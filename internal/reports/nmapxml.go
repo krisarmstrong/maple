@@ -1,0 +1,183 @@
+package reports
+
+import (
+	"encoding/xml"
+	"strings"
+)
+
+type Summary struct {
+	Args        string `json:"args,omitempty"`
+	StartedAt   string `json:"startedAt,omitempty"`
+	FinishedAt  string `json:"finishedAt,omitempty"`
+	ElapsedTime string `json:"elapsedTime,omitempty"`
+	HostCount   int    `json:"hostCount"`
+	HostsUp     int    `json:"hostsUp"`
+	HostsDown   int    `json:"hostsDown"`
+	Hosts       []Host `json:"hosts,omitempty"`
+}
+
+type Host struct {
+	Address  string `json:"address,omitempty"`
+	Hostname string `json:"hostname,omitempty"`
+	State    string `json:"state,omitempty"`
+	Ports    []Port `json:"ports,omitempty"`
+}
+
+type Port struct {
+	Protocol string `json:"protocol,omitempty"`
+	ID       string `json:"id,omitempty"`
+	State    string `json:"state,omitempty"`
+	Service  string `json:"service,omitempty"`
+	Product  string `json:"product,omitempty"`
+	Version  string `json:"version,omitempty"`
+}
+
+func SummarizeNmapXML(input string) (Summary, error) {
+	if strings.TrimSpace(input) == "" {
+		return Summary{}, nil
+	}
+
+	var document nmapRun
+	if err := xml.Unmarshal([]byte(input), &document); err != nil {
+		return Summary{}, err
+	}
+
+	summary := Summary{
+		Args:        document.Args,
+		StartedAt:   document.Started,
+		FinishedAt:  document.RunStats.Finished.Time,
+		ElapsedTime: document.RunStats.Finished.Elapsed,
+		HostCount:   document.hostCount(),
+		HostsUp:     document.RunStats.Hosts.Up,
+		HostsDown:   document.RunStats.Hosts.Down,
+	}
+	for _, host := range document.Hosts {
+		if document.RunStats.Hosts.Total == 0 {
+			countHostState(host.Status.State, &summary)
+		}
+		summary.Hosts = append(summary.Hosts, Host{
+			Address:  host.primaryAddress(),
+			Hostname: host.primaryHostname(),
+			State:    host.Status.State,
+			Ports:    host.ports(),
+		})
+	}
+	return summary, nil
+}
+
+func countHostState(state string, summary *Summary) {
+	switch state {
+	case "up":
+		summary.HostsUp++
+	case "down":
+		summary.HostsDown++
+	}
+}
+
+type nmapRun struct {
+	XMLName  xml.Name   `xml:"nmaprun"`
+	Args     string     `xml:"args,attr"`
+	Started  string     `xml:"startstr,attr"`
+	Hosts    []nmapHost `xml:"host"`
+	RunStats runStats   `xml:"runstats"`
+}
+
+func (n nmapRun) hostCount() int {
+	if n.RunStats.Hosts.Total != 0 {
+		return n.RunStats.Hosts.Total
+	}
+	return len(n.Hosts)
+}
+
+type nmapHost struct {
+	Status    nmapStatus    `xml:"status"`
+	Addresses []nmapAddress `xml:"address"`
+	Hostnames nmapHostnames `xml:"hostnames"`
+	Ports     nmapPorts     `xml:"ports"`
+}
+
+func (h nmapHost) primaryAddress() string {
+	for _, address := range h.Addresses {
+		if address.Value != "" {
+			return address.Value
+		}
+	}
+	return ""
+}
+
+func (h nmapHost) primaryHostname() string {
+	for _, hostname := range h.Hostnames.Names {
+		if hostname.Name != "" {
+			return hostname.Name
+		}
+	}
+	return ""
+}
+
+func (h nmapHost) ports() []Port {
+	ports := make([]Port, 0, len(h.Ports.Ports))
+	for _, port := range h.Ports.Ports {
+		ports = append(ports, Port{
+			Protocol: port.Protocol,
+			ID:       port.ID,
+			State:    port.State.State,
+			Service:  port.Service.Name,
+			Product:  port.Service.Product,
+			Version:  port.Service.Version,
+		})
+	}
+	return ports
+}
+
+type nmapStatus struct {
+	State string `xml:"state,attr"`
+}
+
+type nmapAddress struct {
+	Value string `xml:"addr,attr"`
+}
+
+type nmapHostnames struct {
+	Names []nmapHostname `xml:"hostname"`
+}
+
+type nmapHostname struct {
+	Name string `xml:"name,attr"`
+}
+
+type nmapPorts struct {
+	Ports []nmapPort `xml:"port"`
+}
+
+type nmapPort struct {
+	Protocol string      `xml:"protocol,attr"`
+	ID       string      `xml:"portid,attr"`
+	State    nmapState   `xml:"state"`
+	Service  nmapService `xml:"service"`
+}
+
+type nmapState struct {
+	State string `xml:"state,attr"`
+}
+
+type nmapService struct {
+	Name    string `xml:"name,attr"`
+	Product string `xml:"product,attr"`
+	Version string `xml:"version,attr"`
+}
+
+type runStats struct {
+	Finished finishedStats `xml:"finished"`
+	Hosts    hostStats     `xml:"hosts"`
+}
+
+type finishedStats struct {
+	Time    string `xml:"timestr,attr"`
+	Elapsed string `xml:"elapsed,attr"`
+}
+
+type hostStats struct {
+	Up    int `xml:"up,attr"`
+	Down  int `xml:"down,attr"`
+	Total int `xml:"total,attr"`
+}

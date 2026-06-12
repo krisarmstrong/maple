@@ -1,0 +1,190 @@
+import { act, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  cancelScan,
+  onScanEvent,
+  previewScanCommand,
+  type ScanEvent,
+  startScan,
+} from "../services/scan-service";
+import { ScanWorkspace } from "./ScanWorkspace";
+
+vi.mock("../services/scan-service", () => ({
+  cancelScan: vi.fn(),
+  onScanEvent: vi.fn(() => vi.fn()),
+  previewScanCommand: vi.fn(),
+  startScan: vi.fn(),
+}));
+
+const cancelScanMock = vi.mocked(cancelScan);
+const onScanEventMock = vi.mocked(onScanEvent);
+const previewScanCommandMock = vi.mocked(previewScanCommand);
+const startScanMock = vi.mocked(startScan);
+let scanEventListener: ((event: ScanEvent) => void) | undefined;
+
+describe("ScanWorkspace", () => {
+  beforeEach(() => {
+    cancelScanMock.mockReset();
+    onScanEventMock.mockReset();
+    onScanEventMock.mockImplementation((listener) => {
+      scanEventListener = listener;
+      return vi.fn();
+    });
+    previewScanCommandMock.mockReset();
+    startScanMock.mockReset();
+    scanEventListener = undefined;
+  });
+
+  it("defaults to the TCP connect profile", () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    expect(screen.getByLabelText("Profile")).toHaveValue("connect");
+  });
+
+  it("shows the selected profile description and profile argv", () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    expect(screen.getByText("Unprivileged TCP scan for local desktop use.")).toBeInTheDocument();
+    expect(screen.getByText("-sT -Pn -T3 --top-ports 100")).toBeInTheDocument();
+  });
+
+  it("previews a safe argv command for valid targets", async () => {
+    previewScanCommandMock.mockResolvedValue(["nmap", "-oX", "-", "-sn", "--", "scanme.nmap.org"]);
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
+    await userEvent.click(screen.getByRole("button", { name: "Preview" }));
+
+    expect(await screen.findByText("nmap -oX - -sn -- scanme.nmap.org")).toBeInTheDocument();
+  });
+
+  it("clears stale command previews when targets change", async () => {
+    previewScanCommandMock.mockResolvedValue(["nmap", "-oX", "-", "-sn", "--", "scanme.nmap.org"]);
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
+    await userEvent.click(screen.getByRole("button", { name: "Preview" }));
+    expect(await screen.findByText("nmap -oX - -sn -- scanme.nmap.org")).toBeInTheDocument();
+
+    await userEvent.type(screen.getByLabelText("Targets"), ", 127.0.0.1");
+
+    expect(screen.queryByText("nmap -oX - -sn -- scanme.nmap.org")).not.toBeInTheDocument();
+  });
+
+  it("clears stale command previews when profile changes", async () => {
+    previewScanCommandMock.mockResolvedValue(["nmap", "-oX", "-", "-sn", "--", "scanme.nmap.org"]);
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
+    await userEvent.click(screen.getByRole("button", { name: "Preview" }));
+    await userEvent.selectOptions(screen.getByLabelText("Profile"), "ping");
+
+    expect(screen.queryByText("nmap -oX - -sn -- scanme.nmap.org")).not.toBeInTheDocument();
+  });
+
+  it("shows live run status transitions", () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    act(() => {
+      scanEventListener?.({ type: "started", runId: "scan-1" });
+    });
+    expect(screen.getByText("Scan running")).toBeInTheDocument();
+
+    act(() => {
+      scanEventListener?.({
+        type: "finished",
+        result: { runId: "scan-1", exitCode: 0, xml: "<nmaprun />" },
+      });
+    });
+    expect(screen.getByText("Scan complete")).toBeInTheDocument();
+  });
+
+  it("summarizes target kinds before running", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.click(screen.getByRole("radio", { name: "Target list" }));
+    await userEvent.clear(screen.getByLabelText("Targets"));
+    await userEvent.type(
+      screen.getByLabelText("Targets"),
+      "scanme.nmap.org, 192.168.1.1, 10.0.0.0/24, 192.168.1.1-20",
+    );
+
+    expect(
+      screen.getByText("1 hostname, 1 IP address, 1 subnet, 1 IPv4 range"),
+    ).toBeInTheDocument();
+  });
+
+  it("switches target intent and fills the matching example", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.click(screen.getByRole("radio", { name: "IPv4 range" }));
+
+    expect(screen.getByText("Scan an inclusive IPv4 last-octet range.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Targets")).toHaveAttribute("placeholder", "192.168.1.1-20");
+    expect(screen.getByLabelText("Targets")).toHaveValue("192.168.1.1-20");
+    expect(screen.getByText("1 IPv4 range")).toBeInTheDocument();
+  });
+
+  it("validates targets against the selected target intent", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.click(screen.getByRole("radio", { name: "Subnet" }));
+    await userEvent.clear(screen.getByLabelText("Targets"));
+    await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
+    await userEvent.click(screen.getByRole("button", { name: "Run Scan" }));
+
+    expect(startScanMock).not.toHaveBeenCalled();
+    expect(
+      screen.getByText("Subnet mode expects one CIDR target like 192.168.1.0/24."),
+    ).toBeInTheDocument();
+  });
+
+  it("fills target examples for common target shapes", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.click(screen.getByRole("radio", { name: "IPv4 range" }));
+
+    expect(screen.getByLabelText("Targets")).toHaveValue("192.168.1.1-20");
+    expect(screen.getByText("1 IPv4 range")).toBeInTheDocument();
+  });
+
+  it("blocks scan start for invalid targets", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org; rm -rf /");
+    await userEvent.click(screen.getByRole("button", { name: "Run Scan" }));
+
+    expect(startScanMock).not.toHaveBeenCalled();
+    expect(
+      screen.getByText(
+        "Enter hostnames, IPs, CIDR subnets, or IPv4 ranges separated by commas or new lines.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps XML stdout out of the live scan log", () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    act(() => {
+      scanEventListener?.({ type: "started", runId: "scan-1" });
+      scanEventListener?.({
+        type: "output",
+        output: { runId: "scan-1", stream: "stdout", text: "<nmaprun><host /></nmaprun>" },
+      });
+      scanEventListener?.({
+        type: "output",
+        output: { runId: "scan-1", stream: "stderr", text: "Stats: 0:00:01 elapsed" },
+      });
+      scanEventListener?.({
+        type: "finished",
+        result: { runId: "scan-1", exitCode: 0, xml: "<nmaprun />" },
+      });
+    });
+
+    const log = screen.getByTestId("scan-log");
+    expect(log).not.toHaveTextContent("<nmaprun");
+    expect(log).toHaveTextContent("Stats: 0:00:01 elapsed");
+    expect(log).toHaveTextContent("Scan finished: exit 0. XML captured for history and reports.");
+  });
+});

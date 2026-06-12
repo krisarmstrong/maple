@@ -1,0 +1,87 @@
+package nmap
+
+import (
+	"context"
+	"errors"
+	"os/exec"
+
+	"github.com/krisarmstrong/maple/internal/scanner"
+)
+
+var ErrMissingNmapPath = errors.New("nmap path is required")
+
+type Command struct {
+	Path string
+	Args []string
+}
+
+type Result struct {
+	ExitCode    int    `json:"exitCode"`
+	XML         string `json:"xml"`
+	Diagnostics string `json:"diagnostics,omitempty"`
+}
+
+type Executor interface {
+	Execute(context.Context, Command, func(scanner.ScanOutput)) (Result, error)
+}
+
+type Runner struct {
+	executor Executor
+}
+
+func NewRunner() Runner {
+	return Runner{executor: ExecExecutor{}}
+}
+
+func (r Runner) Run(
+	ctx context.Context,
+	request scanner.ScanRequest,
+	emit func(scanner.ScanOutput),
+) (Result, error) {
+	command, err := BuildCommand(request)
+	if err != nil {
+		return Result{}, err
+	}
+	return r.executorOrDefault().Execute(ctx, command, emit)
+}
+
+func BuildCommand(request scanner.ScanRequest) (Command, error) {
+	command, _, _, err := buildCommandParts(request)
+	return command, err
+}
+
+func buildCommandParts(request scanner.ScanRequest) (Command, scanner.Profile, []scanner.Target, error) {
+	if request.NmapPath == "" {
+		return Command{}, scanner.Profile{}, nil, ErrMissingNmapPath
+	}
+
+	profile, err := scanner.FindProfile(request.ProfileID)
+	if err != nil {
+		return Command{}, scanner.Profile{}, nil, err
+	}
+	targets, err := scanner.ParseTargets(request.Targets)
+	if err != nil {
+		return Command{}, scanner.Profile{}, nil, err
+	}
+
+	argv := scanner.BuildArgv(request.NmapPath, profile, targets)
+	return Command{Path: argv[0], Args: argv[1:]}, profile, targets, nil
+}
+
+func (r Runner) executorOrDefault() Executor {
+	if r.executor != nil {
+		return r.executor
+	}
+	return ExecExecutor{}
+}
+
+func exitCode(err error) int {
+	if err == nil {
+		return 0
+	}
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) {
+		return exitErr.ExitCode()
+	}
+	return -1
+}
