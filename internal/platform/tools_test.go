@@ -70,6 +70,9 @@ func TestDetectOneReportsMissingTool(t *testing.T) {
 	if result.Error == "" {
 		t.Fatal("expected missing tool error")
 	}
+	if result.InstallHint == "" {
+		t.Fatal("expected install hint")
+	}
 }
 
 func TestDetectOneRejectsEmptyToolName(t *testing.T) {
@@ -77,5 +80,34 @@ func TestDetectOneRejectsEmptyToolName(t *testing.T) {
 
 	if result.Error != errEmptyToolName.Error() {
 		t.Fatalf("unexpected error: %s", result.Error)
+	}
+}
+
+func TestInstallHintUsesPlatformSpecificNmapGuidance(t *testing.T) {
+	tests := []struct {
+		name string
+		goos string
+		want string
+	}{
+		{name: "macOS", goos: "darwin", want: "Install Nmap separately with Homebrew or the Nmap Project macOS package."},
+		{name: "Windows", goos: "windows", want: "Install Nmap separately from the Nmap Project. Install Npcap separately if the selected scan mode requires it."},
+		{name: "Linux", goos: "linux", want: "Install Nmap separately with your distribution package manager or the Nmap Project packages."},
+		{name: "Other", goos: "freebsd", want: "Install Nmap separately and make sure it is available on PATH."},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := installHint("nmap", test.goos); got != test.want {
+				t.Fatalf("installHint() = %q, want %q", got, test.want)
+			}
+		})
+	}
+}
+
+func TestInstallHintDescribesOptionalCompanionTools(t *testing.T) {
+	got := installHint("ncat", "linux")
+	want := "Optional Nmap companion tool. Install it separately if you need this workflow."
+	if got != want {
+		t.Fatalf("installHint() = %q, want %q", got, want)
 	}
 }

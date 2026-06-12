@@ -6,6 +6,7 @@ export interface ToolDetection {
   path?: string;
   version?: string;
   error?: string;
+  installHint?: string;
 }
 
 export type ToolStatus = "installed" | "missing-required" | "missing-optional";
@@ -20,7 +21,7 @@ export function getToolStatus(tool: ToolDetection): ToolStatus {
 export function summarizeTools(tools: readonly ToolDetection[]): string {
   const requiredMissing = tools.filter((tool) => tool.required && !tool.installed).length;
   if (requiredMissing > 0) {
-    return `${requiredMissing} required tool missing`;
+    return `${requiredMissing} required ${requiredMissing === 1 ? "tool" : "tools"} missing`;
   }
 
   const installed = tools.filter((tool) => tool.installed).length;

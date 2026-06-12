@@ -190,6 +190,11 @@ h3 {
   margin-bottom: 0;
 }
 
+.tool-card .tool-hint {
+  color: var(--text);
+  margin-top: 6px;
+}
+
 .tool-card span {
   border-radius: 999px;
   font-size: 0.8rem;

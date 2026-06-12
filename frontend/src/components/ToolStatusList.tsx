@@ -14,6 +14,11 @@ export function ToolStatusList({ tools }: ToolStatusListProps): React.JSX.Elemen
             <div>
               <h3>{tool.displayName}</h3>
               <p>{tool.version ?? tool.path ?? tool.error ?? "Not detected"}</p>
+              {tool.installed ||
+              tool.installHint === undefined ||
+              tool.installHint === "" ? null : (
+                <p className="tool-hint">{tool.installHint}</p>
+              )}
             </div>
             <span>{labelForStatus(status)}</span>
           </article>

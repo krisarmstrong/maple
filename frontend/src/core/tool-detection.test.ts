@@ -41,4 +41,13 @@ describe("tool detection helpers", () => {
       ]),
     ).toBe("1 required tool missing");
   });
+
+  it("pluralizes multiple missing required tools", () => {
+    expect(
+      summarizeTools([
+        { name: "nmap", displayName: "Nmap", required: true, installed: false },
+        { name: "nmap2", displayName: "Nmap 2", required: true, installed: false },
+      ]),
+    ).toBe("2 required tools missing");
+  });
 });

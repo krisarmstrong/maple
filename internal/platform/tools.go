@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os/exec"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -27,6 +28,7 @@ type ToolDetection struct {
 	Path        string `json:"path,omitempty"`
 	Version     string `json:"version,omitempty"`
 	Error       string `json:"error,omitempty"`
+	InstallHint string `json:"installHint,omitempty"`
 }
 
 type Detector struct {
@@ -74,6 +76,7 @@ func (d Detector) DetectOne(ctx context.Context, spec ToolSpec) ToolDetection {
 	path, err := d.lookPath(spec.Name)
 	if err != nil {
 		result.Error = err.Error()
+		result.InstallHint = installHint(spec.Name, runtime.GOOS)
 		return result
 	}
 
@@ -81,6 +84,22 @@ func (d Detector) DetectOne(ctx context.Context, spec ToolSpec) ToolDetection {
 	result.Path = path
 	result.Version = d.version(ctx, path, spec.VersionArg)
 	return result
+}
+
+func installHint(name string, goos string) string {
+	if name != "nmap" {
+		return "Optional Nmap companion tool. Install it separately if you need this workflow."
+	}
+	switch goos {
+	case "darwin":
+		return "Install Nmap separately with Homebrew or the Nmap Project macOS package."
+	case "windows":
+		return "Install Nmap separately from the Nmap Project. Install Npcap separately if the selected scan mode requires it."
+	case "linux":
+		return "Install Nmap separately with your distribution package manager or the Nmap Project packages."
+	default:
+		return "Install Nmap separately and make sure it is available on PATH."
+	}
 }
 
 func (d Detector) version(ctx context.Context, path string, versionArg string) string {
