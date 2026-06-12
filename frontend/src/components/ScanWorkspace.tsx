@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { findProfile, type ScanProfileID, scanProfiles } from "../core/scan-profiles";
+import { scanScope } from "../core/scan-scope";
 import {
   type TargetModeID,
   targetModeHelp,
@@ -36,6 +37,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
   const [status, setStatus] = useState<ScanStatus>("idle");
   const targetSummary = summarizeTargets(targets);
   const selectedProfile = findProfile(profileId);
+  const scope = scanScope(profileId, targets);
 
   useEffect(
     () =>
@@ -134,6 +136,12 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
       {error === "" ? null : <p className="error">{error}</p>}
       {status === "idle" ? null : <p className="scan-status">{scanStatusLabel(status)}</p>}
       {targetSummary === "" ? null : <p className="target-summary">{targetSummary}</p>}
+      {scope === undefined ? null : (
+        <div className="scan-scope">
+          <span>{scope.label}</span>
+          {scope.warning === undefined ? null : <strong>{scope.warning}</strong>}
+        </div>
+      )}
       {preview.length === 0 ? null : <code className="command-preview">{preview.join(" ")}</code>}
 
       <div className="scan-actions">

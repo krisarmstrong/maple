@@ -142,6 +142,29 @@ describe("ScanWorkspace", () => {
     expect(
       screen.getByText("1 hostname, 1 IP address, 1 subnet, 1 IPv4 range"),
     ).toBeInTheDocument();
+    expect(screen.getByText("4 target expressions, up to 278 addresses")).toBeInTheDocument();
+  });
+
+  it("warns when a larger subnet uses a port scan profile", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.click(screen.getByRole("radio", { name: "Subnet" }));
+    await userEvent.type(screen.getByLabelText("Targets"), "192.168.1.0/24");
+
+    expect(screen.getByText("1 target expression, up to 256 addresses")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Port scans across many addresses can take a while. Run a Ping Sweep first if you only need host discovery.",
+      ),
+    ).toBeInTheDocument();
+
+    await userEvent.selectOptions(screen.getByLabelText("Profile"), "ping");
+
+    expect(
+      screen.queryByText(
+        "Port scans across many addresses can take a while. Run a Ping Sweep first if you only need host discovery.",
+      ),
+    ).not.toBeInTheDocument();
   });
 
   it("switches target intent without writing an example into the scan field", async () => {
