@@ -124,8 +124,12 @@ func (a *App) historyEmitter(emit nmap.EventEmitter) nmap.EventEmitter {
 		if event == nmap.EventScanFinished {
 			if value, ok := payload.(scanner.ScanFinished); ok {
 				summary, err := reports.SummarizeNmapXML(value.XML)
+				recordError := value.Error
 				if err != nil {
 					summary = reports.Summary{}
+					if recordError == "" {
+						recordError = "Unable to parse Nmap XML: " + err.Error()
+					}
 				}
 				_ = a.history.Add(store.ScanRecord{
 					RunID:       value.RunID,
@@ -136,7 +140,7 @@ func (a *App) historyEmitter(emit nmap.EventEmitter) nmap.EventEmitter {
 					ExitCode:    value.ExitCode,
 					XML:         value.XML,
 					Diagnostics: value.Diagnostics,
-					Error:       value.Error,
+					Error:       recordError,
 				})
 			}
 		}

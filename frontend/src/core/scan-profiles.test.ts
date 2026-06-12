@@ -15,7 +15,7 @@ describe("scanProfiles", () => {
     expect(buildPreviewArgv("connect", ["scanme.nmap.org"])).toEqual([
       "nmap",
       "-oX",
-      "-",
+      "<managed-xml-file>",
       "-sT",
       "-Pn",
       "-T3",

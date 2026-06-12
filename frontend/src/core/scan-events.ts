@@ -12,7 +12,10 @@ export function scanEventRunningState(event: ScanEvent): boolean | undefined {
 
 export function scanEventLogLine(event: ScanEvent): string | undefined {
   if (event.type === "output") {
-    return event.output.stream === "stderr" ? event.output.text : undefined;
+    if (event.output.stream === "stderr") {
+      return event.output.text;
+    }
+    return isXMLLike(event.output.text) ? undefined : event.output.text;
   }
   if (event.type === "finished") {
     return scanFinishedMessage(event.result);
@@ -29,4 +32,9 @@ function scanFinishedMessage(result: Extract<ScanEvent, { type: "finished" }>["r
     return `Scan failed: ${result.error}`;
   }
   return `Scan finished: exit ${result.exitCode}. XML captured for history and reports.`;
+}
+
+function isXMLLike(value: string): boolean {
+  const trimmed = value.trimStart();
+  return trimmed.startsWith("<?xml") || trimmed.startsWith("<nmaprun");
 }

@@ -134,7 +134,7 @@ func scanRecord(runID string) ScanRecord {
 		FinishedAt: now.Add(time.Second),
 		Preview: scanner.CommandPreview{
 			Executable: "nmap",
-			Args:       []string{"-oX", "-", "-sn", "--", "scanme.nmap.org"},
+			Args:       []string{"-oX", "<managed-xml-file>", "-sn", "--", "scanme.nmap.org"},
 		},
 		ExitCode: 0,
 		XML:      "<nmaprun></nmaprun>",

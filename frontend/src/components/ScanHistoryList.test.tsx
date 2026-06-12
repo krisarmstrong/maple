@@ -44,7 +44,7 @@ describe("ScanHistoryList", () => {
       <ScanHistoryList
         records={[
           scanRecord("scan-2", {
-            command: ["nmap", "-oX", "-", "-sn", "--", "192.0.2.0/30"],
+            command: ["nmap", "-oX", "<managed-xml-file>", "-sn", "--", "192.0.2.0/30"],
             hostCount: 2,
             hostsUp: 1,
             hostsDown: 1,
@@ -81,7 +81,15 @@ describe("ScanHistoryList", () => {
       <ScanHistoryList
         records={[
           scanRecord("scan-3", {
-            command: ["nmap", "-oX", "-", "-sV", "--version-light", "--", "192.0.2.1"],
+            command: [
+              "nmap",
+              "-oX",
+              "<managed-xml-file>",
+              "-sV",
+              "--version-light",
+              "--",
+              "192.0.2.1",
+            ],
             hostCount: 1,
             hostsUp: 1,
             openPortCount: 2,

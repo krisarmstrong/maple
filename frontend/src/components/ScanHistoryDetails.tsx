@@ -21,6 +21,7 @@ export function ScanHistoryDetails({ record }: ScanHistoryDetailsProps): React.J
   if (record.hosts.length === 0) {
     return (
       <div className="history-details">
+        {hasError(record) ? <p className="error">{record.error}</p> : null}
         {hasDiagnostics(record) ? <Diagnostics text={record.diagnostics} /> : null}
         <p className="muted">{emptyHostMessage(record)}</p>
       </div>
@@ -28,6 +29,7 @@ export function ScanHistoryDetails({ record }: ScanHistoryDetailsProps): React.J
   }
   return (
     <div className="history-details">
+      {hasError(record) ? <p className="error">{record.error}</p> : null}
       {hasDiagnostics(record) ? <Diagnostics text={record.diagnostics} /> : null}
       {record.hosts.map((host) => (
         <HostDetail host={host} key={hostKey(host)} />
@@ -80,6 +82,10 @@ function PortDetail({ port }: { port: ScanHistoryPort }): React.JSX.Element {
 
 function hasDiagnostics(record: ScanHistoryRecord): boolean {
   return record.diagnostics !== undefined && record.diagnostics !== "";
+}
+
+function hasError(record: ScanHistoryRecord): boolean {
+  return record.error !== undefined && record.error !== "";
 }
 
 function emptyHostMessage(record: ScanHistoryRecord): string {

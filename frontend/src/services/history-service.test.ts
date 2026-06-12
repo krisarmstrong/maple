@@ -25,7 +25,7 @@ describe("history-service", () => {
         finishedAt: "2026-06-12T10:00:05Z",
         preview: {
           executable: "nmap",
-          args: ["-oX", "-", "-sT", "--", "127.0.0.1"],
+          args: ["-oX", "<managed-xml-file>", "-sT", "--", "127.0.0.1"],
           profile: { id: "connect", name: "TCP Connect", description: "", args: [] },
           targets: [{ value: "127.0.0.1", kind: "ip" }],
         },

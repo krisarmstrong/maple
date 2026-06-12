@@ -72,7 +72,7 @@ func exportRecord() store.ScanRecord {
 		FinishedAt: time.Date(2026, 6, 12, 14, 6, 16, 0, time.UTC),
 		Preview: scanner.CommandPreview{
 			Executable: "/opt/homebrew/bin/nmap",
-			Args:       []string{"-oX", "-", "-sT", "--", "127.0.0.1"},
+			Args:       []string{"-oX", "<managed-xml-file>", "-sT", "--", "127.0.0.1"},
 		},
 		XML: "<nmaprun />",
 	}

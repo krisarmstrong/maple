@@ -29,9 +29,11 @@ export const scanProfiles: readonly ScanProfile[] = [
   },
 ];
 
+export const previewXMLOutputPath = "<managed-xml-file>";
+
 export function buildPreviewArgv(profileID: ScanProfileID, targets: readonly string[]): string[] {
   const profile = findProfile(profileID);
-  return ["nmap", "-oX", "-", ...profile.args, "--", ...targets];
+  return ["nmap", "-oX", previewXMLOutputPath, ...profile.args, "--", ...targets];
 }
 
 export function findProfile(profileID: ScanProfileID): ScanProfile {

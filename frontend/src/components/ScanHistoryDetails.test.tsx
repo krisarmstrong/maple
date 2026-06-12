@@ -83,6 +83,16 @@ describe("ScanHistoryDetails", () => {
 
     expect(screen.getByText("Strange read error from 127.0.0.1")).toBeInTheDocument();
   });
+
+  it("shows saved scan errors", () => {
+    render(
+      <ScanHistoryDetails
+        record={scanRecord({ error: "Unable to parse Nmap XML: unexpected EOF" })}
+      />,
+    );
+
+    expect(screen.getByText("Unable to parse Nmap XML: unexpected EOF")).toBeInTheDocument();
+  });
 });
 
 function scanRecord(overrides: Partial<ScanHistoryRecord> = {}): ScanHistoryRecord {
@@ -90,7 +100,7 @@ function scanRecord(overrides: Partial<ScanHistoryRecord> = {}): ScanHistoryReco
     runId: "scan-1",
     startedAt: "2026-06-12T10:00:00Z",
     finishedAt: "2026-06-12T10:00:05Z",
-    command: ["nmap", "-oX", "-", "-sn", "--", "scanme.nmap.org"],
+    command: ["nmap", "-oX", "<managed-xml-file>", "-sn", "--", "scanme.nmap.org"],
     profileName: "TCP Connect",
     targets: [{ value: "scanme.nmap.org", kind: "hostname" }],
     hosts: [],
