@@ -467,6 +467,34 @@ textarea {
   resize: vertical;
 }
 
+.scan-panel-tabs {
+  background: var(--panel-subtle);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 16px;
+  padding: 6px;
+}
+
+.scan-panel-tab {
+  background: transparent;
+  border-color: transparent;
+  min-height: 42px;
+}
+
+.scan-panel-tab[aria-current="page"] {
+  background: var(--panel);
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.scan-panel {
+  display: grid;
+  gap: 14px;
+}
+
 .profile-summary {
   color: var(--muted);
   display: grid;
@@ -579,6 +607,12 @@ textarea {
   display: flex;
   gap: 10px;
   margin-top: 16px;
+}
+
+.workspace-header .scan-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-top: 0;
 }
 
 .scan-log {

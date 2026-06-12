@@ -42,6 +42,28 @@ describe("ScanWorkspace", () => {
     expect(screen.getByLabelText("Profile")).toHaveValue("connect");
   });
 
+  it("starts on the Configure tab with script controls out of the primary path", () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    expect(screen.getByRole("button", { name: "Configure" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.getByLabelText("Targets")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Custom .nse script files")).not.toBeInTheDocument();
+  });
+
+  it("opens NSE controls from the Scripts tab", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
+
+    expect(screen.getByRole("button", { name: "Scripts" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByText("NSE scripts")).toBeInTheDocument();
+    expect(screen.getByLabelText("Custom .nse script files")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Targets")).not.toBeInTheDocument();
+  });
+
   it("shows the selected profile description and profile argv", () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
@@ -63,6 +85,7 @@ describe("ScanWorkspace", () => {
     await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
     await userEvent.click(screen.getByRole("button", { name: "Preview" }));
 
+    expect(screen.getByRole("button", { name: "Output" })).toHaveAttribute("aria-current", "page");
     expect(
       await screen.findByText("nmap -oX <managed-xml-file> -sn -- scanme.nmap.org"),
     ).toBeInTheDocument();
@@ -86,7 +109,7 @@ describe("ScanWorkspace", () => {
 
     await userEvent.selectOptions(screen.getByLabelText("Profile"), "service");
     await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
-    await userEvent.click(screen.getByText("NSE scripts"));
+    await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
     await userEvent.click(screen.getByRole("checkbox", { name: "safe" }));
     await userEvent.type(
       screen.getByLabelText("Custom .nse script files"),
@@ -127,6 +150,7 @@ describe("ScanWorkspace", () => {
       await screen.findByText("nmap -oX <managed-xml-file> -sn -- scanme.nmap.org"),
     ).toBeInTheDocument();
 
+    await userEvent.click(screen.getByRole("button", { name: "Configure" }));
     await userEvent.type(screen.getByLabelText("Targets"), ", 127.0.0.1");
 
     expect(
@@ -147,6 +171,7 @@ describe("ScanWorkspace", () => {
 
     await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
     await userEvent.click(screen.getByRole("button", { name: "Preview" }));
+    await userEvent.click(screen.getByRole("button", { name: "Configure" }));
     await userEvent.selectOptions(screen.getByLabelText("Profile"), "ping");
 
     expect(
@@ -171,7 +196,7 @@ describe("ScanWorkspace", () => {
       await screen.findByText("nmap -oX <managed-xml-file> -sn -- scanme.nmap.org"),
     ).toBeInTheDocument();
 
-    await userEvent.click(screen.getByText("NSE scripts"));
+    await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
     await userEvent.click(screen.getByRole("checkbox", { name: "safe" }));
 
     expect(
