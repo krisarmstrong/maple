@@ -286,6 +286,67 @@ h3 {
   margin-bottom: 18px;
 }
 
+.help-workspace {
+  display: grid;
+  gap: 18px;
+}
+
+.help-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.help-panel {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+
+.help-list {
+  color: var(--muted);
+  display: grid;
+  gap: 10px;
+  line-height: 1.55;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.help-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.compact-header {
+  gap: 16px;
+}
+
+.local-help-output {
+  display: grid;
+  gap: 10px;
+}
+
+.help-source-note {
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 750;
+  margin-bottom: 0;
+}
+
+.local-help-output pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 0;
+  max-height: 460px;
+  overflow: auto;
+  padding: 16px;
+  white-space: pre-wrap;
+}
+
 .history-controls {
   display: grid;
   gap: 12px;
@@ -674,13 +735,18 @@ textarea {
   }
 
   .app-nav {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     margin-top: 16px;
   }
 
   .nav-button {
     min-height: 52px;
-    padding: 8px;
+    padding: 8px 6px;
+  }
+
+  .nav-button span {
+    font-size: 0.84rem;
+    overflow-wrap: anywhere;
   }
 
   .nav-button small {
@@ -713,6 +779,10 @@ textarea {
   }
 
   .history-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .help-grid {
     grid-template-columns: 1fr;
   }
 }

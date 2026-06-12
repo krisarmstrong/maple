@@ -3,7 +3,13 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import { clearScanHistory, loadScanHistory } from "./services/history-service";
-import { detectTools, openNmapDownloads } from "./services/tool-service";
+import {
+  detectTools,
+  loadNmapHelp,
+  openNmapDownloads,
+  openNmapNSEDocs,
+  openNmapReferenceGuide,
+} from "./services/tool-service";
 
 vi.mock("./services/history-service", () => ({
   clearScanHistory: vi.fn(),
@@ -12,11 +18,17 @@ vi.mock("./services/history-service", () => ({
 
 vi.mock("./services/tool-service", () => ({
   detectTools: vi.fn(),
+  loadNmapHelp: vi.fn(),
   openNmapDownloads: vi.fn(),
+  openNmapNSEDocs: vi.fn(),
+  openNmapReferenceGuide: vi.fn(),
 }));
 
 const detectToolsMock = vi.mocked(detectTools);
+const loadNmapHelpMock = vi.mocked(loadNmapHelp);
 const openNmapDownloadsMock = vi.mocked(openNmapDownloads);
+const openNmapNSEDocsMock = vi.mocked(openNmapNSEDocs);
+const openNmapReferenceGuideMock = vi.mocked(openNmapReferenceGuide);
 const clearScanHistoryMock = vi.mocked(clearScanHistory);
 const loadScanHistoryMock = vi.mocked(loadScanHistory);
 
@@ -25,8 +37,17 @@ describe("App", () => {
     clearScanHistoryMock.mockReset();
     clearScanHistoryMock.mockResolvedValue(undefined);
     detectToolsMock.mockReset();
+    loadNmapHelpMock.mockReset();
+    loadNmapHelpMock.mockResolvedValue({
+      path: "/usr/local/bin/nmap",
+      output: "Nmap usage: nmap [Scan Type] [Options] {target}",
+    });
     openNmapDownloadsMock.mockReset();
     openNmapDownloadsMock.mockResolvedValue(undefined);
+    openNmapNSEDocsMock.mockReset();
+    openNmapNSEDocsMock.mockResolvedValue(undefined);
+    openNmapReferenceGuideMock.mockReset();
+    openNmapReferenceGuideMock.mockResolvedValue(undefined);
     loadScanHistoryMock.mockReset();
     loadScanHistoryMock.mockResolvedValue([]);
     window.localStorage?.removeItem("maple.themeMode");
@@ -150,5 +171,46 @@ describe("App", () => {
 
     expect(clearScanHistoryMock).toHaveBeenCalledTimes(1);
     expect(await screen.findByText("No completed scans yet.")).toBeInTheDocument();
+  });
+
+  it("loads local Nmap help from the Help workspace", async () => {
+    detectToolsMock.mockResolvedValue([]);
+
+    render(<App />);
+
+    await userEvent.click(screen.getByRole("button", { name: /Help/u }));
+    await userEvent.click(screen.getByRole("button", { name: "Load local Nmap help" }));
+
+    expect(loadNmapHelpMock).toHaveBeenCalledTimes(1);
+    expect(await screen.findByText("Loaded from /usr/local/bin/nmap")).toBeInTheDocument();
+    expect(screen.getByText("Nmap usage: nmap [Scan Type] [Options] {target}")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Help/u })).toHaveAttribute("aria-current", "page");
+  });
+
+  it("opens official Nmap reference links from the Help workspace", async () => {
+    detectToolsMock.mockResolvedValue([]);
+
+    render(<App />);
+
+    await userEvent.click(screen.getByRole("button", { name: /Help/u }));
+    await userEvent.click(screen.getByRole("button", { name: "Open Nmap Reference Guide" }));
+    await userEvent.click(screen.getByRole("button", { name: "Open NSE documentation" }));
+
+    expect(openNmapReferenceGuideMock).toHaveBeenCalledTimes(1);
+    expect(openNmapNSEDocsMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows local Nmap help failures in the Help workspace", async () => {
+    detectToolsMock.mockResolvedValue([]);
+    loadNmapHelpMock.mockRejectedValue(new Error("nmap is not installed or not available on PATH"));
+
+    render(<App />);
+
+    await userEvent.click(screen.getByRole("button", { name: /Help/u }));
+    await userEvent.click(screen.getByRole("button", { name: "Load local Nmap help" }));
+
+    expect(
+      await screen.findByText("nmap is not installed or not available on PATH"),
+    ).toBeInTheDocument();
   });
 });

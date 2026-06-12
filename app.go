@@ -16,6 +16,8 @@ import (
 var errNmapNotInstalled = errors.New("nmap is not installed or not available on PATH")
 
 const nmapDownloadsURL = "https://nmap.org/download.html"
+const nmapReferenceURL = "https://nmap.org/book/man.html"
+const nmapNSEDocsURL = "https://nmap.org/nsedoc/"
 
 type App struct {
 	ctx         context.Context
@@ -46,6 +48,22 @@ func (a *App) DetectTools() []platform.ToolDetection {
 
 func (a *App) OpenNmapDownloads() {
 	runtime.BrowserOpenURL(a.context(), nmapDownloadsURL)
+}
+
+func (a *App) OpenNmapReferenceGuide() {
+	runtime.BrowserOpenURL(a.context(), nmapReferenceURL)
+}
+
+func (a *App) OpenNmapNSEDocs() {
+	runtime.BrowserOpenURL(a.context(), nmapNSEDocsURL)
+}
+
+func (a *App) LoadNmapHelp() (platform.ToolHelp, error) {
+	return a.detector.Help(a.context(), platform.ToolSpec{
+		Name:        "nmap",
+		DisplayName: "Nmap",
+		Required:    true,
+	}, "--help")
 }
 
 func (a *App) ScanProfiles() []scanner.Profile {

@@ -45,3 +45,12 @@ func TestNmapDownloadsURLUsesOfficialProjectPage(t *testing.T) {
 		t.Fatalf("nmapDownloadsURL = %q", nmapDownloadsURL)
 	}
 }
+
+func TestOfficialNmapHelpURLsUseProjectPages(t *testing.T) {
+	if nmapReferenceURL != "https://nmap.org/book/man.html" {
+		t.Fatalf("nmapReferenceURL = %q", nmapReferenceURL)
+	}
+	if nmapNSEDocsURL != "https://nmap.org/nsedoc/" {
+		t.Fatalf("nmapNSEDocsURL = %q", nmapNSEDocsURL)
+	}
+}

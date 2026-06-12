@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { HelpWorkspace } from "./components/HelpWorkspace";
 import { ScanHistoryList } from "./components/ScanHistoryList";
 import { ScanWorkspace } from "./components/ScanWorkspace";
 import { ThemeModePicker } from "./components/ThemeModePicker";
@@ -23,7 +24,7 @@ type HistoryState =
   | { status: "ready"; records: ScanHistoryRecord[] }
   | { status: "failed"; message: string };
 
-type AppView = "scan" | "history" | "environment";
+type AppView = "scan" | "history" | "environment" | "help";
 
 export default function App(): React.JSX.Element {
   const [state, setState] = useState<LoadState>({ status: "loading" });
@@ -76,6 +77,7 @@ export default function App(): React.JSX.Element {
             meta={statusText(state)}
             onSelect={setActiveView}
           />
+          <NavButton activeView={activeView} id="help" label="Help" onSelect={setActiveView} />
         </nav>
         <div className="sidebar-footer">
           <span>Theme</span>
@@ -151,6 +153,8 @@ export default function App(): React.JSX.Element {
             ) : null}
           </section>
         ) : null}
+
+        {activeView === "help" ? <HelpWorkspace /> : null}
       </div>
     </main>
   );

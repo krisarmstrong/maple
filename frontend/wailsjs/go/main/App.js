@@ -18,12 +18,24 @@ export function DetectTools() {
   return window['go']['main']['App']['DetectTools']();
 }
 
+export function LoadNmapHelp() {
+  return window['go']['main']['App']['LoadNmapHelp']();
+}
+
 export function ExportScanHistoryRecord(arg1, arg2) {
   return window['go']['main']['App']['ExportScanHistoryRecord'](arg1, arg2);
 }
 
 export function OpenNmapDownloads() {
   return window['go']['main']['App']['OpenNmapDownloads']();
+}
+
+export function OpenNmapNSEDocs() {
+  return window['go']['main']['App']['OpenNmapNSEDocs']();
+}
+
+export function OpenNmapReferenceGuide() {
+  return window['go']['main']['App']['OpenNmapReferenceGuide']();
 }
 
 export function PreviewScan(arg1) {

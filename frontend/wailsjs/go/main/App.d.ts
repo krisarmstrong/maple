@@ -13,9 +13,15 @@ export function DeleteScanHistoryRecord(arg1:string):Promise<void>;
 
 export function DetectTools():Promise<Array<platform.ToolDetection>>;
 
+export function LoadNmapHelp():Promise<platform.ToolHelp>;
+
 export function ExportScanHistoryRecord(arg1:string,arg2:exporter.Format):Promise<string>;
 
 export function OpenNmapDownloads():Promise<void>;
+
+export function OpenNmapNSEDocs():Promise<void>;
+
+export function OpenNmapReferenceGuide():Promise<void>;
 
 export function PreviewScan(arg1:scanner.ScanRequest):Promise<scanner.CommandPreview>;
 

@@ -111,3 +111,60 @@ func TestInstallHintDescribesOptionalCompanionTools(t *testing.T) {
 		t.Fatalf("installHint() = %q, want %q", got, want)
 	}
 }
+
+func TestHelpRunsToolHelpWithArgvOnly(t *testing.T) {
+	detector := Detector{
+		lookPath: func(name string) (string, error) {
+			if name != "nmap" {
+				t.Fatalf("unexpected tool lookup: %s", name)
+			}
+			return "/usr/local/bin/nmap", nil
+		},
+		run: func(_ context.Context, path string, args ...string) ([]byte, error) {
+			if path != "/usr/local/bin/nmap" {
+				t.Fatalf("unexpected path: %s", path)
+			}
+			if len(args) != 1 || args[0] != "--help" {
+				t.Fatalf("unexpected args: %v", args)
+			}
+			return []byte("Nmap 7.95 usage: nmap [Scan Type] [Options] {target}\n"), nil
+		},
+	}
+
+	result, err := detector.Help(context.Background(), ToolSpec{
+		Name:        "nmap",
+		DisplayName: "Nmap",
+		Required:    true,
+	}, "--help")
+	if err != nil {
+		t.Fatalf("Help returned error: %v", err)
+	}
+
+	if result.Path != "/usr/local/bin/nmap" {
+		t.Fatalf("result.Path = %q, want executable path", result.Path)
+	}
+	if result.Output != "Nmap 7.95 usage: nmap [Scan Type] [Options] {target}\n" {
+		t.Fatalf("unexpected output: %q", result.Output)
+	}
+}
+
+func TestHelpReportsMissingToolWithoutRunningHelp(t *testing.T) {
+	detector := Detector{
+		lookPath: func(string) (string, error) {
+			return "", errors.New("executable file not found in PATH")
+		},
+		run: func(context.Context, string, ...string) ([]byte, error) {
+			t.Fatal("help command should not run for missing tool")
+			return nil, nil
+		},
+	}
+
+	_, err := detector.Help(context.Background(), ToolSpec{
+		Name:        "nmap",
+		DisplayName: "Nmap",
+		Required:    true,
+	}, "--help")
+	if err == nil {
+		t.Fatal("expected missing tool error")
+	}
+}

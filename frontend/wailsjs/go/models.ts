@@ -1,5 +1,19 @@
 export namespace platform {
 	
+	export class ToolHelp {
+	    path: string;
+	    output: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ToolHelp(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.path = source["path"];
+	        this.output = source["output"];
+	    }
+	}
 	export class ToolDetection {
 	    name: string;
 	    displayName: string;
