@@ -37,6 +37,53 @@ describe("ScanHistoryList", () => {
       screen.getByText("nmap -oX <managed-xml-file> -sn -- scanme.nmap.org"),
     ).toBeInTheDocument();
     expect(screen.getByText("1 target, scanme.nmap.org, 5.00s, exit 0")).toBeInTheDocument();
+    expect(screen.getByText("Showing 1 of 1 scans")).toBeInTheDocument();
+  });
+
+  it("filters history by search text", async () => {
+    render(
+      <ScanHistoryList
+        records={[
+          scanRecord("scan-1", { targets: [{ value: "scanme.nmap.org", kind: "hostname" }] }),
+          scanRecord("scan-2", {
+            profileName: "Service Scan",
+            targets: [{ value: "router.local", kind: "hostname" }],
+          }),
+        ]}
+      />,
+    );
+
+    await userEvent.type(screen.getByLabelText("Search history"), "router");
+
+    expect(screen.queryByText("TCP Connect")).not.toBeInTheDocument();
+    expect(screen.getByText("Service Scan")).toBeInTheDocument();
+    expect(screen.getByText("Showing 1 of 2 scans")).toBeInTheDocument();
+  });
+
+  it("filters history by scan outcome", async () => {
+    render(
+      <ScanHistoryList
+        records={[
+          scanRecord("scan-1", { openPortCount: 2, hostCount: 1, hostsUp: 1 }),
+          scanRecord("scan-2", { error: "Unable to parse Nmap XML: unexpected EOF" }),
+        ]}
+      />,
+    );
+
+    await userEvent.selectOptions(screen.getByLabelText("Show"), "errors");
+
+    expect(screen.queryByText("2 open ports")).not.toBeInTheDocument();
+    expect(screen.getByText("Unable to parse Nmap XML: unexpected EOF")).toBeInTheDocument();
+    expect(screen.getByText("Showing 1 of 2 scans")).toBeInTheDocument();
+  });
+
+  it("shows an empty filtered history state", async () => {
+    render(<ScanHistoryList records={[scanRecord("scan-1")]} />);
+
+    await userEvent.type(screen.getByLabelText("Search history"), "missing.example");
+
+    expect(screen.getByText("No scans match the current filters.")).toBeInTheDocument();
+    expect(screen.getByText("Showing 0 of 1 scans")).toBeInTheDocument();
   });
 
   it("renders parsed host counts when XML summary is available", () => {

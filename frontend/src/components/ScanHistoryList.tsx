@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { historyLabel } from "../core/history-display";
+import { filterHistoryRecords, type HistoryFilterID } from "../core/history-filter";
 import type { ScanHistoryRecord } from "../services/history-service";
 import {
   deleteScanHistoryRecord,
@@ -17,8 +18,11 @@ export function ScanHistoryList({ records, onChanged }: ScanHistoryListProps): R
   const [report, setReport] = useState<{ runId: string; text: string } | undefined>();
   const [detailsRunId, setDetailsRunId] = useState<string | undefined>();
   const [pendingDeleteRunId, setPendingDeleteRunId] = useState<string | undefined>();
+  const [query, setQuery] = useState("");
+  const [filterId, setFilterId] = useState<HistoryFilterID>("all");
   const [exportPath, setExportPath] = useState("");
   const [error, setError] = useState("");
+  const visibleRecords = filterHistoryRecords(records, query, filterId);
 
   if (records.length === 0) {
     return <p className="muted">No completed scans yet.</p>;
@@ -81,9 +85,38 @@ export function ScanHistoryList({ records, onChanged }: ScanHistoryListProps): R
 
   return (
     <div className="history-list">
+      <div className="history-controls">
+        <label>
+          <span>Search history</span>
+          <input
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Target, profile, host, command"
+            type="search"
+            value={query}
+          />
+        </label>
+        <label>
+          <span>Show</span>
+          <select
+            onChange={(event) => setFilterId(toHistoryFilterID(event.target.value))}
+            value={filterId}
+          >
+            <option value="all">All scans</option>
+            <option value="hosts-up">Hosts up</option>
+            <option value="open-ports">Open ports</option>
+            <option value="errors">Errors</option>
+          </select>
+        </label>
+      </div>
+      <p className="history-count">
+        Showing {visibleRecords.length} of {records.length} scans
+      </p>
       {error === "" ? null : <p className="error">{error}</p>}
       {exportPath === "" ? null : <p className="success">Exported to {exportPath}</p>}
-      {records.map((record) => (
+      {visibleRecords.length === 0 ? (
+        <p className="muted">No scans match the current filters.</p>
+      ) : null}
+      {visibleRecords.map((record) => (
         <article className="history-card" key={record.runId}>
           <div>
             <h3>{formatTimestamp(record.finishedAt)}</h3>
@@ -127,6 +160,13 @@ export function ScanHistoryList({ records, onChanged }: ScanHistoryListProps): R
 
 function toggleRunId(current: string | undefined, next: string): string | undefined {
   return current === next ? undefined : next;
+}
+
+function toHistoryFilterID(value: string): HistoryFilterID {
+  if (value === "errors" || value === "hosts-up" || value === "open-ports") {
+    return value;
+  }
+  return "all";
 }
 
 function formatTimestamp(value: string): string {
