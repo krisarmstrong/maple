@@ -10,9 +10,12 @@ import (
 	"github.com/krisarmstrong/maple/internal/reports"
 	"github.com/krisarmstrong/maple/internal/scanner"
 	"github.com/krisarmstrong/maple/internal/store"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 var errNmapNotInstalled = errors.New("nmap is not installed or not available on PATH")
+
+const nmapDownloadsURL = "https://nmap.org/download.html"
 
 type App struct {
 	ctx         context.Context
@@ -39,6 +42,10 @@ func (a *App) startup(ctx context.Context) {
 
 func (a *App) DetectTools() []platform.ToolDetection {
 	return a.detector.Detect(a.context(), platform.DefaultToolSpecs())
+}
+
+func (a *App) OpenNmapDownloads() {
+	runtime.BrowserOpenURL(a.context(), nmapDownloadsURL)
 }
 
 func (a *App) ScanProfiles() []scanner.Profile {

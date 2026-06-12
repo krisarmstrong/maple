@@ -22,6 +22,10 @@ export function ExportScanHistoryRecord(arg1, arg2) {
   return window['go']['main']['App']['ExportScanHistoryRecord'](arg1, arg2);
 }
 
+export function OpenNmapDownloads() {
+  return window['go']['main']['App']['OpenNmapDownloads']();
+}
+
 export function PreviewScan(arg1) {
   return window['go']['main']['App']['PreviewScan'](arg1);
 }

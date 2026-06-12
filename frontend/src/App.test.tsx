@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import { clearScanHistory, loadScanHistory } from "./services/history-service";
-import { detectTools } from "./services/tool-service";
+import { detectTools, openNmapDownloads } from "./services/tool-service";
 
 vi.mock("./services/history-service", () => ({
   clearScanHistory: vi.fn(),
@@ -12,9 +12,11 @@ vi.mock("./services/history-service", () => ({
 
 vi.mock("./services/tool-service", () => ({
   detectTools: vi.fn(),
+  openNmapDownloads: vi.fn(),
 }));
 
 const detectToolsMock = vi.mocked(detectTools);
+const openNmapDownloadsMock = vi.mocked(openNmapDownloads);
 const clearScanHistoryMock = vi.mocked(clearScanHistory);
 const loadScanHistoryMock = vi.mocked(loadScanHistory);
 
@@ -23,6 +25,8 @@ describe("App", () => {
     clearScanHistoryMock.mockReset();
     clearScanHistoryMock.mockResolvedValue(undefined);
     detectToolsMock.mockReset();
+    openNmapDownloadsMock.mockReset();
+    openNmapDownloadsMock.mockResolvedValue(undefined);
     loadScanHistoryMock.mockReset();
     loadScanHistoryMock.mockResolvedValue([]);
     window.localStorage?.removeItem("maple.themeMode");
@@ -82,6 +86,26 @@ describe("App", () => {
 
     expect(await screen.findByText("Nmap version 7.95")).toBeInTheDocument();
     expect(detectToolsMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("shows download open failures in the tool detection panel", async () => {
+    detectToolsMock.mockResolvedValue([
+      {
+        name: "nmap",
+        displayName: "Nmap",
+        required: true,
+        installed: false,
+      },
+    ]);
+    openNmapDownloadsMock.mockRejectedValue(new Error("Maple desktop bridge is unavailable."));
+
+    render(<App />);
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Open official Nmap downloads" }),
+    );
+
+    expect(await screen.findByText("Maple desktop bridge is unavailable.")).toBeInTheDocument();
   });
 
   it("confirms before clearing scan history", async () => {

@@ -39,3 +39,9 @@ func TestHistoryEmitterStoresXMLParseErrors(t *testing.T) {
 		t.Fatalf("record error = %q", records[0].Error)
 	}
 }
+
+func TestNmapDownloadsURLUsesOfficialProjectPage(t *testing.T) {
+	if nmapDownloadsURL != "https://nmap.org/download.html" {
+		t.Fatalf("nmapDownloadsURL = %q", nmapDownloadsURL)
+	}
+}

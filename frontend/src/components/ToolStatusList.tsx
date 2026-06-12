@@ -1,10 +1,12 @@
 import { getToolStatus, type ToolDetection } from "../core/tool-detection";
+import { openNmapDownloads } from "../services/tool-service";
 
 interface ToolStatusListProps {
   tools: readonly ToolDetection[];
+  onError?: (message: string) => void;
 }
 
-export function ToolStatusList({ tools }: ToolStatusListProps): React.JSX.Element {
+export function ToolStatusList({ tools, onError }: ToolStatusListProps): React.JSX.Element {
   return (
     <div className="tool-list" data-testid="tool-status-list">
       {tools.map((tool) => {
@@ -19,6 +21,15 @@ export function ToolStatusList({ tools }: ToolStatusListProps): React.JSX.Elemen
               tool.installHint === "" ? null : (
                 <p className="tool-hint">{tool.installHint}</p>
               )}
+              {shouldShowDownloadButton(tool) ? (
+                <button
+                  className="link-button"
+                  type="button"
+                  onClick={() => void openDownloads(onError)}
+                >
+                  Open official Nmap downloads
+                </button>
+              ) : null}
             </div>
             <span>{labelForStatus(status)}</span>
           </article>
@@ -26,6 +37,19 @@ export function ToolStatusList({ tools }: ToolStatusListProps): React.JSX.Elemen
       })}
     </div>
   );
+}
+
+async function openDownloads(onError: ToolStatusListProps["onError"]): Promise<void> {
+  try {
+    await openNmapDownloads();
+  } catch (caught: unknown) {
+    const message = caught instanceof Error ? caught.message : "Unable to open Nmap downloads";
+    onError?.(message);
+  }
+}
+
+function shouldShowDownloadButton(tool: ToolDetection): boolean {
+  return tool.name === "nmap" && !tool.installed;
 }
 
 function labelForStatus(status: ReturnType<typeof getToolStatus>): string {

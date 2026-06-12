@@ -27,6 +27,7 @@ export default function App(): React.JSX.Element {
   const [state, setState] = useState<LoadState>({ status: "loading" });
   const [historyState, setHistoryState] = useState<HistoryState>({ status: "loading" });
   const [confirmClearHistory, setConfirmClearHistory] = useState(false);
+  const [toolActionError, setToolActionError] = useState("");
   const [themeMode, setThemeMode] = useThemeMode();
 
   useEffect(() => {
@@ -118,7 +119,10 @@ export default function App(): React.JSX.Element {
         </div>
         {state.status === "loading" ? <p className="muted">Detecting local tools...</p> : null}
         {state.status === "failed" ? <p className="error">{state.message}</p> : null}
-        {state.status === "ready" ? <ToolStatusList tools={state.tools} /> : null}
+        {toolActionError === "" ? null : <p className="error">{toolActionError}</p>}
+        {state.status === "ready" ? (
+          <ToolStatusList tools={state.tools} onError={setToolActionError} />
+        ) : null}
       </section>
     </main>
   );
