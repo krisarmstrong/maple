@@ -23,11 +23,14 @@ type HistoryState =
   | { status: "ready"; records: ScanHistoryRecord[] }
   | { status: "failed"; message: string };
 
+type AppView = "scan" | "history" | "environment";
+
 export default function App(): React.JSX.Element {
   const [state, setState] = useState<LoadState>({ status: "loading" });
   const [historyState, setHistoryState] = useState<HistoryState>({ status: "loading" });
   const [confirmClearHistory, setConfirmClearHistory] = useState(false);
   const [toolActionError, setToolActionError] = useState("");
+  const [activeView, setActiveView] = useState<AppView>("scan");
   const [themeMode, setThemeMode] = useThemeMode();
 
   useEffect(() => {
@@ -49,82 +52,129 @@ export default function App(): React.JSX.Element {
 
   return (
     <main className="app-shell">
-      <section className="overview">
+      <aside className="app-sidebar">
         <div>
           <p className="eyebrow">Maple</p>
           <h1>Modern Nmap workbench</h1>
           <p className="summary">
-            Build scan profiles, inspect live results, keep local history, and export clean reports
-            without bundling Nmap.
+            Build scans, inspect results, and export reports with locally installed Nmap.
           </p>
         </div>
-        <div className="status-panel">
-          <span>Environment</span>
-          <strong>{statusText(state)}</strong>
+        <nav className="app-nav" aria-label="Maple sections">
+          <NavButton activeView={activeView} id="scan" label="Scan" onSelect={setActiveView} />
+          <NavButton
+            activeView={activeView}
+            id="history"
+            label="History"
+            meta={historyMeta(historyState)}
+            onSelect={setActiveView}
+          />
+          <NavButton
+            activeView={activeView}
+            id="environment"
+            label="Environment"
+            meta={statusText(state)}
+            onSelect={setActiveView}
+          />
+        </nav>
+        <div className="sidebar-footer">
+          <span>Theme</span>
           <ThemeModePicker mode={themeMode} onChange={setThemeMode} />
         </div>
-      </section>
+      </aside>
 
-      <ScanWorkspace
-        nmapPath={nmapPathFor(state)}
-        onScanFinished={() => refreshHistory(setHistoryState)}
-      />
-
-      <section className="workspace history-workspace">
-        <div className="workspace-header">
-          <div>
-            <h2>Recent Scans</h2>
-            <p>Completed scans are stored locally on this machine.</p>
-          </div>
-          <div className="header-actions">
-            <button type="button" onClick={() => refreshHistory(setHistoryState)}>
-              Refresh
-            </button>
-            {historyState.status === "ready" && historyState.records.length > 0 ? (
-              <button
-                type="button"
-                onClick={() =>
-                  clearHistory(confirmClearHistory, setConfirmClearHistory, setHistoryState)
-                }
-              >
-                {confirmClearHistory ? "Confirm Clear" : "Clear History"}
-              </button>
-            ) : null}
-          </div>
-        </div>
-        {historyState.status === "loading" ? (
-          <p className="muted">Loading scan history...</p>
-        ) : null}
-        {historyState.status === "failed" ? <p className="error">{historyState.message}</p> : null}
-        {historyState.status === "ready" ? (
-          <ScanHistoryList
-            records={historyState.records}
-            onChanged={() => {
-              setConfirmClearHistory(false);
-              refreshHistory(setHistoryState);
-            }}
+      <div className="app-content">
+        {activeView === "scan" ? (
+          <ScanWorkspace
+            nmapPath={nmapPathFor(state)}
+            onScanFinished={() => refreshHistory(setHistoryState)}
           />
         ) : null}
-      </section>
 
-      <section className="workspace">
-        <div className="workspace-header">
-          <div>
-            <h2>Tool Detection</h2>
-            <p>Maple uses locally installed Nmap tools and never shells through user input.</p>
-          </div>
-          <button type="button" onClick={() => refreshTools(setState)}>
-            Refresh
-          </button>
-        </div>
-        {state.status === "loading" ? <p className="muted">Detecting local tools...</p> : null}
-        {state.status === "failed" ? <p className="error">{state.message}</p> : null}
-        {toolActionError === "" ? null : <p className="error">{toolActionError}</p>}
-        {state.status === "ready" ? (
-          <ToolStatusList tools={state.tools} onError={setToolActionError} />
+        {activeView === "history" ? (
+          <section className="workspace history-workspace">
+            <div className="workspace-header">
+              <div>
+                <h2>Recent Scans</h2>
+                <p>Completed scans are stored locally on this machine.</p>
+              </div>
+              <div className="header-actions">
+                <button type="button" onClick={() => refreshHistory(setHistoryState)}>
+                  Refresh
+                </button>
+                {historyState.status === "ready" && historyState.records.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      clearHistory(confirmClearHistory, setConfirmClearHistory, setHistoryState)
+                    }
+                  >
+                    {confirmClearHistory ? "Confirm Clear" : "Clear History"}
+                  </button>
+                ) : null}
+              </div>
+            </div>
+            {historyState.status === "loading" ? (
+              <p className="muted">Loading scan history...</p>
+            ) : null}
+            {historyState.status === "failed" ? (
+              <p className="error">{historyState.message}</p>
+            ) : null}
+            {historyState.status === "ready" ? (
+              <ScanHistoryList
+                records={historyState.records}
+                onChanged={() => {
+                  setConfirmClearHistory(false);
+                  refreshHistory(setHistoryState);
+                }}
+              />
+            ) : null}
+          </section>
         ) : null}
-      </section>
+
+        {activeView === "environment" ? (
+          <section className="workspace">
+            <div className="workspace-header">
+              <div>
+                <h2>Tool Detection</h2>
+                <p>Maple uses locally installed Nmap tools and never shells through user input.</p>
+              </div>
+              <button type="button" onClick={() => refreshTools(setState)}>
+                Refresh
+              </button>
+            </div>
+            {state.status === "loading" ? <p className="muted">Detecting local tools...</p> : null}
+            {state.status === "failed" ? <p className="error">{state.message}</p> : null}
+            {toolActionError === "" ? null : <p className="error">{toolActionError}</p>}
+            {state.status === "ready" ? (
+              <ToolStatusList tools={state.tools} onError={setToolActionError} />
+            ) : null}
+          </section>
+        ) : null}
+      </div>
     </main>
+  );
+}
+
+interface NavButtonProps {
+  activeView: AppView;
+  id: AppView;
+  label: string;
+  meta?: string;
+  onSelect: (view: AppView) => void;
+}
+
+function NavButton({ activeView, id, label, meta, onSelect }: NavButtonProps): React.JSX.Element {
+  return (
+    <button
+      aria-current={activeView === id ? "page" : undefined}
+      className="nav-button"
+      type="button"
+      onClick={() => onSelect(id)}
+    >
+      <span>{label}</span>
+      {meta === undefined || meta === "" ? null : <small>{meta}</small>}
+    </button>
   );
 }
 
@@ -184,4 +234,14 @@ function statusText(state: LoadState): string {
     return "Detection failed";
   }
   return summarizeTools(state.tools);
+}
+
+function historyMeta(state: HistoryState): string {
+  if (state.status === "loading") {
+    return "Loading";
+  }
+  if (state.status === "failed") {
+    return "Unavailable";
+  }
+  return `${state.records.length} ${state.records.length === 1 ? "scan" : "scans"}`;
 }

@@ -46,8 +46,14 @@ describe("App", () => {
     render(<App />);
 
     expect(screen.getByRole("heading", { name: "Modern Nmap workbench" })).toBeInTheDocument();
+    expect(await screen.findByText("1 tools detected")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /Environment/u }));
+
     expect(await screen.findByText("Nmap version 7.95")).toBeInTheDocument();
-    expect(screen.getByText("1 tools detected")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Environment/u })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
   });
 
   it("defaults theme selection to system mode", () => {
@@ -80,9 +86,11 @@ describe("App", () => {
 
     render(<App />);
 
+    expect(await screen.findByText("1 required tool missing")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /Environment/u }));
     expect(await screen.findByText("Required")).toBeInTheDocument();
-    const refreshButtons = screen.getAllByRole("button", { name: "Refresh" });
-    await userEvent.click(refreshButtons.at(-1) as HTMLButtonElement);
+
+    await userEvent.click(screen.getByRole("button", { name: "Refresh" }));
 
     expect(await screen.findByText("Nmap version 7.95")).toBeInTheDocument();
     expect(detectToolsMock).toHaveBeenCalledTimes(2);
@@ -101,6 +109,7 @@ describe("App", () => {
 
     render(<App />);
 
+    await userEvent.click(await screen.findByRole("button", { name: /Environment/u }));
     await userEvent.click(
       await screen.findByRole("button", { name: "Open official Nmap downloads" }),
     );
@@ -132,6 +141,7 @@ describe("App", () => {
 
     render(<App />);
 
+    await userEvent.click(await screen.findByRole("button", { name: /History/u }));
     await screen.findByText("nmap -oX <managed-xml-file> -sn -- scanme.nmap.org");
     await userEvent.click(screen.getByRole("button", { name: "Clear History" }));
 
