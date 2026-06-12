@@ -67,12 +67,16 @@ func buildCommandParts(request scanner.ScanRequest) (Command, scanner.Profile, [
 	if err != nil {
 		return Command{}, scanner.Profile{}, nil, err
 	}
+	scriptArgs, err := scanner.BuildScriptArgs(request.Scripts)
+	if err != nil {
+		return Command{}, scanner.Profile{}, nil, err
+	}
 
 	xmlPath, err := createXMLOutputPath()
 	if err != nil {
 		return Command{}, scanner.Profile{}, nil, err
 	}
-	argv := scanner.BuildArgv(request.NmapPath, xmlPath, profile, targets)
+	argv := scanner.BuildArgv(request.NmapPath, xmlPath, profile, scriptArgs, targets)
 	return Command{Path: argv[0], Args: argv[1:], XMLPath: xmlPath}, profile, targets, nil
 }
 
@@ -96,8 +100,12 @@ func previewCommandParts(request scanner.ScanRequest) (Command, scanner.Profile,
 	if err != nil {
 		return Command{}, scanner.Profile{}, nil, err
 	}
+	scriptArgs, err := scanner.BuildScriptArgs(request.Scripts)
+	if err != nil {
+		return Command{}, scanner.Profile{}, nil, err
+	}
 
-	argv := scanner.BuildArgv(request.NmapPath, previewXMLOutputPath, profile, targets)
+	argv := scanner.BuildArgv(request.NmapPath, previewXMLOutputPath, profile, scriptArgs, targets)
 	return Command{Path: argv[0], Args: argv[1:], XMLPath: previewXMLOutputPath}, profile, targets, nil
 }
 

@@ -25,4 +25,20 @@ describe("scanProfiles", () => {
       "scanme.nmap.org",
     ]);
   });
+
+  it("builds preview argv with NSE scripts before targets", () => {
+    expect(buildPreviewArgv("service", ["scanme.nmap.org"], ["safe", "/tmp/custom.nse"])).toEqual([
+      "nmap",
+      "-oX",
+      "<managed-xml-file>",
+      "-sV",
+      "--version-light",
+      "--script",
+      "safe",
+      "--script",
+      "/tmp/custom.nse",
+      "--",
+      "scanme.nmap.org",
+    ]);
+  });
 });

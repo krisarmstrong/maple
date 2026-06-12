@@ -394,6 +394,50 @@ textarea {
   padding: 6px 8px;
 }
 
+.advanced-options {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-top: 14px;
+  padding: 12px;
+}
+
+.advanced-options summary {
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.script-category-picker {
+  border: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 0;
+}
+
+.script-category-picker legend,
+.custom-script-paths span {
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.script-category-picker label {
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  display: flex;
+  gap: 6px;
+  padding: 6px 8px;
+}
+
+.custom-script-paths {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .command-preview {
   background: var(--code-bg);
   border-radius: 6px;

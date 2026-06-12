@@ -68,6 +68,48 @@ describe("ScanWorkspace", () => {
     ).toBeInTheDocument();
   });
 
+  it("adds NSE categories and custom scripts to preview requests", async () => {
+    previewScanCommandMock.mockResolvedValue([
+      "nmap",
+      "-oX",
+      "<managed-xml-file>",
+      "-sV",
+      "--version-light",
+      "--script",
+      "safe",
+      "--script",
+      "/Users/krisarmstrong/Scripts/custom-check.nse",
+      "--",
+      "scanme.nmap.org",
+    ]);
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.selectOptions(screen.getByLabelText("Profile"), "service");
+    await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
+    await userEvent.click(screen.getByText("NSE scripts"));
+    await userEvent.click(screen.getByRole("checkbox", { name: "safe" }));
+    await userEvent.type(
+      screen.getByLabelText("Custom .nse script files"),
+      "/Users/krisarmstrong/Scripts/custom-check.nse",
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Preview" }));
+
+    expect(previewScanCommandMock).toHaveBeenCalledWith({
+      profileId: "service",
+      targets: "scanme.nmap.org",
+      nmapPath: "/usr/local/bin/nmap",
+      scripts: [
+        { kind: "category", value: "safe" },
+        { kind: "path", value: "/Users/krisarmstrong/Scripts/custom-check.nse" },
+      ],
+    });
+    expect(
+      await screen.findByText(
+        "nmap -oX <managed-xml-file> -sV --version-light --script safe --script /Users/krisarmstrong/Scripts/custom-check.nse -- scanme.nmap.org",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("clears stale command previews when targets change", async () => {
     previewScanCommandMock.mockResolvedValue([
       "nmap",
@@ -106,6 +148,31 @@ describe("ScanWorkspace", () => {
     await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
     await userEvent.click(screen.getByRole("button", { name: "Preview" }));
     await userEvent.selectOptions(screen.getByLabelText("Profile"), "ping");
+
+    expect(
+      screen.queryByText("nmap -oX <managed-xml-file> -sn -- scanme.nmap.org"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("clears stale command previews when NSE scripts change", async () => {
+    previewScanCommandMock.mockResolvedValue([
+      "nmap",
+      "-oX",
+      "<managed-xml-file>",
+      "-sn",
+      "--",
+      "scanme.nmap.org",
+    ]);
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
+    await userEvent.click(screen.getByRole("button", { name: "Preview" }));
+    expect(
+      await screen.findByText("nmap -oX <managed-xml-file> -sn -- scanme.nmap.org"),
+    ).toBeInTheDocument();
+
+    await userEvent.click(screen.getByText("NSE scripts"));
+    await userEvent.click(screen.getByRole("checkbox", { name: "safe" }));
 
     expect(
       screen.queryByText("nmap -oX <managed-xml-file> -sn -- scanme.nmap.org"),

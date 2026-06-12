@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { buildScanScripts, type NSECategory, nseCategories } from "../core/nse-scripts";
 import { findProfile, type ScanProfileID, scanProfiles } from "../core/scan-profiles";
 import { scanScope } from "../core/scan-scope";
 import {
@@ -30,6 +31,8 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
   const [targets, setTargets] = useState("");
   const [targetModeId, setTargetModeId] = useState<TargetModeID>("single");
   const [profileId, setProfileId] = useState<ScanProfileID>("connect");
+  const [scriptCategories, setScriptCategories] = useState<NSECategory[]>([]);
+  const [customScriptPaths, setCustomScriptPaths] = useState("");
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<string[]>([]);
   const [log, setLog] = useState<LogEntry[]>([]);
@@ -38,6 +41,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
   const targetSummary = summarizeTargets(targets);
   const selectedProfile = findProfile(profileId);
   const scope = scanScope(profileId, targets);
+  const scripts = buildScanScripts(scriptCategories, customScriptPaths);
 
   useEffect(
     () =>
@@ -48,7 +52,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
   );
 
   async function previewCommand(): Promise<void> {
-    const request = makeRequest(profileId, targetModeId, targets, nmapPath);
+    const request = makeRequest(profileId, targetModeId, targets, nmapPath, scripts);
     if (request === undefined) {
       setError(messageForInvalidTargets(targetModeId, targets));
       return;
@@ -58,7 +62,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
   }
 
   async function runScan(): Promise<void> {
-    const request = makeRequest(profileId, targetModeId, targets, nmapPath);
+    const request = makeRequest(profileId, targetModeId, targets, nmapPath, scripts);
     if (request === undefined) {
       setError(messageForInvalidTargets(targetModeId, targets));
       return;
@@ -73,6 +77,15 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
     setTargetModeId(modeId);
     setPreview([]);
     setError("");
+  }
+
+  function updateScriptCategory(category: NSECategory, checked: boolean): void {
+    setScriptCategories((current) =>
+      checked
+        ? [...current, category].sort()
+        : current.filter((candidate) => candidate !== category),
+    );
+    setPreview([]);
   }
 
   return (
@@ -132,6 +145,38 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
         </div>
       </div>
       <ProfileSummary profile={selectedProfile} />
+      <details className="advanced-options">
+        <summary>NSE scripts</summary>
+        <fieldset className="script-category-picker">
+          <legend>Categories</legend>
+          {nseCategories.map((category) => (
+            <label key={category}>
+              <input
+                checked={scriptCategories.includes(category)}
+                onChange={(event) => updateScriptCategory(category, event.target.checked)}
+                type="checkbox"
+              />
+              <span>{category}</span>
+            </label>
+          ))}
+        </fieldset>
+        <label className="custom-script-paths">
+          <span>Custom .nse script files</span>
+          <textarea
+            onChange={(event) => {
+              setCustomScriptPaths(event.target.value);
+              setPreview([]);
+            }}
+            placeholder="/Users/you/nmap-scripts/custom-check.nse"
+            rows={3}
+            value={customScriptPaths}
+          />
+        </label>
+        <p className="target-mode-help">
+          Add one absolute custom script path per line. Maple passes scripts as argv values and Nmap
+          runs them locally.
+        </p>
+      </details>
 
       {error === "" ? null : <p className="error">{error}</p>}
       {status === "idle" ? null : <p className="scan-status">{scanStatusLabel(status)}</p>}

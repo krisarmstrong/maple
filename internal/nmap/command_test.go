@@ -24,10 +24,46 @@ func TestBuildPreviewConstructsArgv(t *testing.T) {
 	}
 }
 
+func TestBuildPreviewIncludesStructuredScriptArgsBeforeTargets(t *testing.T) {
+	preview, err := BuildPreview("/usr/local/bin/nmap", scanner.ScanRequest{
+		ProfileID: "service",
+		Targets:   "scanme.nmap.org",
+		Scripts: []scanner.Script{
+			{Kind: scanner.ScriptCategory, Value: "safe"},
+			{Kind: scanner.ScriptPath, Value: "/Users/krisarmstrong/Scripts/custom-check.nse"},
+		},
+	})
+	if err != nil {
+		t.Fatalf("BuildPreview returned error: %v", err)
+	}
+
+	wantArgs := []string{
+		"-oX", "<managed-xml-file>",
+		"-sV", "--version-light",
+		"--script", "safe",
+		"--script", "/Users/krisarmstrong/Scripts/custom-check.nse",
+		"--", "scanme.nmap.org",
+	}
+	if !sameStrings(preview.Args, wantArgs) {
+		t.Fatalf("args = %#v, want %#v", preview.Args, wantArgs)
+	}
+}
+
 func TestBuildPreviewRejectsUnknownProfile(t *testing.T) {
 	_, err := BuildPreview("nmap", scanner.ScanRequest{
 		ProfileID: "unsafe",
 		Targets:   "scanme.nmap.org",
+	})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestBuildPreviewRejectsInvalidScripts(t *testing.T) {
+	_, err := BuildPreview("nmap", scanner.ScanRequest{
+		ProfileID: scanner.ProfilePing,
+		Targets:   "scanme.nmap.org",
+		Scripts:   []scanner.Script{{Kind: scanner.ScriptCategory, Value: "safe,default"}},
 	})
 	if err == nil {
 		t.Fatal("expected error")

@@ -2,7 +2,7 @@ import type { Dispatch, SetStateAction } from "react";
 import { scanEventIsFinished, scanEventLogLine, scanEventRunningState } from "../core/scan-events";
 import { isScanProfileID, type ScanProfileID } from "../core/scan-profiles";
 import { type TargetModeID, validateTargetsForMode } from "../core/target-modes";
-import type { ScanEvent } from "../services/scan-service";
+import type { ScanEvent, ScanScript } from "../services/scan-service";
 
 export interface LogEntry {
   id: number;
@@ -23,11 +23,12 @@ export function makeRequest(
   targetModeId: TargetModeID,
   targets: string,
   nmapPath?: string,
+  scripts: readonly ScanScript[] = [],
 ) {
   if (nmapPath === undefined || !validateTargetsForMode(targetModeId, targets).ok) {
     return undefined;
   }
-  return { profileId, targets, nmapPath };
+  return { profileId, targets, nmapPath, scripts: [...scripts] };
 }
 
 export function updateProfile(
