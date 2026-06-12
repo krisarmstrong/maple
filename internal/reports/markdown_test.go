@@ -15,7 +15,7 @@ func TestMarkdownIncludesCommandAndSummary(t *testing.T) {
 		FinishedAt: time.Date(2026, 6, 12, 10, 0, 5, 0, time.UTC),
 		Preview: scanner.CommandPreview{
 			Executable: "nmap",
-			Args:       []string{"-oX", "-", "-sn", "--", "192.0.2.0/30"},
+			Args:       []string{"-oX", "<managed-xml-file>", "-sn", "--", "192.0.2.0/30"},
 			Targets:    []scanner.Target{{Value: "192.0.2.0/30", Kind: scanner.TargetCIDR}},
 			Profile:    scanner.Profile{Name: "Ping Sweep"},
 		},
@@ -51,7 +51,7 @@ func TestMarkdownIncludesCommandAndSummary(t *testing.T) {
 		"# Maple Scan Report",
 		"- Run ID: scan-1",
 		"- Profile: Ping Sweep",
-		"nmap -oX - -sn -- 192.0.2.0/30",
+		"nmap -oX <managed-xml-file> -sn -- 192.0.2.0/30",
 		"- Hosts found: 2",
 		"- Hosts up: 1",
 		"- Hosts down: 1",

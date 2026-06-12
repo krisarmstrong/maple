@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"os"
 	"os/exec"
 	"sync"
 
@@ -17,6 +18,11 @@ func (ExecExecutor) Execute(
 	command Command,
 	emit func(scanner.ScanOutput),
 ) (Result, error) {
+	if command.XMLPath != "" {
+		defer func() {
+			_ = os.Remove(command.XMLPath)
+		}()
+	}
 	cmd := exec.CommandContext(ctx, command.Path, command.Args...)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -30,16 +36,26 @@ func (ExecExecutor) Execute(
 		return Result{}, err
 	}
 
-	var xml bytes.Buffer
 	var diagnostics bytes.Buffer
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(2)
-	go copyStream(stdout, scanner.StreamStdout, emit, &xml, &waitGroup)
+	go copyStream(stdout, scanner.StreamStdout, emit, &diagnostics, &waitGroup)
 	go copyStream(stderr, scanner.StreamStderr, emit, &diagnostics, &waitGroup)
 
-	err = cmd.Wait()
+	processErr := cmd.Wait()
 	waitGroup.Wait()
-	return Result{ExitCode: exitCode(err), XML: xml.String(), Diagnostics: diagnostics.String()}, err
+	xmlContent, readErr := readXMLFile(command.XMLPath)
+	if readErr != nil && processErr == nil {
+		return Result{
+			ExitCode:    exitCode(processErr),
+			Diagnostics: diagnostics.String(),
+		}, readErr
+	}
+	return Result{
+		ExitCode:    exitCode(processErr),
+		XML:         xmlContent,
+		Diagnostics: diagnostics.String(),
+	}, processErr
 }
 
 func copyStream(
@@ -68,4 +84,15 @@ func writeOutput(stream string, chunk []byte, emit func(scanner.ScanOutput), cap
 		_, _ = capture.Write(chunk)
 	}
 	emit(scanner.ScanOutput{Stream: stream, Text: text})
+}
+
+func readXMLFile(path string) (string, error) {
+	if path == "" {
+		return "", nil
+	}
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	return string(content), nil
 }

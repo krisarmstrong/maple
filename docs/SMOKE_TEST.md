@@ -22,6 +22,7 @@ Recommended scan:
 1. Enter `127.0.0.1` as a single target.
 2. Click `Preview`.
 3. Confirm the command is argv-shaped and includes `--` before the target.
+   The XML output path should appear as Maple's managed XML placeholder, not as `-oX -`.
 4. Click `Run Scan`.
 5. Confirm the live log does not show raw XML.
 6. Confirm a history row appears with `exit 0` for a successful Nmap run.

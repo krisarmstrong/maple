@@ -33,7 +33,9 @@ describe("ScanHistoryList", () => {
     render(<ScanHistoryList records={[scanRecord("scan-1")]} />);
 
     expect(screen.getByText("TCP Connect")).toBeInTheDocument();
-    expect(screen.getByText("nmap -oX - -sn -- scanme.nmap.org")).toBeInTheDocument();
+    expect(
+      screen.getByText("nmap -oX <managed-xml-file> -sn -- scanme.nmap.org"),
+    ).toBeInTheDocument();
     expect(screen.getByText("1 target, scanme.nmap.org, 5.00s, exit 0")).toBeInTheDocument();
   });
 
@@ -145,7 +147,7 @@ function scanRecord(runId: string, overrides: Partial<ScanHistoryRecord> = {}): 
     runId,
     startedAt: "2026-06-12T10:00:00Z",
     finishedAt: "2026-06-12T10:00:05Z",
-    command: ["nmap", "-oX", "-", "-sn", "--", "scanme.nmap.org"],
+    command: ["nmap", "-oX", "<managed-xml-file>", "-sn", "--", "scanme.nmap.org"],
     profileName: "TCP Connect",
     elapsedTime: "5.00",
     targets: [{ value: "scanme.nmap.org", kind: "hostname" }],

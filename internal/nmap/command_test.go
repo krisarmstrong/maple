@@ -15,7 +15,7 @@ func TestBuildPreviewConstructsArgv(t *testing.T) {
 		t.Fatalf("BuildPreview returned error: %v", err)
 	}
 
-	wantArgs := []string{"-oX", "-", "-sn", "--", "scanme.nmap.org", "192.168.1.1"}
+	wantArgs := []string{"-oX", "<managed-xml-file>", "-sn", "--", "scanme.nmap.org", "192.168.1.1"}
 	if !sameStrings(preview.Args, wantArgs) {
 		t.Fatalf("args = %#v, want %#v", preview.Args, wantArgs)
 	}

@@ -69,7 +69,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
 
   function updateTargetMode(modeId: TargetModeID): void {
     setTargetModeId(modeId);
-    updateTargets(targetModePlaceholder(modeId), setTargets, setPreview);
+    setPreview([]);
     setError("");
   }
 
@@ -124,6 +124,9 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
             />
           </label>
           <p className="target-mode-help">{targetModeHelp(targetModeId)}</p>
+          <p className="target-mode-example">
+            Example: <code>{targetModePlaceholder(targetModeId)}</code>
+          </p>
         </div>
       </div>
       <ProfileSummary profile={selectedProfile} />

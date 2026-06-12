@@ -4,7 +4,7 @@ import "github.com/krisarmstrong/maple/internal/scanner"
 
 func BuildPreview(nmapPath string, request scanner.ScanRequest) (scanner.CommandPreview, error) {
 	request.NmapPath = nmapPath
-	command, profile, targets, err := buildCommandParts(request)
+	command, profile, targets, err := previewCommandParts(request)
 	if err != nil {
 		return scanner.CommandPreview{}, err
 	}

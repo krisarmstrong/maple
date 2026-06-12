@@ -92,7 +92,7 @@ describe("App", () => {
           runId: "scan-1",
           startedAt: "2026-06-12T10:00:00Z",
           finishedAt: "2026-06-12T10:00:05Z",
-          command: ["nmap", "-oX", "-", "-sn", "--", "scanme.nmap.org"],
+          command: ["nmap", "-oX", "<managed-xml-file>", "-sn", "--", "scanme.nmap.org"],
           profileName: "TCP Connect",
           targets: [{ value: "scanme.nmap.org", kind: "hostname" }],
           hosts: [],
@@ -108,7 +108,7 @@ describe("App", () => {
 
     render(<App />);
 
-    await screen.findByText("nmap -oX - -sn -- scanme.nmap.org");
+    await screen.findByText("nmap -oX <managed-xml-file> -sn -- scanme.nmap.org");
     await userEvent.click(screen.getByRole("button", { name: "Clear History" }));
 
     expect(clearScanHistoryMock).not.toHaveBeenCalled();

@@ -86,10 +86,10 @@ func FindProfile(id ProfileID) (Profile, error) {
 	return Profile{}, ErrUnknownProfile
 }
 
-func BuildArgv(nmapPath string, profile Profile, targets []Target) []string {
+func BuildArgv(nmapPath string, xmlOutputPath string, profile Profile, targets []Target) []string {
 	argv := make([]string, 0, 4+len(profile.Args)+len(targets))
 	argv = append(argv, nmapPath)
-	argv = append(argv, "-oX", "-")
+	argv = append(argv, "-oX", xmlOutputPath)
 	argv = append(argv, profile.Args...)
 	argv = append(argv, "--")
 	for _, target := range targets {

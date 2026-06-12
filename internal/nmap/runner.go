@@ -3,6 +3,7 @@ package nmap
 import (
 	"context"
 	"errors"
+	"os"
 	"os/exec"
 
 	"github.com/krisarmstrong/maple/internal/scanner"
@@ -10,9 +11,12 @@ import (
 
 var ErrMissingNmapPath = errors.New("nmap path is required")
 
+const previewXMLOutputPath = "<managed-xml-file>"
+
 type Command struct {
-	Path string
-	Args []string
+	Path    string
+	Args    []string
+	XMLPath string
 }
 
 type Result struct {
@@ -64,8 +68,12 @@ func buildCommandParts(request scanner.ScanRequest) (Command, scanner.Profile, [
 		return Command{}, scanner.Profile{}, nil, err
 	}
 
-	argv := scanner.BuildArgv(request.NmapPath, profile, targets)
-	return Command{Path: argv[0], Args: argv[1:]}, profile, targets, nil
+	xmlPath, err := createXMLOutputPath()
+	if err != nil {
+		return Command{}, scanner.Profile{}, nil, err
+	}
+	argv := scanner.BuildArgv(request.NmapPath, xmlPath, profile, targets)
+	return Command{Path: argv[0], Args: argv[1:], XMLPath: xmlPath}, profile, targets, nil
 }
 
 func (r Runner) executorOrDefault() Executor {
@@ -73,6 +81,37 @@ func (r Runner) executorOrDefault() Executor {
 		return r.executor
 	}
 	return ExecExecutor{}
+}
+
+func previewCommandParts(request scanner.ScanRequest) (Command, scanner.Profile, []scanner.Target, error) {
+	if request.NmapPath == "" {
+		return Command{}, scanner.Profile{}, nil, ErrMissingNmapPath
+	}
+
+	profile, err := scanner.FindProfile(request.ProfileID)
+	if err != nil {
+		return Command{}, scanner.Profile{}, nil, err
+	}
+	targets, err := scanner.ParseTargets(request.Targets)
+	if err != nil {
+		return Command{}, scanner.Profile{}, nil, err
+	}
+
+	argv := scanner.BuildArgv(request.NmapPath, previewXMLOutputPath, profile, targets)
+	return Command{Path: argv[0], Args: argv[1:], XMLPath: previewXMLOutputPath}, profile, targets, nil
+}
+
+func createXMLOutputPath() (string, error) {
+	file, err := os.CreateTemp("", "maple-nmap-*.xml")
+	if err != nil {
+		return "", err
+	}
+	path := file.Name()
+	if err := file.Close(); err != nil {
+		_ = os.Remove(path)
+		return "", err
+	}
+	return path, nil
 }
 
 func exitCode(err error) int {

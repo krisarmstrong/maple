@@ -50,37 +50,66 @@ describe("ScanWorkspace", () => {
   });
 
   it("previews a safe argv command for valid targets", async () => {
-    previewScanCommandMock.mockResolvedValue(["nmap", "-oX", "-", "-sn", "--", "scanme.nmap.org"]);
+    previewScanCommandMock.mockResolvedValue([
+      "nmap",
+      "-oX",
+      "<managed-xml-file>",
+      "-sn",
+      "--",
+      "scanme.nmap.org",
+    ]);
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
     await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
     await userEvent.click(screen.getByRole("button", { name: "Preview" }));
 
-    expect(await screen.findByText("nmap -oX - -sn -- scanme.nmap.org")).toBeInTheDocument();
+    expect(
+      await screen.findByText("nmap -oX <managed-xml-file> -sn -- scanme.nmap.org"),
+    ).toBeInTheDocument();
   });
 
   it("clears stale command previews when targets change", async () => {
-    previewScanCommandMock.mockResolvedValue(["nmap", "-oX", "-", "-sn", "--", "scanme.nmap.org"]);
+    previewScanCommandMock.mockResolvedValue([
+      "nmap",
+      "-oX",
+      "<managed-xml-file>",
+      "-sn",
+      "--",
+      "scanme.nmap.org",
+    ]);
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
     await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
     await userEvent.click(screen.getByRole("button", { name: "Preview" }));
-    expect(await screen.findByText("nmap -oX - -sn -- scanme.nmap.org")).toBeInTheDocument();
+    expect(
+      await screen.findByText("nmap -oX <managed-xml-file> -sn -- scanme.nmap.org"),
+    ).toBeInTheDocument();
 
     await userEvent.type(screen.getByLabelText("Targets"), ", 127.0.0.1");
 
-    expect(screen.queryByText("nmap -oX - -sn -- scanme.nmap.org")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("nmap -oX <managed-xml-file> -sn -- scanme.nmap.org"),
+    ).not.toBeInTheDocument();
   });
 
   it("clears stale command previews when profile changes", async () => {
-    previewScanCommandMock.mockResolvedValue(["nmap", "-oX", "-", "-sn", "--", "scanme.nmap.org"]);
+    previewScanCommandMock.mockResolvedValue([
+      "nmap",
+      "-oX",
+      "<managed-xml-file>",
+      "-sn",
+      "--",
+      "scanme.nmap.org",
+    ]);
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
     await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
     await userEvent.click(screen.getByRole("button", { name: "Preview" }));
     await userEvent.selectOptions(screen.getByLabelText("Profile"), "ping");
 
-    expect(screen.queryByText("nmap -oX - -sn -- scanme.nmap.org")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("nmap -oX <managed-xml-file> -sn -- scanme.nmap.org"),
+    ).not.toBeInTheDocument();
   });
 
   it("shows live run status transitions", () => {
@@ -115,15 +144,17 @@ describe("ScanWorkspace", () => {
     ).toBeInTheDocument();
   });
 
-  it("switches target intent and fills the matching example", async () => {
+  it("switches target intent without writing an example into the scan field", async () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
     await userEvent.click(screen.getByRole("radio", { name: "IPv4 range" }));
 
     expect(screen.getByText("Scan an inclusive IPv4 last-octet range.")).toBeInTheDocument();
     expect(screen.getByLabelText("Targets")).toHaveAttribute("placeholder", "192.168.1.1-20");
-    expect(screen.getByLabelText("Targets")).toHaveValue("192.168.1.1-20");
-    expect(screen.getByText("1 IPv4 range")).toBeInTheDocument();
+    expect(screen.getByText("Example:")).toBeInTheDocument();
+    expect(screen.getByText("192.168.1.1-20")).toBeInTheDocument();
+    expect(screen.getByLabelText("Targets")).toHaveValue("");
+    expect(screen.queryByText("1 IPv4 range")).not.toBeInTheDocument();
   });
 
   it("validates targets against the selected target intent", async () => {
@@ -140,13 +171,14 @@ describe("ScanWorkspace", () => {
     ).toBeInTheDocument();
   });
 
-  it("fills target examples for common target shapes", async () => {
+  it("preserves typed targets when changing target intent", async () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
+    await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
     await userEvent.click(screen.getByRole("radio", { name: "IPv4 range" }));
 
-    expect(screen.getByLabelText("Targets")).toHaveValue("192.168.1.1-20");
-    expect(screen.getByText("1 IPv4 range")).toBeInTheDocument();
+    expect(screen.getByLabelText("Targets")).toHaveValue("scanme.nmap.org");
+    expect(screen.getByText("1 hostname")).toBeInTheDocument();
   });
 
   it("blocks scan start for invalid targets", async () => {
