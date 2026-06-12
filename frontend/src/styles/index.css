@@ -1,0 +1,77 @@
+@import "./theme.css";
+
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--bg);
+  margin: var(--space-0);
+  min-width: var(--layout-mobile-min-width);
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: var(--space-0);
+}
+
+h1 {
+  font-size: var(--font-size-brand);
+  line-height: var(--line-height-tight);
+  margin-bottom: var(--space-9);
+}
+
+h2 {
+  font-size: var(--font-size-title);
+  margin-bottom: var(--space-5);
+}
+
+h3 {
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--space-4);
+}
+
+p {
+  line-height: var(--line-height-body);
+}
+
+button {
+  background: var(--panel);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font: inherit;
+  font-weight: var(--font-weight-control);
+  min-height: var(--size-control-min);
+  padding: var(--space-0) var(--space-11);
+}
+
+button:hover {
+  border-color: var(--muted);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: var(--opacity-disabled);
+}
+
+code,
+pre {
+  font-family: var(--font-mono);
+}
+
+@media (max-width: 760px) {
+  h1 {
+    font-size: var(--font-size-brand-compact);
+  }
+}
