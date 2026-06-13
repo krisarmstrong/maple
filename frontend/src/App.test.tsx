@@ -200,6 +200,21 @@ describe("App", () => {
     expect(openNmapNSEDocsMock).toHaveBeenCalledTimes(1);
   });
 
+  it("shows Maple-owned workflow and platform help", async () => {
+    detectToolsMock.mockResolvedValue([]);
+
+    render(<App />);
+
+    await userEvent.click(screen.getByRole("button", { name: /Help/u }));
+
+    expect(screen.getByText("Workflow Tips")).toBeInTheDocument();
+    expect(screen.getByText("Results Guide")).toBeInTheDocument();
+    expect(screen.getByText("Platform Notes")).toBeInTheDocument();
+    expect(
+      screen.getByText("Maple does not bundle or redistribute Nmap, Npcap, Ncat, Ndiff, or Nping."),
+    ).toBeInTheDocument();
+  });
+
   it("shows local Nmap help failures in the Help workspace", async () => {
     detectToolsMock.mockResolvedValue([]);
     loadNmapHelpMock.mockRejectedValue(new Error("nmap is not installed or not available on PATH"));

@@ -88,17 +88,17 @@ func (d Detector) DetectOne(ctx context.Context, spec ToolSpec) ToolDetection {
 
 func installHint(name string, goos string) string {
 	if name != "nmap" {
-		return "Optional Nmap companion tool. Install it separately if you need this workflow."
+		return "Optional Nmap companion tool. Install it separately; Maple does not bundle Nmap companion binaries."
 	}
 	switch goos {
 	case "darwin":
-		return "Install Nmap separately with Homebrew or the Nmap Project macOS package."
+		return "Install Nmap separately with Homebrew or the official Nmap Project macOS package; Maple does not download or bundle it."
 	case "windows":
-		return "Install Nmap separately from the Nmap Project. Install Npcap separately if the selected scan mode requires it."
+		return "Install Nmap separately from the Nmap Project. Install Npcap separately for scan modes that require packet capture."
 	case "linux":
-		return "Install Nmap separately with your distribution package manager or the Nmap Project packages."
+		return "Install Nmap separately with apt, dnf, pacman, zypper, or official Nmap Project packages."
 	default:
-		return "Install Nmap separately and make sure it is available on PATH."
+		return "Install Nmap separately and make sure it is available on PATH; Maple does not bundle it."
 	}
 }
 

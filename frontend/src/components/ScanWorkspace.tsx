@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { buildScanScripts, type NSECategory, nseCategories } from "../core/nse-scripts";
+import {
+  buildScanScripts,
+  type NSECategory,
+  nseCategories,
+  popularNSEScripts,
+} from "../core/nse-scripts";
 import {
   defaultScanOptions,
   discoveryModes,
@@ -16,6 +21,7 @@ import {
   verbosityModes,
   versionModes,
 } from "../core/scan-options";
+import { loadSavedPresets, makePresetID, type ScanPreset, savePreset } from "../core/scan-presets";
 import { findProfile, type ScanProfileID, scanProfiles } from "../core/scan-profiles";
 import { scanScope } from "../core/scan-scope";
 import {
@@ -54,8 +60,12 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
   const [scriptCategories, setScriptCategories] = useState<NSECategory[]>([]);
   const [scriptNames, setScriptNames] = useState("");
   const [customScriptPaths, setCustomScriptPaths] = useState("");
+  const [customScriptDirectories, setCustomScriptDirectories] = useState("");
+  const [scriptSearch, setScriptSearch] = useState("");
   const [scriptArgs, setScriptArgs] = useState("");
   const [scriptArgsFile, setScriptArgsFile] = useState("");
+  const [savedPresets, setSavedPresets] = useState<ScanPreset[]>(() => loadPresetsFromStorage());
+  const [presetName, setPresetName] = useState("");
   const [activePanel, setActivePanel] = useState<ScanPanel>("configure");
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<string[]>([]);
@@ -65,7 +75,15 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
   const targetSummary = summarizeTargets(targets);
   const selectedProfile = findProfile(profileId);
   const scope = scanScope(profileId, targets);
-  const scripts = buildScanScripts(scriptCategories, scriptNames, customScriptPaths);
+  const scripts = buildScanScripts(
+    scriptCategories,
+    scriptNames,
+    customScriptPaths,
+    customScriptDirectories,
+  );
+  const visiblePopularScripts = popularNSEScripts.filter((script) =>
+    script.toLowerCase().includes(scriptSearch.trim().toLowerCase()),
+  );
 
   useEffect(
     () =>
@@ -154,6 +172,66 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
     setPreview([]);
   }
 
+  function saveCurrentPreset(): void {
+    const name = presetName.trim();
+    if (name === "") {
+      return;
+    }
+    const preset: ScanPreset = {
+      id: makePresetID(name),
+      name,
+      profileId,
+      options: scanOptions,
+      scriptCategories,
+      scriptNames,
+      customScriptPaths,
+      customScriptDirectories,
+      scriptArgs,
+      scriptArgsFile,
+    };
+    setSavedPresets((current) => {
+      const storage = browserStorage();
+      if (storage === undefined) {
+        return [preset, ...current.filter((candidate) => candidate.id !== preset.id)];
+      }
+      return savePreset(storage, current, preset);
+    });
+    setPresetName("");
+  }
+
+  function applyPreset(presetID: string): void {
+    const preset = savedPresets.find((candidate) => candidate.id === presetID);
+    if (preset === undefined) {
+      return;
+    }
+    setProfileId(preset.profileId);
+    setScanOptions(preset.options);
+    setScriptCategories(preset.scriptCategories);
+    setScriptNames(preset.scriptNames);
+    setCustomScriptPaths(preset.customScriptPaths);
+    setCustomScriptDirectories(preset.customScriptDirectories);
+    setScriptArgs(preset.scriptArgs);
+    setScriptArgsFile(preset.scriptArgsFile);
+    setPreview([]);
+    setError("");
+  }
+
+  function updateNamedScript(name: string, checked: boolean): void {
+    const current = new Set(
+      scriptNames
+        .split(/\n/u)
+        .map((script) => script.trim())
+        .filter(Boolean),
+    );
+    if (checked) {
+      current.add(name);
+    } else {
+      current.delete(name);
+    }
+    setScriptNames([...current].sort().join("\n"));
+    setPreview([]);
+  }
+
   return (
     <section className="workspace scan-workspace">
       <div className="workspace-header">
@@ -213,6 +291,35 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
 
       {activePanel === "configure" ? (
         <div className="scan-panel">
+          <div className="preset-bar">
+            <label>
+              <span>Saved preset</span>
+              <select
+                aria-label="Saved preset"
+                onChange={(event) => applyPreset(event.target.value)}
+                value=""
+              >
+                <option value="">Choose preset</option>
+                {savedPresets.map((preset) => (
+                  <option key={preset.id} value={preset.id}>
+                    {preset.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>Preset name</span>
+              <input
+                onChange={(event) => setPresetName(event.target.value)}
+                placeholder="Web TLS check"
+                type="text"
+                value={presetName}
+              />
+            </label>
+            <button disabled={presetName.trim() === ""} onClick={saveCurrentPreset} type="button">
+              Save Preset
+            </button>
+          </div>
           <div className="scan-grid">
             <label>
               <span>Profile</span>
@@ -278,6 +385,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
             </p>
           </div>
           <div className="options-grid">
+            <h4 className="option-section-heading">Scan shape</h4>
             <label>
               <span>Scan technique</span>
               <select
@@ -396,6 +504,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                 ))}
               </select>
             </label>
+            <h4 className="option-section-heading">Ports</h4>
             <label>
               <span>Ports</span>
               <input
@@ -430,6 +539,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                 value={scanOptions.topPorts === 0 ? "" : scanOptions.topPorts}
               />
             </label>
+            <h4 className="option-section-heading">Performance</h4>
             <label>
               <span>Minimum packet rate</span>
               <input
@@ -659,6 +769,28 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
             ))}
           </fieldset>
           <label className="custom-script-paths">
+            <span>Find built-in scripts</span>
+            <input
+              onChange={(event) => setScriptSearch(event.target.value)}
+              placeholder="http, ssl, smb"
+              type="search"
+              value={scriptSearch}
+            />
+          </label>
+          <fieldset className="script-category-picker">
+            <legend>Popular scripts</legend>
+            {visiblePopularScripts.map((script) => (
+              <label key={script}>
+                <input
+                  checked={scriptNames.split(/\n/u).includes(script)}
+                  onChange={(event) => updateNamedScript(script, event.target.checked)}
+                  type="checkbox"
+                />
+                <span>{script}</span>
+              </label>
+            ))}
+          </fieldset>
+          <label className="custom-script-paths">
             <span>Built-in script names</span>
             <textarea
               onChange={(event) => {
@@ -680,6 +812,18 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
               placeholder="/Users/you/nmap-scripts/custom-check.nse"
               rows={3}
               value={customScriptPaths}
+            />
+          </label>
+          <label className="custom-script-paths">
+            <span>Custom script directories</span>
+            <textarea
+              onChange={(event) => {
+                setCustomScriptDirectories(event.target.value);
+                setPreview([]);
+              }}
+              placeholder="/Users/you/nmap-scripts"
+              rows={3}
+              value={customScriptDirectories}
             />
           </label>
           <label className="custom-script-paths">
@@ -730,6 +874,26 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
       ) : null}
     </section>
   );
+}
+
+function loadPresetsFromStorage(): ScanPreset[] {
+  const storage = browserStorage();
+  if (storage === undefined) {
+    return [];
+  }
+  try {
+    return loadSavedPresets(storage);
+  } catch {
+    return [];
+  }
+}
+
+function browserStorage(): Storage | undefined {
+  try {
+    return window.localStorage;
+  } catch {
+    return undefined;
+  }
 }
 
 function errorMessage(caught: unknown): string {

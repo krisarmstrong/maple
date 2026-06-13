@@ -71,6 +71,16 @@ describe("ScanWorkspace", () => {
     expect(screen.getByText("-sT -Pn -T3 --top-ports 100")).toBeInTheDocument();
   });
 
+  it("saves the current scan configuration as a preset", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.selectOptions(screen.getByLabelText("Profile"), "service");
+    await userEvent.type(screen.getByLabelText("Preset name"), "Web TLS check");
+    await userEvent.click(screen.getByRole("button", { name: "Save Preset" }));
+
+    expect(screen.getByRole("option", { name: "Web TLS check" })).toBeInTheDocument();
+  });
+
   it("previews a safe argv command for valid targets", async () => {
     previewScanCommandMock.mockResolvedValue([
       "nmap",
@@ -128,7 +138,11 @@ describe("ScanWorkspace", () => {
       "--script",
       "http-title",
       "--script",
+      "ssl-cert",
+      "--script",
       "/Users/krisarmstrong/Scripts/custom-check.nse",
+      "--script",
+      "/Users/krisarmstrong/Scripts/nse-pack",
       "--script-args",
       "http.useragent=Maple",
       "--script-args-file",
@@ -143,9 +157,15 @@ describe("ScanWorkspace", () => {
     await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
     await userEvent.click(screen.getByRole("checkbox", { name: "safe" }));
     await userEvent.type(screen.getByLabelText("Built-in script names"), "http-title");
+    await userEvent.type(screen.getByLabelText("Find built-in scripts"), "ssl");
+    await userEvent.click(screen.getByRole("checkbox", { name: "ssl-cert" }));
     await userEvent.type(
       screen.getByLabelText("Custom .nse script files"),
       "/Users/krisarmstrong/Scripts/custom-check.nse",
+    );
+    await userEvent.type(
+      screen.getByLabelText("Custom script directories"),
+      "/Users/krisarmstrong/Scripts/nse-pack",
     );
     await userEvent.type(screen.getByLabelText("Script arguments"), "http.useragent=Maple");
     await userEvent.type(
@@ -185,12 +205,14 @@ describe("ScanWorkspace", () => {
       scripts: [
         { kind: "category", value: "safe" },
         { kind: "name", value: "http-title" },
+        { kind: "name", value: "ssl-cert" },
         { kind: "path", value: "/Users/krisarmstrong/Scripts/custom-check.nse" },
+        { kind: "path", value: "/Users/krisarmstrong/Scripts/nse-pack" },
       ],
     });
     expect(
       await screen.findByText(
-        "nmap -oX <managed-xml-file> -sV --version-light --script safe --script http-title --script /Users/krisarmstrong/Scripts/custom-check.nse --script-args http.useragent=Maple --script-args-file /Users/krisarmstrong/nse-args.txt -- scanme.nmap.org",
+        "nmap -oX <managed-xml-file> -sV --version-light --script safe --script http-title --script ssl-cert --script /Users/krisarmstrong/Scripts/custom-check.nse --script /Users/krisarmstrong/Scripts/nse-pack --script-args http.useragent=Maple --script-args-file /Users/krisarmstrong/nse-args.txt -- scanme.nmap.org",
       ),
     ).toBeInTheDocument();
   });

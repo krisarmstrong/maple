@@ -49,9 +49,11 @@ export namespace reports {
 	    protocol?: string;
 	    id?: string;
 	    state?: string;
+	    reason?: string;
 	    service?: string;
 	    product?: string;
 	    version?: string;
+	    extraInfo?: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Port(source);
@@ -62,9 +64,11 @@ export namespace reports {
 	        this.protocol = source["protocol"];
 	        this.id = source["id"];
 	        this.state = source["state"];
+	        this.reason = source["reason"];
 	        this.service = source["service"];
 	        this.product = source["product"];
 	        this.version = source["version"];
+	        this.extraInfo = source["extraInfo"];
 	    }
 	}
 	export class Host {

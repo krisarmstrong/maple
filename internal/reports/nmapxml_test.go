@@ -11,7 +11,11 @@ func TestSummarizeNmapXMLCountsHostStatuses(t *testing.T) {
     <ports>
       <port protocol="tcp" portid="22">
         <state state="open"/>
-        <service name="ssh" product="OpenSSH" version="9.6"/>
+        <service name="ssh" product="OpenSSH" version="9.6" extrainfo="protocol 2.0"/>
+      </port>
+      <port protocol="tcp" portid="80">
+        <state state="closed" reason="conn-refused"/>
+        <service name="http"/>
       </port>
     </ports>
   </host>
@@ -52,8 +56,8 @@ func TestSummarizeNmapXMLCountsHostStatuses(t *testing.T) {
 	if summary.Hosts[1].State != "down" {
 		t.Fatalf("second host state = %q", summary.Hosts[1].State)
 	}
-	if len(summary.Hosts[0].Ports) != 1 {
-		t.Fatalf("len(first host ports) = %d, want 1", len(summary.Hosts[0].Ports))
+	if len(summary.Hosts[0].Ports) != 2 {
+		t.Fatalf("len(first host ports) = %d, want 2", len(summary.Hosts[0].Ports))
 	}
 	if summary.Hosts[0].Ports[0].ID != "22" {
 		t.Fatalf("first port ID = %q", summary.Hosts[0].Ports[0].ID)
@@ -63,6 +67,12 @@ func TestSummarizeNmapXMLCountsHostStatuses(t *testing.T) {
 	}
 	if summary.Hosts[0].Ports[0].Product != "OpenSSH" {
 		t.Fatalf("first port product = %q", summary.Hosts[0].Ports[0].Product)
+	}
+	if summary.Hosts[0].Ports[0].ExtraInfo != "protocol 2.0" {
+		t.Fatalf("first port extra info = %q", summary.Hosts[0].Ports[0].ExtraInfo)
+	}
+	if summary.Hosts[0].Ports[1].Reason != "conn-refused" {
+		t.Fatalf("second port reason = %q", summary.Hosts[0].Ports[1].Reason)
 	}
 }
 

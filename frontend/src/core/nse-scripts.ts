@@ -19,10 +19,23 @@ export const nseCategories = [
 
 export type NSECategory = (typeof nseCategories)[number];
 
+export const popularNSEScripts = [
+  "http-title",
+  "http-headers",
+  "http-server-header",
+  "ssl-cert",
+  "ssl-enum-ciphers",
+  "ssh2-enum-algos",
+  "smb-os-discovery",
+  "dns-service-discovery",
+  "vulners",
+] as const;
+
 export function buildScanScripts(
   categories: readonly NSECategory[],
   scriptNames: string,
   customScriptPaths: string,
+  customScriptDirectories = "",
 ): ScanScript[] {
   return [
     ...categories.map((category) => ({ kind: "category" as const, value: category })),
@@ -31,6 +44,10 @@ export function buildScanScripts(
       value: name,
     })),
     ...splitLines(customScriptPaths).map((path) => ({
+      kind: "path" as const,
+      value: path,
+    })),
+    ...splitLines(customScriptDirectories).map((path) => ({
       kind: "path" as const,
       value: path,
     })),

@@ -11,6 +11,7 @@ func TestBuildScriptArgsAcceptsCategoriesNamedScriptsAndCustomScriptPaths(t *tes
 		{Kind: ScriptName, Value: "http-title"},
 		{Kind: ScriptName, Value: "ssl-enum-ciphers"},
 		{Kind: ScriptPath, Value: "/Users/krisarmstrong/Scripts/custom-check.nse"},
+		{Kind: ScriptPath, Value: "/Users/krisarmstrong/Scripts/nse-pack"},
 		{Kind: ScriptPath, Value: `C:\Users\Kris\Scripts\windows-check.nse`},
 	})
 	if err != nil {
@@ -22,6 +23,7 @@ func TestBuildScriptArgsAcceptsCategoriesNamedScriptsAndCustomScriptPaths(t *tes
 		"--script", "http-title",
 		"--script", "ssl-enum-ciphers",
 		"--script", "/Users/krisarmstrong/Scripts/custom-check.nse",
+		"--script", "/Users/krisarmstrong/Scripts/nse-pack",
 		"--script", `C:\Users\Kris\Scripts\windows-check.nse`,
 	}
 	if !sameStringSlices(args, want) {

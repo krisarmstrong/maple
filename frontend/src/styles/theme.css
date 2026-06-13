@@ -71,6 +71,10 @@
   --size-textarea-min: 132px;
   --size-scan-log-min: 92px;
   --size-history-port-min: 34px;
+  --size-history-metric-min: 104px;
+  --size-history-metric-height: 68px;
+  --size-preset-select-min: 180px;
+  --size-preset-name-min: 180px;
   --size-local-help-max: 460px;
   --size-target-mode-min: 38px;
   --size-app-viewport: 100vh;
@@ -78,6 +82,7 @@
   --layout-sidebar-width: 280px;
   --layout-mobile-min-width: 320px;
   --layout-breakpoint-compact: 760px;
+  --layout-full-span: 1 / -1;
   --layout-history-filter-width: 180px;
   --layout-profile-column-width: 240px;
   --layout-full: 100%;

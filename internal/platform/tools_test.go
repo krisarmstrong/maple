@@ -89,10 +89,10 @@ func TestInstallHintUsesPlatformSpecificNmapGuidance(t *testing.T) {
 		goos string
 		want string
 	}{
-		{name: "macOS", goos: "darwin", want: "Install Nmap separately with Homebrew or the Nmap Project macOS package."},
-		{name: "Windows", goos: "windows", want: "Install Nmap separately from the Nmap Project. Install Npcap separately if the selected scan mode requires it."},
-		{name: "Linux", goos: "linux", want: "Install Nmap separately with your distribution package manager or the Nmap Project packages."},
-		{name: "Other", goos: "freebsd", want: "Install Nmap separately and make sure it is available on PATH."},
+		{name: "macOS", goos: "darwin", want: "Install Nmap separately with Homebrew or the official Nmap Project macOS package; Maple does not download or bundle it."},
+		{name: "Windows", goos: "windows", want: "Install Nmap separately from the Nmap Project. Install Npcap separately for scan modes that require packet capture."},
+		{name: "Linux", goos: "linux", want: "Install Nmap separately with apt, dnf, pacman, zypper, or official Nmap Project packages."},
+		{name: "Other", goos: "freebsd", want: "Install Nmap separately and make sure it is available on PATH; Maple does not bundle it."},
 	}
 
 	for _, test := range tests {
@@ -106,7 +106,7 @@ func TestInstallHintUsesPlatformSpecificNmapGuidance(t *testing.T) {
 
 func TestInstallHintDescribesOptionalCompanionTools(t *testing.T) {
 	got := installHint("ncat", "linux")
-	want := "Optional Nmap companion tool. Install it separately if you need this workflow."
+	want := "Optional Nmap companion tool. Install it separately; Maple does not bundle Nmap companion binaries."
 	if got != want {
 		t.Fatalf("installHint() = %q, want %q", got, want)
 	}

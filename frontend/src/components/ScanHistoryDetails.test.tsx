@@ -44,6 +44,8 @@ describe("ScanHistoryDetails", () => {
                   service: "https",
                   product: "nginx",
                   version: "1.25",
+                  extraInfo: "TLS ALPN h2",
+                  reason: "syn-ack",
                 },
               ],
             },
@@ -54,6 +56,31 @@ describe("ScanHistoryDetails", () => {
 
     expect(screen.getByText("https")).toBeInTheDocument();
     expect(screen.getByText("nginx 1.25")).toBeInTheDocument();
+    expect(screen.getByText("TLS ALPN h2")).toBeInTheDocument();
+    expect(screen.getByText("syn-ack")).toBeInTheDocument();
+  });
+
+  it("shows scan result summary metrics", () => {
+    render(
+      <ScanHistoryDetails
+        record={scanRecord({
+          hostCount: 4,
+          hostsUp: 2,
+          hostsDown: 2,
+          openPortCount: 3,
+          elapsedTime: "5.42",
+        })}
+      />,
+    );
+
+    expect(screen.getByText("4")).toBeInTheDocument();
+    expect(screen.getByText("Hosts total")).toBeInTheDocument();
+    expect(screen.getAllByText("2")).toHaveLength(2);
+    expect(screen.getByText("Hosts up")).toBeInTheDocument();
+    expect(screen.getByText("3")).toBeInTheDocument();
+    expect(screen.getByText("Open ports")).toBeInTheDocument();
+    expect(screen.getByText("5.42s")).toBeInTheDocument();
+    expect(screen.getByText("Elapsed")).toBeInTheDocument();
   });
 
   it("explains when host counts exist without host rows", () => {

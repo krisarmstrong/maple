@@ -35,9 +35,11 @@ export interface ScanHistoryPort {
   id?: string;
   protocol?: string;
   state?: string;
+  reason?: string;
   service?: string;
   product?: string;
   version?: string;
+  extraInfo?: string;
 }
 
 export interface ScanHistoryHost {

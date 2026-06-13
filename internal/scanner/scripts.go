@@ -17,7 +17,7 @@ const (
 )
 
 var (
-	ErrInvalidScript  = errors.New("enter known NSE categories, built-in script names, or absolute .nse script file paths")
+	ErrInvalidScript  = errors.New("enter known NSE categories, built-in script names, or absolute .nse script file or directory paths")
 	scriptNamePattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.+-]*$`)
 	windowsDrivePath  = regexp.MustCompile(`^[A-Za-z]:[\\/].+`)
 )
@@ -97,11 +97,16 @@ func validateScript(script Script) (string, error) {
 			return value, nil
 		}
 	case ScriptPath:
-		if isAbsoluteScriptPath(value) && strings.EqualFold(filepath.Ext(value), ".nse") {
+		if isAbsoluteScriptPath(value) && isScriptFileOrDirectoryPath(value) {
 			return value, nil
 		}
 	}
 	return "", ErrInvalidScript
+}
+
+func isScriptFileOrDirectoryPath(value string) bool {
+	extension := filepath.Ext(value)
+	return extension == "" || strings.EqualFold(extension, ".nse")
 }
 
 func isAbsoluteScriptPath(value string) bool {

@@ -33,6 +33,36 @@ export function HelpWorkspace(): React.JSX.Element {
         </article>
 
         <article className="help-panel">
+          <h3>Workflow Tips</h3>
+          <ul className="help-list">
+            <li>Preview every scan to inspect the exact argv before execution.</li>
+            <li>Save presets for repeated option and script combinations, not target lists.</li>
+            <li>Use stats intervals on long scans so progress is visible in Output.</li>
+            <li>Prefer structured options before custom NSE arguments.</li>
+          </ul>
+        </article>
+
+        <article className="help-panel">
+          <h3>Results Guide</h3>
+          <ul className="help-list">
+            <li>History shows parsed hosts, ports, service labels, and Nmap reason fields.</li>
+            <li>Raw XML and JSON exports are available from completed scans.</li>
+            <li>Empty host rows can still have useful run statistics from Nmap.</li>
+            <li>Diagnostics are stderr and parser notes preserved for troubleshooting.</li>
+          </ul>
+        </article>
+
+        <article className="help-panel">
+          <h3>Platform Notes</h3>
+          <ul className="help-list">
+            <li>Install Nmap separately from the official project or your OS package manager.</li>
+            <li>Windows packet scans may require Npcap installed outside Maple.</li>
+            <li>macOS and Linux privileged scan modes may require elevated execution.</li>
+            <li>Maple does not bundle or redistribute Nmap, Npcap, Ncat, Ndiff, or Nping.</li>
+          </ul>
+        </article>
+
+        <article className="help-panel">
           <h3>Official Nmap References</h3>
           <p>
             Maple opens official Nmap pages in your browser instead of bundling their manual or

@@ -24,12 +24,14 @@ type Host struct {
 }
 
 type Port struct {
-	Protocol string `json:"protocol,omitempty"`
-	ID       string `json:"id,omitempty"`
-	State    string `json:"state,omitempty"`
-	Service  string `json:"service,omitempty"`
-	Product  string `json:"product,omitempty"`
-	Version  string `json:"version,omitempty"`
+	Protocol  string `json:"protocol,omitempty"`
+	ID        string `json:"id,omitempty"`
+	State     string `json:"state,omitempty"`
+	Reason    string `json:"reason,omitempty"`
+	Service   string `json:"service,omitempty"`
+	Product   string `json:"product,omitempty"`
+	Version   string `json:"version,omitempty"`
+	ExtraInfo string `json:"extraInfo,omitempty"`
 }
 
 func SummarizeNmapXML(input string) (Summary, error) {
@@ -118,12 +120,14 @@ func (h nmapHost) ports() []Port {
 	ports := make([]Port, 0, len(h.Ports.Ports))
 	for _, port := range h.Ports.Ports {
 		ports = append(ports, Port{
-			Protocol: port.Protocol,
-			ID:       port.ID,
-			State:    port.State.State,
-			Service:  port.Service.Name,
-			Product:  port.Service.Product,
-			Version:  port.Service.Version,
+			Protocol:  port.Protocol,
+			ID:        port.ID,
+			State:     port.State.State,
+			Reason:    port.State.Reason,
+			Service:   port.Service.Name,
+			Product:   port.Service.Product,
+			Version:   port.Service.Version,
+			ExtraInfo: port.Service.ExtraInfo,
 		})
 	}
 	return ports
@@ -157,13 +161,15 @@ type nmapPort struct {
 }
 
 type nmapState struct {
-	State string `xml:"state,attr"`
+	State  string `xml:"state,attr"`
+	Reason string `xml:"reason,attr"`
 }
 
 type nmapService struct {
-	Name    string `xml:"name,attr"`
-	Product string `xml:"product,attr"`
-	Version string `xml:"version,attr"`
+	Name      string `xml:"name,attr"`
+	Product   string `xml:"product,attr"`
+	Version   string `xml:"version,attr"`
+	ExtraInfo string `xml:"extrainfo,attr"`
 }
 
 type runStats struct {

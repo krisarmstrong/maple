@@ -8,6 +8,7 @@ describe("NSE script helpers", () => {
         ["safe", "vuln"],
         "http-title\n\nssl-enum-ciphers",
         "/tmp/custom-one.nse\n\n/tmp/custom-two.nse",
+        "/tmp/nse-pack",
       ),
     ).toEqual([
       { kind: "category", value: "safe" },
@@ -16,6 +17,7 @@ describe("NSE script helpers", () => {
       { kind: "name", value: "ssl-enum-ciphers" },
       { kind: "path", value: "/tmp/custom-one.nse" },
       { kind: "path", value: "/tmp/custom-two.nse" },
+      { kind: "path", value: "/tmp/nse-pack" },
     ]);
   });
 });
