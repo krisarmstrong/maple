@@ -321,7 +321,7 @@
   font-weight: var(--font-weight-heading);
   margin-bottom: var(--space-7);
   padding: var(--space-0);
-  width: 100%;
+  width: var(--layout-full);
 }
 
 .target-mode-picker label {
