@@ -7,12 +7,18 @@ import (
 )
 
 type DNSMode string
+type ScanTechnique string
 type VersionMode string
 
 const (
 	DNSModeDefault DNSMode = ""
 	DNSModeSkip    DNSMode = "skip"
 	DNSModeSystem  DNSMode = "system"
+
+	ScanTechniqueDefault ScanTechnique = ""
+	ScanTechniqueConnect ScanTechnique = "connect"
+	ScanTechniqueSYN     ScanTechnique = "syn"
+	ScanTechniqueUDP     ScanTechnique = "udp"
 
 	VersionModeDefault VersionMode = ""
 	VersionModeLight   VersionMode = "light"
@@ -22,16 +28,17 @@ const (
 var ErrInvalidScanOption = errors.New("enter valid structured Nmap options")
 
 type ScanOptions struct {
-	TimingTemplate   string      `json:"timingTemplate,omitempty"`
-	Ports            string      `json:"ports,omitempty"`
-	TopPorts         int         `json:"topPorts,omitempty"`
-	AllPorts         bool        `json:"allPorts,omitempty"`
-	ServiceDetection bool        `json:"serviceDetection,omitempty"`
-	VersionMode      VersionMode `json:"versionMode,omitempty"`
-	IPv6             bool        `json:"ipv6,omitempty"`
-	OSDetection      bool        `json:"osDetection,omitempty"`
-	Traceroute       bool        `json:"traceroute,omitempty"`
-	DNSMode          DNSMode     `json:"dnsMode,omitempty"`
+	ScanTechnique    ScanTechnique `json:"scanTechnique,omitempty"`
+	TimingTemplate   string        `json:"timingTemplate,omitempty"`
+	Ports            string        `json:"ports,omitempty"`
+	TopPorts         int           `json:"topPorts,omitempty"`
+	AllPorts         bool          `json:"allPorts,omitempty"`
+	ServiceDetection bool          `json:"serviceDetection,omitempty"`
+	VersionMode      VersionMode   `json:"versionMode,omitempty"`
+	IPv6             bool          `json:"ipv6,omitempty"`
+	OSDetection      bool          `json:"osDetection,omitempty"`
+	Traceroute       bool          `json:"traceroute,omitempty"`
+	DNSMode          DNSMode       `json:"dnsMode,omitempty"`
 }
 
 func BuildOptionArgs(options ScanOptions) ([]string, error) {
@@ -39,7 +46,12 @@ func BuildOptionArgs(options ScanOptions) ([]string, error) {
 		return nil, err
 	}
 
-	args := make([]string, 0, 10)
+	args := make([]string, 0, 12)
+	techniqueArgs, err := buildTechniqueArgs(options.ScanTechnique)
+	if err != nil {
+		return nil, err
+	}
+	args = append(args, techniqueArgs...)
 	if options.TimingTemplate != "" {
 		timing, err := validateTimingTemplate(options.TimingTemplate)
 		if err != nil {
@@ -104,9 +116,21 @@ func ProfileArgsForOptions(profile Profile, options ScanOptions) []string {
 			}
 			continue
 		}
+		if options.ScanTechnique != ScanTechniqueDefault && isTechniqueArg(arg) {
+			continue
+		}
 		args = append(args, arg)
 	}
 	return args
+}
+
+func isTechniqueArg(value string) bool {
+	switch value {
+	case "-sS", "-sT", "-sU":
+		return true
+	default:
+		return false
+	}
 }
 
 func hasVersionSelection(options ScanOptions) bool {
@@ -195,6 +219,21 @@ func buildDNSArgs(mode DNSMode) ([]string, error) {
 		return []string{"-n"}, nil
 	case DNSModeSystem:
 		return []string{"--system-dns"}, nil
+	default:
+		return nil, ErrInvalidScanOption
+	}
+}
+
+func buildTechniqueArgs(technique ScanTechnique) ([]string, error) {
+	switch technique {
+	case ScanTechniqueDefault:
+		return nil, nil
+	case ScanTechniqueConnect:
+		return []string{"-sT"}, nil
+	case ScanTechniqueSYN:
+		return []string{"-sS"}, nil
+	case ScanTechniqueUDP:
+		return []string{"-sU"}, nil
 	default:
 		return nil, ErrInvalidScanOption
 	}

@@ -4,9 +4,11 @@ import {
   defaultScanOptions,
   dnsModes,
   isDNSMode,
+  isScanTechnique,
   isTimingTemplate,
   isVersionMode,
   type ScanOptions,
+  scanTechniques,
   timingTemplates,
   versionModes,
 } from "../core/scan-options";
@@ -270,8 +272,28 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
           </div>
           <div className="options-grid">
             <label>
+              <span>Scan technique</span>
+              <select
+                aria-label="Scan technique"
+                value={scanOptions.scanTechnique}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  if (isScanTechnique(value)) {
+                    updateScanOptions((current) => ({ ...current, scanTechnique: value }));
+                  }
+                }}
+              >
+                {scanTechniques.map((technique) => (
+                  <option key={technique.value || "default"} value={technique.value}>
+                    {technique.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
               <span>Timing</span>
               <select
+                aria-label="Timing"
                 value={scanOptions.timingTemplate}
                 onChange={(event) => {
                   const value = event.target.value;
@@ -290,6 +312,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
             <label>
               <span>DNS</span>
               <select
+                aria-label="DNS"
                 value={scanOptions.dnsMode}
                 onChange={(event) => {
                   const value = event.target.value;
@@ -308,6 +331,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
             <label>
               <span>Version detail</span>
               <select
+                aria-label="Version detail"
                 value={scanOptions.versionMode}
                 onChange={(event) => {
                   const value = event.target.value;
@@ -433,6 +457,16 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
           {scanOptions.osDetection ? (
             <p className="option-warning">
               OS detection often requires elevated privileges on macOS, Linux, and Windows.
+            </p>
+          ) : null}
+          {scanOptions.scanTechnique === "syn" ? (
+            <p className="option-warning">
+              TCP SYN scans usually require elevated privileges on macOS, Linux, and Windows.
+            </p>
+          ) : null}
+          {scanOptions.scanTechnique === "udp" ? (
+            <p className="option-warning">
+              UDP scans can be slow and may need elevated privileges for best results.
             </p>
           ) : null}
         </div>

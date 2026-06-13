@@ -1,8 +1,10 @@
 export type TimingTemplate = "" | "T0" | "T1" | "T2" | "T3" | "T4" | "T5";
 export type DNSMode = "" | "skip" | "system";
+export type ScanTechnique = "" | "connect" | "syn" | "udp";
 export type VersionMode = "" | "light" | "all";
 
 export interface ScanOptions {
+  scanTechnique: ScanTechnique;
   timingTemplate: TimingTemplate;
   ports: string;
   topPorts: number;
@@ -16,6 +18,7 @@ export interface ScanOptions {
 }
 
 export const defaultScanOptions: ScanOptions = {
+  scanTechnique: "",
   timingTemplate: "",
   ports: "",
   topPorts: 0,
@@ -38,6 +41,13 @@ export const timingTemplates: readonly { value: TimingTemplate; label: string }[
   { value: "T5", label: "T5 fastest" },
 ];
 
+export const scanTechniques: readonly { value: ScanTechnique; label: string }[] = [
+  { value: "", label: "Profile default" },
+  { value: "connect", label: "TCP connect" },
+  { value: "syn", label: "TCP SYN" },
+  { value: "udp", label: "UDP" },
+];
+
 export const dnsModes: readonly { value: DNSMode; label: string }[] = [
   { value: "", label: "Default DNS" },
   { value: "skip", label: "Skip DNS lookup" },
@@ -52,6 +62,10 @@ export const versionModes: readonly { value: VersionMode; label: string }[] = [
 
 export function isTimingTemplate(value: string): value is TimingTemplate {
   return timingTemplates.some((template) => template.value === value);
+}
+
+export function isScanTechnique(value: string): value is ScanTechnique {
+  return scanTechniques.some((technique) => technique.value === value);
 }
 
 export function isDNSMode(value: string): value is DNSMode {

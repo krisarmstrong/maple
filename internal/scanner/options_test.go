@@ -4,6 +4,7 @@ import "testing"
 
 func TestBuildOptionArgsAddsStructuredNmapOptions(t *testing.T) {
 	args, err := BuildOptionArgs(ScanOptions{
+		ScanTechnique:    ScanTechniqueUDP,
 		TimingTemplate:   "T4",
 		Ports:            "22,80,443",
 		ServiceDetection: true,
@@ -17,7 +18,7 @@ func TestBuildOptionArgsAddsStructuredNmapOptions(t *testing.T) {
 		t.Fatalf("BuildOptionArgs returned error: %v", err)
 	}
 
-	want := []string{"-T4", "-p", "22,80,443", "-sV", "--version-all", "-6", "-O", "--traceroute", "-n"}
+	want := []string{"-sU", "-T4", "-p", "22,80,443", "-sV", "--version-all", "-6", "-O", "--traceroute", "-n"}
 	if !sameStrings(args, want) {
 		t.Fatalf("args = %#v, want %#v", args, want)
 	}
@@ -53,6 +54,7 @@ func TestBuildOptionArgsRejectsInvalidOptions(t *testing.T) {
 		{AllPorts: true, TopPorts: 10},
 		{DNSMode: "recursive"},
 		{VersionMode: "deep"},
+		{ScanTechnique: "ack"},
 	}
 
 	for _, test := range tests {
@@ -63,9 +65,10 @@ func TestBuildOptionArgsRejectsInvalidOptions(t *testing.T) {
 }
 
 func TestProfileArgsForOptionsRemovesOverriddenProfileDefaults(t *testing.T) {
-	profile := Profile{Args: []string{"-sV", "--version-light", "-T3", "--top-ports", "100"}}
+	profile := Profile{Args: []string{"-sT", "-sV", "--version-light", "-T3", "--top-ports", "100"}}
 
 	args := ProfileArgsForOptions(profile, ScanOptions{
+		ScanTechnique:    ScanTechniqueSYN,
 		TimingTemplate:   "T4",
 		Ports:            "22,80",
 		ServiceDetection: true,

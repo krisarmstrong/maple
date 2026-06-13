@@ -157,6 +157,7 @@ describe("ScanWorkspace", () => {
       nmapPath: "/usr/local/bin/nmap",
       scriptArgsFile: "/Users/krisarmstrong/nse-args.txt",
       options: {
+        scanTechnique: "",
         timingTemplate: "",
         ports: "",
         topPorts: 0,
@@ -186,6 +187,7 @@ describe("ScanWorkspace", () => {
       "nmap",
       "-oX",
       "<managed-xml-file>",
+      "-sU",
       "-T4",
       "-p",
       "22,80,443",
@@ -202,6 +204,7 @@ describe("ScanWorkspace", () => {
 
     await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
     await userEvent.click(screen.getByRole("button", { name: "Options" }));
+    await userEvent.selectOptions(screen.getByLabelText("Scan technique"), "udp");
     await userEvent.selectOptions(screen.getByLabelText("Timing"), "T4");
     await userEvent.click(screen.getByRole("checkbox", { name: "Service detection" }));
     await userEvent.selectOptions(screen.getByLabelText("Version detail"), "all");
@@ -219,6 +222,7 @@ describe("ScanWorkspace", () => {
       scripts: [],
       scriptArgsFile: "",
       options: {
+        scanTechnique: "udp",
         timingTemplate: "T4",
         ports: "22,80,443",
         serviceDetection: true,
@@ -233,8 +237,27 @@ describe("ScanWorkspace", () => {
     });
     expect(
       await screen.findByText(
-        "nmap -oX <managed-xml-file> -T4 -p 22,80,443 -sV --version-all -6 -O --traceroute -n -- scanme.nmap.org",
+        "nmap -oX <managed-xml-file> -sU -T4 -p 22,80,443 -sV --version-all -6 -O --traceroute -n -- scanme.nmap.org",
       ),
+    ).toBeInTheDocument();
+  });
+
+  it("warns when scan technique can require privileges or run slowly", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Options" }));
+    await userEvent.selectOptions(screen.getByLabelText("Scan technique"), "syn");
+
+    expect(
+      screen.getByText(
+        "TCP SYN scans usually require elevated privileges on macOS, Linux, and Windows.",
+      ),
+    ).toBeInTheDocument();
+
+    await userEvent.selectOptions(screen.getByLabelText("Scan technique"), "udp");
+
+    expect(
+      screen.getByText("UDP scans can be slow and may need elevated privileges for best results."),
     ).toBeInTheDocument();
   });
 

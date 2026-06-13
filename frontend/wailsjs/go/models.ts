@@ -263,6 +263,7 @@ export namespace scanner {
 		}
 	}
 	export class ScanOptions {
+	    scanTechnique?: string;
 	    timingTemplate?: string;
 	    ports?: string;
 	    topPorts?: number;
@@ -280,6 +281,7 @@ export namespace scanner {
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.scanTechnique = source["scanTechnique"];
 	        this.timingTemplate = source["timingTemplate"];
 	        this.ports = source["ports"];
 	        this.topPorts = source["topPorts"];
