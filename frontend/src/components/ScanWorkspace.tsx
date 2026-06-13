@@ -75,8 +75,13 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
       return;
     }
     setError("");
-    setPreview(await previewScanCommand(request));
-    setActivePanel("output");
+    try {
+      setPreview(await previewScanCommand(request));
+      setActivePanel("output");
+    } catch (caught) {
+      setActivePanel("configure");
+      setError(errorMessage(caught));
+    }
   }
 
   async function runScan(): Promise<void> {
@@ -90,7 +95,14 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
     setLog([]);
     setStatus("running");
     setActivePanel("output");
-    await startScan(request);
+    try {
+      await startScan(request);
+    } catch (caught) {
+      setRunning(false);
+      setStatus("failed");
+      setActivePanel("configure");
+      setError(errorMessage(caught));
+    }
   }
 
   function updateTargetMode(modeId: TargetModeID): void {
@@ -434,6 +446,10 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
       ) : null}
     </section>
   );
+}
+
+function errorMessage(caught: unknown): string {
+  return caught instanceof Error ? caught.message : "Unable to start scan.";
 }
 
 interface ScanPanelButtonProps {

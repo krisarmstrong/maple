@@ -91,6 +91,31 @@ describe("ScanWorkspace", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows preview validation errors from the backend", async () => {
+    previewScanCommandMock.mockRejectedValue(new Error("enter valid structured Nmap options"));
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
+    await userEvent.click(screen.getByRole("button", { name: "Preview" }));
+
+    expect(await screen.findByText("enter valid structured Nmap options")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Configure" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+  });
+
+  it("shows scan start errors from the backend", async () => {
+    startScanMock.mockRejectedValue(new Error("enter known NSE categories"));
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
+    await userEvent.click(screen.getByRole("button", { name: "Run Scan" }));
+
+    expect(await screen.findByText("enter known NSE categories")).toBeInTheDocument();
+    expect(screen.queryByText("Scan running")).not.toBeInTheDocument();
+  });
+
   it("adds NSE categories, built-in script names, and custom scripts to preview requests", async () => {
     previewScanCommandMock.mockResolvedValue([
       "nmap",
