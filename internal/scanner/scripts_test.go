@@ -52,6 +52,39 @@ func TestBuildScriptArgsRejectsUnknownCategoriesAndScriptExpressions(t *testing.
 	}
 }
 
+func TestBuildScriptArgsFileArgs(t *testing.T) {
+	args, err := BuildScriptArgsFileArgs("/Users/krisarmstrong/nse-args.txt")
+	if err != nil {
+		t.Fatalf("BuildScriptArgsFileArgs returned error: %v", err)
+	}
+
+	want := []string{"--script-args-file", "/Users/krisarmstrong/nse-args.txt"}
+	if !sameStringSlices(args, want) {
+		t.Fatalf("args = %#v, want %#v", args, want)
+	}
+
+	args, err = BuildScriptArgsFileArgs("")
+	if err != nil {
+		t.Fatalf("BuildScriptArgsFileArgs returned error for empty path: %v", err)
+	}
+	if len(args) != 0 {
+		t.Fatalf("args = %#v, want empty", args)
+	}
+}
+
+func TestBuildScriptArgsFileArgsRejectsUnsafePaths(t *testing.T) {
+	tests := []string{
+		"relative/nse-args.txt",
+		"/Users/krisarmstrong/nse\nargs.txt",
+		"/Users/krisarmstrong/nse\x00args.txt",
+	}
+	for _, test := range tests {
+		if _, err := BuildScriptArgsFileArgs(test); !errors.Is(err, ErrInvalidScript) {
+			t.Fatalf("error = %v, want ErrInvalidScript for %q", err, test)
+		}
+	}
+}
+
 func TestNSECategoriesReturnsCopy(t *testing.T) {
 	categories := NSECategories()
 	categories[0] = "mutated"

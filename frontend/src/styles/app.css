@@ -363,6 +363,7 @@
 }
 
 .history-controls input,
+.custom-script-paths input,
 .options-grid input,
 select,
 textarea {

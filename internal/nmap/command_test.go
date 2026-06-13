@@ -26,8 +26,9 @@ func TestBuildPreviewConstructsArgv(t *testing.T) {
 
 func TestBuildPreviewIncludesStructuredScriptArgsBeforeTargets(t *testing.T) {
 	preview, err := BuildPreview("/usr/local/bin/nmap", scanner.ScanRequest{
-		ProfileID: "service",
-		Targets:   "scanme.nmap.org",
+		ProfileID:      "service",
+		Targets:        "scanme.nmap.org",
+		ScriptArgsFile: "/Users/krisarmstrong/nse-args.txt",
 		Scripts: []scanner.Script{
 			{Kind: scanner.ScriptCategory, Value: "safe"},
 			{Kind: scanner.ScriptPath, Value: "/Users/krisarmstrong/Scripts/custom-check.nse"},
@@ -42,6 +43,7 @@ func TestBuildPreviewIncludesStructuredScriptArgsBeforeTargets(t *testing.T) {
 		"-sV", "--version-light",
 		"--script", "safe",
 		"--script", "/Users/krisarmstrong/Scripts/custom-check.nse",
+		"--script-args-file", "/Users/krisarmstrong/nse-args.txt",
 		"--", "scanme.nmap.org",
 	}
 	if !sameStrings(preview.Args, wantArgs) {

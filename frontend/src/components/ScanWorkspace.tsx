@@ -45,6 +45,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
   const [scriptCategories, setScriptCategories] = useState<NSECategory[]>([]);
   const [scriptNames, setScriptNames] = useState("");
   const [customScriptPaths, setCustomScriptPaths] = useState("");
+  const [scriptArgsFile, setScriptArgsFile] = useState("");
   const [activePanel, setActivePanel] = useState<ScanPanel>("configure");
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<string[]>([]);
@@ -68,7 +69,15 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
   );
 
   async function previewCommand(): Promise<void> {
-    const request = makeRequest(profileId, targetModeId, targets, nmapPath, scripts, scanOptions);
+    const request = makeRequest(
+      profileId,
+      targetModeId,
+      targets,
+      nmapPath,
+      scripts,
+      scanOptions,
+      scriptArgsFile,
+    );
     if (request === undefined) {
       setActivePanel("configure");
       setError(messageForInvalidTargets(targetModeId, targets));
@@ -85,7 +94,15 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
   }
 
   async function runScan(): Promise<void> {
-    const request = makeRequest(profileId, targetModeId, targets, nmapPath, scripts, scanOptions);
+    const request = makeRequest(
+      profileId,
+      targetModeId,
+      targets,
+      nmapPath,
+      scripts,
+      scanOptions,
+      scriptArgsFile,
+    );
     if (request === undefined) {
       setActivePanel("configure");
       setError(messageForInvalidTargets(targetModeId, targets));
@@ -420,6 +437,18 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
               placeholder="/Users/you/nmap-scripts/custom-check.nse"
               rows={3}
               value={customScriptPaths}
+            />
+          </label>
+          <label className="custom-script-paths">
+            <span>Script arguments file</span>
+            <input
+              onChange={(event) => {
+                setScriptArgsFile(event.target.value);
+                setPreview([]);
+              }}
+              placeholder="/Users/you/nmap-scripts/script-args.txt"
+              type="text"
+              value={scriptArgsFile}
             />
           </label>
           <p className="target-mode-help">

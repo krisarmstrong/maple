@@ -56,6 +56,17 @@ func BuildScriptArgs(scripts []Script) ([]string, error) {
 	return args, nil
 }
 
+func BuildScriptArgsFileArgs(path string) ([]string, error) {
+	value := strings.TrimSpace(path)
+	if value == "" {
+		return nil, nil
+	}
+	if strings.ContainsAny(value, "\x00\r\n") || !isAbsoluteScriptPath(value) {
+		return nil, ErrInvalidScript
+	}
+	return []string{"--script-args-file", value}, nil
+}
+
 func NSECategories() []string {
 	return append([]string(nil), nseCategories...)
 }

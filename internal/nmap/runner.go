@@ -71,6 +71,10 @@ func buildCommandParts(request scanner.ScanRequest) (Command, scanner.Profile, [
 	if err != nil {
 		return Command{}, scanner.Profile{}, nil, err
 	}
+	scriptArgsFileArgs, err := scanner.BuildScriptArgsFileArgs(request.ScriptArgsFile)
+	if err != nil {
+		return Command{}, scanner.Profile{}, nil, err
+	}
 	optionArgs, err := scanner.BuildOptionArgs(request.Options)
 	if err != nil {
 		return Command{}, scanner.Profile{}, nil, err
@@ -81,7 +85,15 @@ func buildCommandParts(request scanner.ScanRequest) (Command, scanner.Profile, [
 		return Command{}, scanner.Profile{}, nil, err
 	}
 	profile.Args = scanner.ProfileArgsForOptions(profile, request.Options)
-	argv := scanner.BuildArgv(request.NmapPath, xmlPath, profile, optionArgs, scriptArgs, targets)
+	argv := scanner.BuildArgv(
+		request.NmapPath,
+		xmlPath,
+		profile,
+		optionArgs,
+		scriptArgs,
+		scriptArgsFileArgs,
+		targets,
+	)
 	return Command{Path: argv[0], Args: argv[1:], XMLPath: xmlPath}, profile, targets, nil
 }
 
@@ -109,13 +121,25 @@ func previewCommandParts(request scanner.ScanRequest) (Command, scanner.Profile,
 	if err != nil {
 		return Command{}, scanner.Profile{}, nil, err
 	}
+	scriptArgsFileArgs, err := scanner.BuildScriptArgsFileArgs(request.ScriptArgsFile)
+	if err != nil {
+		return Command{}, scanner.Profile{}, nil, err
+	}
 	optionArgs, err := scanner.BuildOptionArgs(request.Options)
 	if err != nil {
 		return Command{}, scanner.Profile{}, nil, err
 	}
 
 	profile.Args = scanner.ProfileArgsForOptions(profile, request.Options)
-	argv := scanner.BuildArgv(request.NmapPath, previewXMLOutputPath, profile, optionArgs, scriptArgs, targets)
+	argv := scanner.BuildArgv(
+		request.NmapPath,
+		previewXMLOutputPath,
+		profile,
+		optionArgs,
+		scriptArgs,
+		scriptArgsFileArgs,
+		targets,
+	)
 	return Command{Path: argv[0], Args: argv[1:], XMLPath: previewXMLOutputPath}, profile, targets, nil
 }
 

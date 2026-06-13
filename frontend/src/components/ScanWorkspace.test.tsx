@@ -129,6 +129,8 @@ describe("ScanWorkspace", () => {
       "http-title",
       "--script",
       "/Users/krisarmstrong/Scripts/custom-check.nse",
+      "--script-args-file",
+      "/Users/krisarmstrong/nse-args.txt",
       "--",
       "scanme.nmap.org",
     ]);
@@ -143,12 +145,17 @@ describe("ScanWorkspace", () => {
       screen.getByLabelText("Custom .nse script files"),
       "/Users/krisarmstrong/Scripts/custom-check.nse",
     );
+    await userEvent.type(
+      screen.getByLabelText("Script arguments file"),
+      "/Users/krisarmstrong/nse-args.txt",
+    );
     await userEvent.click(screen.getByRole("button", { name: "Preview" }));
 
     expect(previewScanCommandMock).toHaveBeenCalledWith({
       profileId: "service",
       targets: "scanme.nmap.org",
       nmapPath: "/usr/local/bin/nmap",
+      scriptArgsFile: "/Users/krisarmstrong/nse-args.txt",
       options: {
         timingTemplate: "",
         ports: "",
@@ -167,7 +174,7 @@ describe("ScanWorkspace", () => {
     });
     expect(
       await screen.findByText(
-        "nmap -oX <managed-xml-file> -sV --version-light --script safe --script http-title --script /Users/krisarmstrong/Scripts/custom-check.nse -- scanme.nmap.org",
+        "nmap -oX <managed-xml-file> -sV --version-light --script safe --script http-title --script /Users/krisarmstrong/Scripts/custom-check.nse --script-args-file /Users/krisarmstrong/nse-args.txt -- scanme.nmap.org",
       ),
     ).toBeInTheDocument();
   });
@@ -204,6 +211,7 @@ describe("ScanWorkspace", () => {
       targets: "scanme.nmap.org",
       nmapPath: "/usr/local/bin/nmap",
       scripts: [],
+      scriptArgsFile: "",
       options: {
         timingTemplate: "T4",
         ports: "22,80,443",
