@@ -46,6 +46,19 @@ export function targetModePlaceholder(modeID: TargetModeID): string {
   return findTargetMode(modeID).placeholder;
 }
 
+export function targetModeInputLabel(modeID: TargetModeID): string {
+  if (modeID === "single") {
+    return "Single hostname or IP";
+  }
+  if (modeID === "range") {
+    return "IPv4 range";
+  }
+  if (modeID === "subnet") {
+    return "CIDR subnet";
+  }
+  return "Target list";
+}
+
 export function validateTargetsForMode(
   modeID: TargetModeID,
   targets: string,

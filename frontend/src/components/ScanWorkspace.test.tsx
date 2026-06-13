@@ -361,12 +361,26 @@ describe("ScanWorkspace", () => {
 
     await userEvent.click(screen.getByRole("radio", { name: "IPv4 range" }));
 
+    expect(screen.getAllByText("IPv4 range")).toHaveLength(2);
     expect(screen.getByText("Scan an inclusive IPv4 last-octet range.")).toBeInTheDocument();
     expect(screen.getByLabelText("Targets")).toHaveAttribute("placeholder", "192.168.1.1-20");
     expect(screen.getByText("Example:")).toBeInTheDocument();
     expect(screen.getByText("192.168.1.1-20")).toBeInTheDocument();
     expect(screen.getByLabelText("Targets")).toHaveValue("");
     expect(screen.queryByText("1 IPv4 range")).not.toBeInTheDocument();
+  });
+
+  it("labels the target field for the selected target intent", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    expect(screen.getByText("Single hostname or IP")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("radio", { name: "Subnet" }));
+    expect(screen.getByText("CIDR subnet")).toBeInTheDocument();
+    expect(screen.getByLabelText("Targets")).toHaveAttribute("placeholder", "192.168.1.0/24");
+
+    await userEvent.click(screen.getByRole("radio", { name: "Target list" }));
+    expect(screen.getAllByText("Target list")).toHaveLength(2);
   });
 
   it("validates targets against the selected target intent", async () => {

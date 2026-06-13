@@ -13,6 +13,7 @@ import { scanScope } from "../core/scan-scope";
 import {
   type TargetModeID,
   targetModeHelp,
+  targetModeInputLabel,
   targetModePlaceholder,
   targetModes,
 } from "../core/target-modes";
@@ -231,8 +232,9 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                 ))}
               </fieldset>
               <label>
-                <span>Targets</span>
+                <span>{targetModeInputLabel(targetModeId)}</span>
                 <textarea
+                  aria-label="Targets"
                   onChange={(event) => updateTargets(event.target.value, setTargets, setPreview)}
                   placeholder={targetModePlaceholder(targetModeId)}
                   rows={5}
