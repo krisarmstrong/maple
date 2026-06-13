@@ -169,6 +169,9 @@ describe("ScanWorkspace", () => {
         osDetection: false,
         traceroute: false,
         dnsMode: "",
+        verbosityMode: "",
+        reason: false,
+        openOnly: false,
       },
       scripts: [
         { kind: "category", value: "safe" },
@@ -199,6 +202,9 @@ describe("ScanWorkspace", () => {
       "-O",
       "--traceroute",
       "-n",
+      "-vv",
+      "--reason",
+      "--open",
       "--",
       "scanme.nmap.org",
     ]);
@@ -216,6 +222,9 @@ describe("ScanWorkspace", () => {
     await userEvent.click(screen.getByRole("checkbox", { name: "OS detection" }));
     await userEvent.click(screen.getByRole("checkbox", { name: "Traceroute" }));
     await userEvent.selectOptions(screen.getByLabelText("DNS"), "skip");
+    await userEvent.selectOptions(screen.getByLabelText("Output detail"), "debug");
+    await userEvent.click(screen.getByRole("checkbox", { name: "Show reasons" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "Only open ports" }));
     await userEvent.click(screen.getByRole("button", { name: "Preview" }));
 
     expect(previewScanCommandMock).toHaveBeenCalledWith({
@@ -237,11 +246,14 @@ describe("ScanWorkspace", () => {
         osDetection: true,
         traceroute: true,
         dnsMode: "skip",
+        verbosityMode: "debug",
+        reason: true,
+        openOnly: true,
       },
     });
     expect(
       await screen.findByText(
-        "nmap -oX <managed-xml-file> -sU -Pn -T4 -p 22,80,443 -sV --version-all -6 -O --traceroute -n -- scanme.nmap.org",
+        "nmap -oX <managed-xml-file> -sU -Pn -T4 -p 22,80,443 -sV --version-all -6 -O --traceroute -n -vv --reason --open -- scanme.nmap.org",
       ),
     ).toBeInTheDocument();
   });

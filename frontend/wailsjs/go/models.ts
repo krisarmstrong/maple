@@ -275,6 +275,9 @@ export namespace scanner {
 	    osDetection?: boolean;
 	    traceroute?: boolean;
 	    dnsMode?: string;
+	    verbosityMode?: string;
+	    reason?: boolean;
+	    openOnly?: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new ScanOptions(source);
@@ -294,6 +297,9 @@ export namespace scanner {
 	        this.osDetection = source["osDetection"];
 	        this.traceroute = source["traceroute"];
 	        this.dnsMode = source["dnsMode"];
+	        this.verbosityMode = source["verbosityMode"];
+	        this.reason = source["reason"];
+	        this.openOnly = source["openOnly"];
 	    }
 	}
 	export class Script {

@@ -9,6 +9,7 @@ import (
 type DNSMode string
 type DiscoveryMode string
 type ScanTechnique string
+type VerbosityMode string
 type VersionMode string
 
 const (
@@ -24,6 +25,10 @@ const (
 	ScanTechniqueConnect ScanTechnique = "connect"
 	ScanTechniqueSYN     ScanTechnique = "syn"
 	ScanTechniqueUDP     ScanTechnique = "udp"
+
+	VerbosityModeDefault VerbosityMode = ""
+	VerbosityModeVerbose VerbosityMode = "verbose"
+	VerbosityModeDebug   VerbosityMode = "debug"
 
 	VersionModeDefault VersionMode = ""
 	VersionModeLight   VersionMode = "light"
@@ -45,6 +50,9 @@ type ScanOptions struct {
 	OSDetection      bool          `json:"osDetection,omitempty"`
 	Traceroute       bool          `json:"traceroute,omitempty"`
 	DNSMode          DNSMode       `json:"dnsMode,omitempty"`
+	VerbosityMode    VerbosityMode `json:"verbosityMode,omitempty"`
+	Reason           bool          `json:"reason,omitempty"`
+	OpenOnly         bool          `json:"openOnly,omitempty"`
 }
 
 func BuildOptionArgs(options ScanOptions) ([]string, error) {
@@ -102,6 +110,17 @@ func BuildOptionArgs(options ScanOptions) ([]string, error) {
 		return nil, err
 	}
 	args = append(args, dnsArgs...)
+	verbosityArgs, err := buildVerbosityArgs(options.VerbosityMode)
+	if err != nil {
+		return nil, err
+	}
+	args = append(args, verbosityArgs...)
+	if options.Reason {
+		args = append(args, "--reason")
+	}
+	if options.OpenOnly {
+		args = append(args, "--open")
+	}
 	return args, nil
 }
 
@@ -133,6 +152,15 @@ func ProfileArgsForOptions(profile Profile, options ScanOptions) []string {
 		if options.DiscoveryMode != DiscoveryModeDefault && isDiscoveryArg(arg) {
 			continue
 		}
+		if options.VerbosityMode != VerbosityModeDefault && isVerbosityArg(arg) {
+			continue
+		}
+		if options.Reason && arg == "--reason" {
+			continue
+		}
+		if options.OpenOnly && arg == "--open" {
+			continue
+		}
 		args = append(args, arg)
 	}
 	return args
@@ -150,6 +178,15 @@ func isTechniqueArg(value string) bool {
 func isDiscoveryArg(value string) bool {
 	switch value {
 	case "-Pn", "-sn":
+		return true
+	default:
+		return false
+	}
+}
+
+func isVerbosityArg(value string) bool {
+	switch value {
+	case "-v", "-vv":
 		return true
 	default:
 		return false
@@ -270,6 +307,19 @@ func buildDiscoveryArgs(mode DiscoveryMode) ([]string, error) {
 		return []string{"-Pn"}, nil
 	case DiscoveryModePing:
 		return []string{"-sn"}, nil
+	default:
+		return nil, ErrInvalidScanOption
+	}
+}
+
+func buildVerbosityArgs(mode VerbosityMode) ([]string, error) {
+	switch mode {
+	case VerbosityModeDefault:
+		return nil, nil
+	case VerbosityModeVerbose:
+		return []string{"-v"}, nil
+	case VerbosityModeDebug:
+		return []string{"-vv"}, nil
 	default:
 		return nil, ErrInvalidScanOption
 	}

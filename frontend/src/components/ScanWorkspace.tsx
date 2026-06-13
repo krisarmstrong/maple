@@ -8,10 +8,12 @@ import {
   isDNSMode,
   isScanTechnique,
   isTimingTemplate,
+  isVerbosityMode,
   isVersionMode,
   type ScanOptions,
   scanTechniques,
   timingTemplates,
+  verbosityModes,
   versionModes,
 } from "../core/scan-options";
 import { findProfile, type ScanProfileID, scanProfiles } from "../core/scan-profiles";
@@ -373,6 +375,25 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
               </select>
             </label>
             <label>
+              <span>Output detail</span>
+              <select
+                aria-label="Output detail"
+                value={scanOptions.verbosityMode}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  if (isVerbosityMode(value)) {
+                    updateScanOptions((current) => ({ ...current, verbosityMode: value }));
+                  }
+                }}
+              >
+                {verbosityModes.map((mode) => (
+                  <option key={mode.value || "default"} value={mode.value}>
+                    {mode.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
               <span>Ports</span>
               <input
                 disabled={scanOptions.allPorts}
@@ -473,6 +494,32 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                 type="checkbox"
               />
               <span>Traceroute</span>
+            </label>
+            <label>
+              <input
+                checked={scanOptions.reason}
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    reason: event.target.checked,
+                  }))
+                }
+                type="checkbox"
+              />
+              <span>Show reasons</span>
+            </label>
+            <label>
+              <input
+                checked={scanOptions.openOnly}
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    openOnly: event.target.checked,
+                  }))
+                }
+                type="checkbox"
+              />
+              <span>Only open ports</span>
             </label>
           </fieldset>
           {scanOptions.osDetection ? (

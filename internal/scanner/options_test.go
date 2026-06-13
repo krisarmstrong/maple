@@ -14,12 +14,15 @@ func TestBuildOptionArgsAddsStructuredNmapOptions(t *testing.T) {
 		OSDetection:      true,
 		Traceroute:       true,
 		DNSMode:          "skip",
+		VerbosityMode:    VerbosityModeDebug,
+		Reason:           true,
+		OpenOnly:         true,
 	})
 	if err != nil {
 		t.Fatalf("BuildOptionArgs returned error: %v", err)
 	}
 
-	want := []string{"-sU", "-Pn", "-T4", "-p", "22,80,443", "-sV", "--version-all", "-6", "-O", "--traceroute", "-n"}
+	want := []string{"-sU", "-Pn", "-T4", "-p", "22,80,443", "-sV", "--version-all", "-6", "-O", "--traceroute", "-n", "-vv", "--reason", "--open"}
 	if !sameStrings(args, want) {
 		t.Fatalf("args = %#v, want %#v", args, want)
 	}
@@ -57,6 +60,7 @@ func TestBuildOptionArgsRejectsInvalidOptions(t *testing.T) {
 		{VersionMode: "deep"},
 		{ScanTechnique: "ack"},
 		{DiscoveryMode: "arp"},
+		{VerbosityMode: "trace"},
 	}
 
 	for _, test := range tests {
@@ -67,7 +71,7 @@ func TestBuildOptionArgsRejectsInvalidOptions(t *testing.T) {
 }
 
 func TestProfileArgsForOptionsRemovesOverriddenProfileDefaults(t *testing.T) {
-	profile := Profile{Args: []string{"-sT", "-Pn", "-sV", "--version-light", "-T3", "--top-ports", "100"}}
+	profile := Profile{Args: []string{"-sT", "-Pn", "-sV", "--version-light", "-T3", "--top-ports", "100", "-v", "--reason", "--open"}}
 
 	args := ProfileArgsForOptions(profile, ScanOptions{
 		ScanTechnique:    ScanTechniqueSYN,
@@ -76,6 +80,9 @@ func TestProfileArgsForOptionsRemovesOverriddenProfileDefaults(t *testing.T) {
 		Ports:            "22,80",
 		ServiceDetection: true,
 		VersionMode:      VersionModeAll,
+		VerbosityMode:    VerbosityModeDebug,
+		Reason:           true,
+		OpenOnly:         true,
 	})
 
 	want := []string{}
