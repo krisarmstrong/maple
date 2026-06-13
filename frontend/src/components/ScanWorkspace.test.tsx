@@ -161,6 +161,8 @@ describe("ScanWorkspace", () => {
         ports: "",
         topPorts: 0,
         allPorts: false,
+        serviceDetection: false,
+        versionMode: "",
         ipv6: false,
         osDetection: false,
         traceroute: false,
@@ -187,6 +189,8 @@ describe("ScanWorkspace", () => {
       "-T4",
       "-p",
       "22,80,443",
+      "-sV",
+      "--version-all",
       "-6",
       "-O",
       "--traceroute",
@@ -199,6 +203,8 @@ describe("ScanWorkspace", () => {
     await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
     await userEvent.click(screen.getByRole("button", { name: "Options" }));
     await userEvent.selectOptions(screen.getByLabelText("Timing"), "T4");
+    await userEvent.click(screen.getByRole("checkbox", { name: "Service detection" }));
+    await userEvent.selectOptions(screen.getByLabelText("Version detail"), "all");
     await userEvent.type(screen.getByLabelText("Ports"), "22,80,443");
     await userEvent.click(screen.getByRole("checkbox", { name: "IPv6" }));
     await userEvent.click(screen.getByRole("checkbox", { name: "OS detection" }));
@@ -215,6 +221,8 @@ describe("ScanWorkspace", () => {
       options: {
         timingTemplate: "T4",
         ports: "22,80,443",
+        serviceDetection: true,
+        versionMode: "all",
         topPorts: 0,
         allPorts: false,
         ipv6: true,
@@ -225,7 +233,7 @@ describe("ScanWorkspace", () => {
     });
     expect(
       await screen.findByText(
-        "nmap -oX <managed-xml-file> -T4 -p 22,80,443 -6 -O --traceroute -n -- scanme.nmap.org",
+        "nmap -oX <managed-xml-file> -T4 -p 22,80,443 -sV --version-all -6 -O --traceroute -n -- scanme.nmap.org",
       ),
     ).toBeInTheDocument();
   });

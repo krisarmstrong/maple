@@ -267,6 +267,8 @@ export namespace scanner {
 	    ports?: string;
 	    topPorts?: number;
 	    allPorts?: boolean;
+	    serviceDetection?: boolean;
+	    versionMode?: string;
 	    ipv6?: boolean;
 	    osDetection?: boolean;
 	    traceroute?: boolean;
@@ -282,6 +284,8 @@ export namespace scanner {
 	        this.ports = source["ports"];
 	        this.topPorts = source["topPorts"];
 	        this.allPorts = source["allPorts"];
+	        this.serviceDetection = source["serviceDetection"];
+	        this.versionMode = source["versionMode"];
 	        this.ipv6 = source["ipv6"];
 	        this.osDetection = source["osDetection"];
 	        this.traceroute = source["traceroute"];

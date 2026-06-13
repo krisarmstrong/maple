@@ -1,11 +1,14 @@
 export type TimingTemplate = "" | "T0" | "T1" | "T2" | "T3" | "T4" | "T5";
 export type DNSMode = "" | "skip" | "system";
+export type VersionMode = "" | "light" | "all";
 
 export interface ScanOptions {
   timingTemplate: TimingTemplate;
   ports: string;
   topPorts: number;
   allPorts: boolean;
+  serviceDetection: boolean;
+  versionMode: VersionMode;
   ipv6: boolean;
   osDetection: boolean;
   traceroute: boolean;
@@ -17,6 +20,8 @@ export const defaultScanOptions: ScanOptions = {
   ports: "",
   topPorts: 0,
   allPorts: false,
+  serviceDetection: false,
+  versionMode: "",
   ipv6: false,
   osDetection: false,
   traceroute: false,
@@ -39,10 +44,20 @@ export const dnsModes: readonly { value: DNSMode; label: string }[] = [
   { value: "system", label: "Use system DNS resolver" },
 ];
 
+export const versionModes: readonly { value: VersionMode; label: string }[] = [
+  { value: "", label: "Default version detail" },
+  { value: "light", label: "Light probes" },
+  { value: "all", label: "All probes" },
+];
+
 export function isTimingTemplate(value: string): value is TimingTemplate {
   return timingTemplates.some((template) => template.value === value);
 }
 
 export function isDNSMode(value: string): value is DNSMode {
   return dnsModes.some((mode) => mode.value === value);
+}
+
+export function isVersionMode(value: string): value is VersionMode {
+  return versionModes.some((mode) => mode.value === value);
 }

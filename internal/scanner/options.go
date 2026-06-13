@@ -7,24 +7,31 @@ import (
 )
 
 type DNSMode string
+type VersionMode string
 
 const (
 	DNSModeDefault DNSMode = ""
 	DNSModeSkip    DNSMode = "skip"
 	DNSModeSystem  DNSMode = "system"
+
+	VersionModeDefault VersionMode = ""
+	VersionModeLight   VersionMode = "light"
+	VersionModeAll     VersionMode = "all"
 )
 
 var ErrInvalidScanOption = errors.New("enter valid structured Nmap options")
 
 type ScanOptions struct {
-	TimingTemplate string  `json:"timingTemplate,omitempty"`
-	Ports          string  `json:"ports,omitempty"`
-	TopPorts       int     `json:"topPorts,omitempty"`
-	AllPorts       bool    `json:"allPorts,omitempty"`
-	IPv6           bool    `json:"ipv6,omitempty"`
-	OSDetection    bool    `json:"osDetection,omitempty"`
-	Traceroute     bool    `json:"traceroute,omitempty"`
-	DNSMode        DNSMode `json:"dnsMode,omitempty"`
+	TimingTemplate   string      `json:"timingTemplate,omitempty"`
+	Ports            string      `json:"ports,omitempty"`
+	TopPorts         int         `json:"topPorts,omitempty"`
+	AllPorts         bool        `json:"allPorts,omitempty"`
+	ServiceDetection bool        `json:"serviceDetection,omitempty"`
+	VersionMode      VersionMode `json:"versionMode,omitempty"`
+	IPv6             bool        `json:"ipv6,omitempty"`
+	OSDetection      bool        `json:"osDetection,omitempty"`
+	Traceroute       bool        `json:"traceroute,omitempty"`
+	DNSMode          DNSMode     `json:"dnsMode,omitempty"`
 }
 
 func BuildOptionArgs(options ScanOptions) ([]string, error) {
@@ -53,6 +60,11 @@ func BuildOptionArgs(options ScanOptions) ([]string, error) {
 	if options.TopPorts != 0 {
 		args = append(args, "--top-ports", strconv.Itoa(options.TopPorts))
 	}
+	versionArgs, err := buildVersionArgs(options)
+	if err != nil {
+		return nil, err
+	}
+	args = append(args, versionArgs...)
 	if options.IPv6 {
 		args = append(args, "-6")
 	}
@@ -86,9 +98,28 @@ func ProfileArgsForOptions(profile Profile, options ScanOptions) []string {
 				continue
 			}
 		}
+		if hasVersionSelection(options) && isVersionArg(arg) {
+			if arg == "--version-intensity" {
+				index++
+			}
+			continue
+		}
 		args = append(args, arg)
 	}
 	return args
+}
+
+func hasVersionSelection(options ScanOptions) bool {
+	return options.ServiceDetection || options.VersionMode != VersionModeDefault
+}
+
+func isVersionArg(value string) bool {
+	switch value {
+	case "-sV", "--version-light", "--version-all", "--version-intensity":
+		return true
+	default:
+		return false
+	}
 }
 
 func validatePortSelection(options ScanOptions) error {
@@ -164,6 +195,23 @@ func buildDNSArgs(mode DNSMode) ([]string, error) {
 		return []string{"-n"}, nil
 	case DNSModeSystem:
 		return []string{"--system-dns"}, nil
+	default:
+		return nil, ErrInvalidScanOption
+	}
+}
+
+func buildVersionArgs(options ScanOptions) ([]string, error) {
+	if !hasVersionSelection(options) {
+		return nil, nil
+	}
+	args := []string{"-sV"}
+	switch options.VersionMode {
+	case VersionModeDefault:
+		return args, nil
+	case VersionModeLight:
+		return append(args, "--version-light"), nil
+	case VersionModeAll:
+		return append(args, "--version-all"), nil
 	default:
 		return nil, ErrInvalidScanOption
 	}

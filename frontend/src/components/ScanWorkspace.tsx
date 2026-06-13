@@ -5,8 +5,10 @@ import {
   dnsModes,
   isDNSMode,
   isTimingTemplate,
+  isVersionMode,
   type ScanOptions,
   timingTemplates,
+  versionModes,
 } from "../core/scan-options";
 import { findProfile, type ScanProfileID, scanProfiles } from "../core/scan-profiles";
 import { scanScope } from "../core/scan-scope";
@@ -304,6 +306,28 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
               </select>
             </label>
             <label>
+              <span>Version detail</span>
+              <select
+                value={scanOptions.versionMode}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  if (isVersionMode(value)) {
+                    updateScanOptions((current) => ({
+                      ...current,
+                      serviceDetection: value === "" ? current.serviceDetection : true,
+                      versionMode: value,
+                    }));
+                  }
+                }}
+              >
+                {versionModes.map((mode) => (
+                  <option key={mode.value || "default"} value={mode.value}>
+                    {mode.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
               <span>Ports</span>
               <input
                 disabled={scanOptions.allPorts}
@@ -354,6 +378,20 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                 type="checkbox"
               />
               <span>All ports</span>
+            </label>
+            <label>
+              <input
+                checked={scanOptions.serviceDetection}
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    serviceDetection: event.target.checked,
+                    versionMode: event.target.checked ? current.versionMode : "",
+                  }))
+                }
+                type="checkbox"
+              />
+              <span>Service detection</span>
             </label>
             <label>
               <input
