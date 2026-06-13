@@ -24,6 +24,8 @@ export interface ScanOptions {
   minRate: number;
   maxRetries: string;
   hostTimeout: string;
+  statsEvery: string;
+  packetTrace: boolean;
 }
 
 export const defaultScanOptions: ScanOptions = {
@@ -45,6 +47,8 @@ export const defaultScanOptions: ScanOptions = {
   minRate: 0,
   maxRetries: "",
   hostTimeout: "",
+  statsEvery: "",
+  packetTrace: false,
 };
 
 export const timingTemplates: readonly { value: TimingTemplate; label: string }[] = [

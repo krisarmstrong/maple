@@ -283,6 +283,8 @@ export namespace scanner {
 	    minRate?: number;
 	    maxRetries?: string;
 	    hostTimeout?: string;
+	    statsEvery?: string;
+	    packetTrace?: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new ScanOptions(source);
@@ -308,6 +310,8 @@ export namespace scanner {
 	        this.minRate = source["minRate"];
 	        this.maxRetries = source["maxRetries"];
 	        this.hostTimeout = source["hostTimeout"];
+	        this.statsEvery = source["statsEvery"];
+	        this.packetTrace = source["packetTrace"];
 	    }
 	}
 	export class Script {

@@ -476,6 +476,20 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                 value={scanOptions.hostTimeout}
               />
             </label>
+            <label>
+              <span>Stats interval</span>
+              <input
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    statsEvery: event.target.value,
+                  }))
+                }
+                placeholder="10s"
+                type="text"
+                value={scanOptions.statsEvery}
+              />
+            </label>
           </div>
           <fieldset className="option-toggle-grid">
             <legend>Scan behavior</legend>
@@ -570,6 +584,19 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
               />
               <span>Only open ports</span>
             </label>
+            <label>
+              <input
+                checked={scanOptions.packetTrace}
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    packetTrace: event.target.checked,
+                  }))
+                }
+                type="checkbox"
+              />
+              <span>Packet trace</span>
+            </label>
           </fieldset>
           {scanOptions.osDetection ? (
             <p className="option-warning">
@@ -599,6 +626,11 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
           {scanOptions.minRate > 0 ? (
             <p className="option-warning">
               Minimum packet rate can speed scans up, but aggressive values may reduce accuracy.
+            </p>
+          ) : null}
+          {scanOptions.packetTrace ? (
+            <p className="option-warning">
+              Packet trace emits detailed packet logs and can make output noisy.
             </p>
           ) : null}
         </div>

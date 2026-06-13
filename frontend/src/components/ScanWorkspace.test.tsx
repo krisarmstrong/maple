@@ -179,6 +179,8 @@ describe("ScanWorkspace", () => {
         minRate: 0,
         maxRetries: "",
         hostTimeout: "",
+        statsEvery: "",
+        packetTrace: false,
       },
       scripts: [
         { kind: "category", value: "safe" },
@@ -218,6 +220,9 @@ describe("ScanWorkspace", () => {
       "2",
       "--host-timeout",
       "30m",
+      "--stats-every",
+      "10s",
+      "--packet-trace",
       "--",
       "scanme.nmap.org",
     ]);
@@ -241,6 +246,8 @@ describe("ScanWorkspace", () => {
     await userEvent.type(screen.getByLabelText("Minimum packet rate"), "500");
     await userEvent.type(screen.getByLabelText("Maximum retries"), "2");
     await userEvent.type(screen.getByLabelText("Host timeout"), "30m");
+    await userEvent.type(screen.getByLabelText("Stats interval"), "10s");
+    await userEvent.click(screen.getByRole("checkbox", { name: "Packet trace" }));
     await userEvent.click(screen.getByRole("button", { name: "Preview" }));
 
     expect(previewScanCommandMock).toHaveBeenCalledWith({
@@ -269,11 +276,13 @@ describe("ScanWorkspace", () => {
         minRate: 500,
         maxRetries: "2",
         hostTimeout: "30m",
+        statsEvery: "10s",
+        packetTrace: true,
       },
     });
     expect(
       await screen.findByText(
-        "nmap -oX <managed-xml-file> -sU -Pn -T4 -p 22,80,443 -sV --version-all -6 -O --traceroute -n -vv --reason --open --min-rate 500 --max-retries 2 --host-timeout 30m -- scanme.nmap.org",
+        "nmap -oX <managed-xml-file> -sU -Pn -T4 -p 22,80,443 -sV --version-all -6 -O --traceroute -n -vv --reason --open --min-rate 500 --max-retries 2 --host-timeout 30m --stats-every 10s --packet-trace -- scanme.nmap.org",
       ),
     ).toBeInTheDocument();
   });
