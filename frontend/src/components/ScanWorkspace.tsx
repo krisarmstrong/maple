@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { buildScanScripts, type NSECategory, nseCategories } from "../core/nse-scripts";
 import {
   defaultScanOptions,
+  discoveryModes,
   dnsModes,
+  isDiscoveryMode,
   isDNSMode,
   isScanTechnique,
   isTimingTemplate,
@@ -291,6 +293,25 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
               </select>
             </label>
             <label>
+              <span>Host discovery</span>
+              <select
+                aria-label="Host discovery"
+                value={scanOptions.discoveryMode}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  if (isDiscoveryMode(value)) {
+                    updateScanOptions((current) => ({ ...current, discoveryMode: value }));
+                  }
+                }}
+              >
+                {discoveryModes.map((mode) => (
+                  <option key={mode.value || "default"} value={mode.value}>
+                    {mode.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
               <span>Timing</span>
               <select
                 aria-label="Timing"
@@ -467,6 +488,16 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
           {scanOptions.scanTechnique === "udp" ? (
             <p className="option-warning">
               UDP scans can be slow and may need elevated privileges for best results.
+            </p>
+          ) : null}
+          {scanOptions.discoveryMode === "skip" ? (
+            <p className="option-warning">
+              Skip host discovery treats every target as online and can make large scans slower.
+            </p>
+          ) : null}
+          {scanOptions.discoveryMode === "ping" ? (
+            <p className="option-warning">
+              Ping discovery only finds live hosts; it does not enumerate ports.
             </p>
           ) : null}
         </div>

@@ -158,6 +158,7 @@ describe("ScanWorkspace", () => {
       scriptArgsFile: "/Users/krisarmstrong/nse-args.txt",
       options: {
         scanTechnique: "",
+        discoveryMode: "",
         timingTemplate: "",
         ports: "",
         topPorts: 0,
@@ -188,6 +189,7 @@ describe("ScanWorkspace", () => {
       "-oX",
       "<managed-xml-file>",
       "-sU",
+      "-Pn",
       "-T4",
       "-p",
       "22,80,443",
@@ -205,6 +207,7 @@ describe("ScanWorkspace", () => {
     await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
     await userEvent.click(screen.getByRole("button", { name: "Options" }));
     await userEvent.selectOptions(screen.getByLabelText("Scan technique"), "udp");
+    await userEvent.selectOptions(screen.getByLabelText("Host discovery"), "skip");
     await userEvent.selectOptions(screen.getByLabelText("Timing"), "T4");
     await userEvent.click(screen.getByRole("checkbox", { name: "Service detection" }));
     await userEvent.selectOptions(screen.getByLabelText("Version detail"), "all");
@@ -223,6 +226,7 @@ describe("ScanWorkspace", () => {
       scriptArgsFile: "",
       options: {
         scanTechnique: "udp",
+        discoveryMode: "skip",
         timingTemplate: "T4",
         ports: "22,80,443",
         serviceDetection: true,
@@ -237,8 +241,27 @@ describe("ScanWorkspace", () => {
     });
     expect(
       await screen.findByText(
-        "nmap -oX <managed-xml-file> -sU -T4 -p 22,80,443 -sV --version-all -6 -O --traceroute -n -- scanme.nmap.org",
+        "nmap -oX <managed-xml-file> -sU -Pn -T4 -p 22,80,443 -sV --version-all -6 -O --traceroute -n -- scanme.nmap.org",
       ),
+    ).toBeInTheDocument();
+  });
+
+  it("warns when host discovery changes scan semantics", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Options" }));
+    await userEvent.selectOptions(screen.getByLabelText("Host discovery"), "skip");
+
+    expect(
+      screen.getByText(
+        "Skip host discovery treats every target as online and can make large scans slower.",
+      ),
+    ).toBeInTheDocument();
+
+    await userEvent.selectOptions(screen.getByLabelText("Host discovery"), "ping");
+
+    expect(
+      screen.getByText("Ping discovery only finds live hosts; it does not enumerate ports."),
     ).toBeInTheDocument();
   });
 

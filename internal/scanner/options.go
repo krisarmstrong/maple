@@ -7,6 +7,7 @@ import (
 )
 
 type DNSMode string
+type DiscoveryMode string
 type ScanTechnique string
 type VersionMode string
 
@@ -14,6 +15,10 @@ const (
 	DNSModeDefault DNSMode = ""
 	DNSModeSkip    DNSMode = "skip"
 	DNSModeSystem  DNSMode = "system"
+
+	DiscoveryModeDefault DiscoveryMode = ""
+	DiscoveryModeSkip    DiscoveryMode = "skip"
+	DiscoveryModePing    DiscoveryMode = "ping"
 
 	ScanTechniqueDefault ScanTechnique = ""
 	ScanTechniqueConnect ScanTechnique = "connect"
@@ -29,6 +34,7 @@ var ErrInvalidScanOption = errors.New("enter valid structured Nmap options")
 
 type ScanOptions struct {
 	ScanTechnique    ScanTechnique `json:"scanTechnique,omitempty"`
+	DiscoveryMode    DiscoveryMode `json:"discoveryMode,omitempty"`
 	TimingTemplate   string        `json:"timingTemplate,omitempty"`
 	Ports            string        `json:"ports,omitempty"`
 	TopPorts         int           `json:"topPorts,omitempty"`
@@ -52,6 +58,11 @@ func BuildOptionArgs(options ScanOptions) ([]string, error) {
 		return nil, err
 	}
 	args = append(args, techniqueArgs...)
+	discoveryArgs, err := buildDiscoveryArgs(options.DiscoveryMode)
+	if err != nil {
+		return nil, err
+	}
+	args = append(args, discoveryArgs...)
 	if options.TimingTemplate != "" {
 		timing, err := validateTimingTemplate(options.TimingTemplate)
 		if err != nil {
@@ -119,6 +130,9 @@ func ProfileArgsForOptions(profile Profile, options ScanOptions) []string {
 		if options.ScanTechnique != ScanTechniqueDefault && isTechniqueArg(arg) {
 			continue
 		}
+		if options.DiscoveryMode != DiscoveryModeDefault && isDiscoveryArg(arg) {
+			continue
+		}
 		args = append(args, arg)
 	}
 	return args
@@ -127,6 +141,15 @@ func ProfileArgsForOptions(profile Profile, options ScanOptions) []string {
 func isTechniqueArg(value string) bool {
 	switch value {
 	case "-sS", "-sT", "-sU":
+		return true
+	default:
+		return false
+	}
+}
+
+func isDiscoveryArg(value string) bool {
+	switch value {
+	case "-Pn", "-sn":
 		return true
 	default:
 		return false
@@ -234,6 +257,19 @@ func buildTechniqueArgs(technique ScanTechnique) ([]string, error) {
 		return []string{"-sS"}, nil
 	case ScanTechniqueUDP:
 		return []string{"-sU"}, nil
+	default:
+		return nil, ErrInvalidScanOption
+	}
+}
+
+func buildDiscoveryArgs(mode DiscoveryMode) ([]string, error) {
+	switch mode {
+	case DiscoveryModeDefault:
+		return nil, nil
+	case DiscoveryModeSkip:
+		return []string{"-Pn"}, nil
+	case DiscoveryModePing:
+		return []string{"-sn"}, nil
 	default:
 		return nil, ErrInvalidScanOption
 	}
