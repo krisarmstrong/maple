@@ -24,8 +24,10 @@ import {
 import { loadSavedPresets, makePresetID, type ScanPreset, savePreset } from "../core/scan-presets";
 import { findProfile, type ScanProfileID, scanProfiles } from "../core/scan-profiles";
 import { scanScope } from "../core/scan-scope";
+import { parseTargets } from "../core/scan-targets";
 import {
   type TargetModeID,
+  targetModeAcceptedSyntax,
   targetModeHelp,
   targetModeInputLabel,
   targetModePlaceholder,
@@ -72,9 +74,9 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
   const [log, setLog] = useState<LogEntry[]>([]);
   const [running, setRunning] = useState(false);
   const [status, setStatus] = useState<ScanStatus>("idle");
-  const targetSummary = summarizeTargets(targets);
   const selectedProfile = findProfile(profileId);
   const scope = scanScope(profileId, targets);
+  const parsedTargetSummary = targetBuilderSummary(targets);
   const scripts = buildScanScripts(
     scriptCategories,
     scriptNames,
@@ -84,6 +86,17 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
   const visiblePopularScripts = popularNSEScripts.filter((script) =>
     script.toLowerCase().includes(scriptSearch.trim().toLowerCase()),
   );
+  const selectedScriptNames = scriptNameLines(scriptNames);
+  const selectedScriptValues = [
+    ...scriptCategories.map((category) => ({ id: `category:${category}`, label: category })),
+    ...selectedScriptNames.map((script) => ({ id: `name:${script}`, label: script })),
+    ...lineValues(customScriptPaths).map((script) => ({ id: `path:${script}`, label: script })),
+    ...lineValues(customScriptDirectories).map((script) => ({
+      id: `directory:${script}`,
+      label: script,
+    })),
+  ];
+  const previewTokens = commandTokens(preview);
 
   useEffect(
     () =>
@@ -115,6 +128,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
     setError("");
     try {
       setPreview(await previewScanCommand(request));
+      setStatus("previewed");
       setActivePanel("output");
     } catch (caught) {
       setActivePanel("configure");
@@ -217,18 +231,42 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
   }
 
   function updateNamedScript(name: string, checked: boolean): void {
-    const current = new Set(
-      scriptNames
-        .split(/\n/u)
-        .map((script) => script.trim())
-        .filter(Boolean),
-    );
+    const current = new Set(scriptNameLines(scriptNames));
     if (checked) {
       current.add(name);
     } else {
       current.delete(name);
     }
     setScriptNames([...current].sort().join("\n"));
+    setPreview([]);
+  }
+
+  function removeSelectedScript(id: string): void {
+    const [kind, value] = splitSelectedScriptID(id);
+    if (kind === "category" && isNSECategory(value)) {
+      setScriptCategories((current) => current.filter((category) => category !== value));
+    }
+    if (kind === "name") {
+      setScriptNames(
+        scriptNameLines(scriptNames)
+          .filter((script) => script !== value)
+          .join("\n"),
+      );
+    }
+    if (kind === "path") {
+      setCustomScriptPaths(
+        lineValues(customScriptPaths)
+          .filter((script) => script !== value)
+          .join("\n"),
+      );
+    }
+    if (kind === "directory") {
+      setCustomScriptDirectories(
+        lineValues(customScriptDirectories)
+          .filter((script) => script !== value)
+          .join("\n"),
+      );
+    }
     setPreview([]);
   }
 
@@ -335,6 +373,12 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
               </select>
             </label>
             <div className="target-input">
+              <div>
+                <h3>Target Builder</h3>
+                <p className="target-mode-help">
+                  Choose the target shape first so Maple can validate the syntax before Nmap runs.
+                </p>
+              </div>
               <fieldset className="target-mode-picker">
                 <legend>Target type</legend>
                 {targetModes.map((mode) => (
@@ -363,16 +407,24 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
               <p className="target-mode-example">
                 Example: <code>{targetModePlaceholder(targetModeId)}</code>
               </p>
+              <div className="target-builder-summary">
+                <div>
+                  <strong>Accepted syntax</strong>
+                  <span>{targetModeAcceptedSyntax(targetModeId)}</span>
+                </div>
+                <div>
+                  <strong>Parsed targets</strong>
+                  <span>{parsedTargetSummary.parsedTargets}</span>
+                </div>
+                <div>
+                  <strong>Estimated addresses</strong>
+                  <span>{parsedTargetSummary.estimatedAddresses}</span>
+                </div>
+              </div>
             </div>
           </div>
           <ProfileSummary profile={selectedProfile} />
-          {targetSummary === "" ? null : <p className="target-summary">{targetSummary}</p>}
-          {scope === undefined ? null : (
-            <div className="scan-scope">
-              <span>{scope.label}</span>
-              {scope.warning === undefined ? null : <strong>{scope.warning}</strong>}
-            </div>
-          )}
+          {scope?.warning === undefined ? null : <p className="scan-scope">{scope.warning}</p>}
         </div>
       ) : null}
 
@@ -587,6 +639,20 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
               />
             </label>
             <label>
+              <span>Max RTT timeout</span>
+              <input
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    maxRttTimeout: event.target.value,
+                  }))
+                }
+                placeholder="2s"
+                type="text"
+                value={scanOptions.maxRttTimeout}
+              />
+            </label>
+            <label>
               <span>Stats interval</span>
               <input
                 onChange={(event) =>
@@ -765,9 +831,13 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                   type="checkbox"
                 />
                 <span>{category}</span>
+                {isRiskyNSECategory(category) ? (
+                  <small className="script-risk-label">Use carefully</small>
+                ) : null}
               </label>
             ))}
           </fieldset>
+          <p className="target-mode-help">May be intrusive, exploit-oriented, or disruptive.</p>
           <label className="custom-script-paths">
             <span>Find built-in scripts</span>
             <input
@@ -782,7 +852,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
             {visiblePopularScripts.map((script) => (
               <label key={script}>
                 <input
-                  checked={scriptNames.split(/\n/u).includes(script)}
+                  checked={selectedScriptNames.includes(script)}
                   onChange={(event) => updateNamedScript(script, event.target.checked)}
                   type="checkbox"
                 />
@@ -802,6 +872,24 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
               value={scriptNames}
             />
           </label>
+          {selectedScriptValues.length === 0 ? null : (
+            <div className="selected-script-list">
+              <strong>Selected scripts</strong>
+              <div>
+                {selectedScriptValues.map((script) => (
+                  <button
+                    aria-label={`Remove ${script.label}`}
+                    className="script-chip"
+                    key={script.id}
+                    onClick={() => removeSelectedScript(script.id)}
+                    type="button"
+                  >
+                    {script.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <label className="custom-script-paths">
             <span>Custom .nse script files</span>
             <textarea
@@ -859,17 +947,41 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
 
       {activePanel === "output" ? (
         <div className="scan-panel output-panel">
-          {status === "idle" ? null : <p className="scan-status">{scanStatusLabel(status)}</p>}
-          {preview.length === 0 ? (
-            <p className="muted">Preview a scan to inspect the exact argv before execution.</p>
-          ) : (
-            <code className="command-preview">{preview.join(" ")}</code>
-          )}
-          <output className="scan-log" data-testid="scan-log">
-            {log.map((entry) => (
-              <span key={entry.id}>{entry.text}</span>
-            ))}
-          </output>
+          <section className="output-section">
+            <h3>Run status</h3>
+            <p className="scan-status">{scanStatusLabel(status)}</p>
+            <p className="muted">Raw XML is captured for History exports, not shown here.</p>
+          </section>
+          <section className="output-section">
+            <h3>Preview argv</h3>
+            {preview.length === 0 ? (
+              <p className="muted">Preview a scan to inspect the exact argv before execution.</p>
+            ) : (
+              <>
+                <ul className="argv-token-list" aria-label="Preview argv tokens">
+                  {previewTokens.map((token) => (
+                    <li className="argv-token" key={token.id}>
+                      {token.value}
+                    </li>
+                  ))}
+                </ul>
+                <code className="command-preview">{preview.join(" ")}</code>
+              </>
+            )}
+          </section>
+          <section className="output-section">
+            <h3>Live log</h3>
+            <output className="scan-log" data-testid="scan-log">
+              {log.length === 0 ? <span>No live log lines yet.</span> : null}
+              {log.map((entry) => (
+                <span key={entry.id}>{entry.text}</span>
+              ))}
+            </output>
+          </section>
+          <section className="output-section">
+            <h3>Diagnostics</h3>
+            <p className="muted">Warnings and stderr lines appear in the live log.</p>
+          </section>
         </div>
       ) : null}
     </section>
@@ -894,6 +1006,59 @@ function browserStorage(): Storage | undefined {
   } catch {
     return undefined;
   }
+}
+
+function targetBuilderSummary(targets: string): {
+  parsedTargets: string;
+  estimatedAddresses: string;
+} {
+  const result = parseTargets(targets);
+  if (!result.ok) {
+    return { parsedTargets: "No valid targets yet", estimatedAddresses: "n/a" };
+  }
+  const scope = scanScope("connect", targets);
+  return {
+    parsedTargets: summarizeTargets(targets),
+    estimatedAddresses: scope?.label ?? "n/a",
+  };
+}
+
+function commandTokens(argv: readonly string[]): Array<{ id: string; value: string }> {
+  const seen = new Map<string, number>();
+  return argv.map((value) => {
+    const count = (seen.get(value) ?? 0) + 1;
+    seen.set(value, count);
+    return { id: `${value}:${count}`, value };
+  });
+}
+
+function lineValues(value: string): string[] {
+  return value
+    .split(/\n/u)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function scriptNameLines(value: string): string[] {
+  return lineValues(value);
+}
+
+function splitSelectedScriptID(id: string): [string, string] {
+  const separator = id.indexOf(":");
+  if (separator === -1) {
+    return ["", id];
+  }
+  return [id.slice(0, separator), id.slice(separator + 1)];
+}
+
+function isNSECategory(value: string): value is NSECategory {
+  return nseCategories.includes(value as NSECategory);
+}
+
+function isRiskyNSECategory(category: NSECategory): boolean {
+  return (
+    category === "dos" || category === "exploit" || category === "intrusive" || category === "vuln"
+  );
 }
 
 function errorMessage(caught: unknown): string {

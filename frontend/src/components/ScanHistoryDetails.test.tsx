@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import type { ScanHistoryRecord } from "../services/history-service";
 import { ScanHistoryDetails } from "./ScanHistoryDetails";
@@ -26,6 +27,55 @@ describe("ScanHistoryDetails", () => {
     expect(screen.getByText("22/tcp")).toBeInTheDocument();
     expect(screen.getByText("Open")).toBeInTheDocument();
     expect(screen.getByText("ssh")).toBeInTheDocument();
+  });
+
+  it("groups ports by state and filters result details", async () => {
+    render(
+      <ScanHistoryDetails
+        record={scanRecord({
+          hosts: [
+            {
+              address: "192.0.2.10",
+              state: "up",
+              ports: [
+                { id: "22", protocol: "tcp", state: "open", service: "ssh" },
+                { id: "80", protocol: "tcp", state: "closed", reason: "conn-refused" },
+                { id: "443", protocol: "tcp", state: "filtered", reason: "no-response" },
+              ],
+            },
+            {
+              address: "192.0.2.11",
+              state: "down",
+              ports: [{ id: "25", protocol: "tcp", state: "closed" }],
+            },
+          ],
+        })}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "All ports" })).toHaveAttribute(
+      "aria-current",
+      "true",
+    );
+    expect(screen.getAllByText("Open ports").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Closed ports").length).toBeGreaterThan(0);
+    expect(screen.getByText("Filtered ports")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Open ports" }));
+
+    expect(screen.getByText("22/tcp")).toBeInTheDocument();
+    expect(screen.queryByText("80/tcp")).not.toBeInTheDocument();
+    expect(screen.queryByText("25/tcp")).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Hosts up" }));
+
+    expect(screen.getByText("192.0.2.10")).toBeInTheDocument();
+    expect(screen.queryByText("192.0.2.11")).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Hosts with findings" }));
+
+    expect(screen.getByText("192.0.2.10")).toBeInTheDocument();
+    expect(screen.queryByText("192.0.2.11")).not.toBeInTheDocument();
   });
 
   it("shows service product and version when available", () => {
@@ -108,7 +158,8 @@ describe("ScanHistoryDetails", () => {
       />,
     );
 
-    expect(screen.getByText("Strange read error from 127.0.0.1")).toBeInTheDocument();
+    expect(screen.getByText("Diagnostics")).toBeInTheDocument();
+    expect(screen.getByText("Strange read error from 127.0.0.1")).not.toBeVisible();
   });
 
   it("shows saved scan errors", () => {

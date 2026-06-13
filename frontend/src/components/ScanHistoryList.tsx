@@ -112,7 +112,11 @@ export function ScanHistoryList({ records, onChanged }: ScanHistoryListProps): R
         Showing {visibleRecords.length} of {records.length} scans
       </p>
       {error === "" ? null : <p className="error">{error}</p>}
-      {exportPath === "" ? null : <p className="success">Exported to {exportPath}</p>}
+      {exportPath === "" ? null : (
+        <p className="success">
+          Saved {filenameFromPath(exportPath)} to {exportPath}
+        </p>
+      )}
       {visibleRecords.length === 0 ? (
         <p className="muted">No scans match the current filters.</p>
       ) : null}
@@ -134,13 +138,13 @@ export function ScanHistoryList({ records, onChanged }: ScanHistoryListProps): R
             {report?.runId === record.runId ? "Hide Report" : "Report"}
           </button>
           <button type="button" onClick={() => void exportRecord(record.runId, "xml")}>
-            Export XML
+            Raw XML
           </button>
           <button type="button" onClick={() => void exportRecord(record.runId, "json")}>
-            Export JSON
+            Full JSON
           </button>
           <button type="button" onClick={() => void exportRecord(record.runId, "markdown")}>
-            Export Report
+            Markdown Report
           </button>
           <button type="button" onClick={() => void deleteRecord(record.runId)}>
             {pendingDeleteRunId === record.runId ? "Confirm Delete" : "Delete"}
@@ -178,4 +182,8 @@ function formatTimestamp(value: string): string {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(date);
+}
+
+function filenameFromPath(path: string): string {
+  return path.split(/[\\/]/u).at(-1) ?? path;
 }

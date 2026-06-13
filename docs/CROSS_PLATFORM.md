@@ -59,6 +59,16 @@ make build
 
 Then run the relevant smoke checklist in `docs/SMOKE_TEST.md` on the target operating system.
 
+## MVP Platform Bar
+
+The usable MVP platform bar is:
+
+- macOS: `make build` produces a runnable desktop binary and the macOS smoke checklist passes.
+- Windows: package command generation is validated locally; final package smoke runs on a Windows host with user-installed Nmap and, when needed, user-installed Npcap.
+- Linux: package command generation records Wails' macOS cross-compilation limitation; final package smoke runs on a Linux host with user-installed Nmap and WebKitGTK dependencies.
+
+Real signed installers are release work after this MVP bar, not a prerequisite for the MVP baseline.
+
 ## Current Packaging Note
 
 On macOS 26 SDK with Wails v2.12.0, `make build` succeeds and produces a runnable desktop binary, but `wails build` package mode currently reports `exit status 1` during the Wails compile wrapper even when the equivalent `go build` command succeeds. Keep `make build` as the validated local binary path until this Wails/SDK packaging issue is resolved on the packaging host.

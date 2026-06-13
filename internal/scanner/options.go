@@ -56,6 +56,7 @@ type ScanOptions struct {
 	MinRate          int           `json:"minRate,omitempty"`
 	MaxRetries       string        `json:"maxRetries,omitempty"`
 	HostTimeout      string        `json:"hostTimeout,omitempty"`
+	MaxRTTTimeout    string        `json:"maxRttTimeout,omitempty"`
 	StatsEvery       string        `json:"statsEvery,omitempty"`
 	PacketTrace      bool          `json:"packetTrace,omitempty"`
 }
@@ -138,6 +139,9 @@ func BuildOptionArgs(options ScanOptions) ([]string, error) {
 	if strings.TrimSpace(options.HostTimeout) != "" {
 		args = append(args, "--host-timeout", strings.TrimSpace(options.HostTimeout))
 	}
+	if strings.TrimSpace(options.MaxRTTTimeout) != "" {
+		args = append(args, "--max-rtt-timeout", strings.TrimSpace(options.MaxRTTTimeout))
+	}
 	if strings.TrimSpace(options.StatsEvery) != "" {
 		args = append(args, "--stats-every", strings.TrimSpace(options.StatsEvery))
 	}
@@ -193,6 +197,10 @@ func ProfileArgsForOptions(profile Profile, options ScanOptions) []string {
 			continue
 		}
 		if strings.TrimSpace(options.HostTimeout) != "" && arg == "--host-timeout" {
+			index++
+			continue
+		}
+		if strings.TrimSpace(options.MaxRTTTimeout) != "" && arg == "--max-rtt-timeout" {
 			index++
 			continue
 		}
@@ -283,6 +291,9 @@ func validatePerformanceOptions(options ScanOptions) error {
 		}
 	}
 	if _, err := validateDurationExpression(options.HostTimeout); err != nil {
+		return err
+	}
+	if _, err := validateDurationExpression(options.MaxRTTTimeout); err != nil {
 		return err
 	}
 	if _, err := validateDurationExpression(options.StatsEvery); err != nil {

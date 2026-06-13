@@ -44,6 +44,7 @@ func Markdown(input MarkdownInput) string {
 	writeLine(&builder, "Hosts found", fmt.Sprintf("%d", input.Summary.HostCount))
 	writeLine(&builder, "Hosts up", fmt.Sprintf("%d", input.Summary.HostsUp))
 	writeLine(&builder, "Hosts down", fmt.Sprintf("%d", input.Summary.HostsDown))
+	writeLine(&builder, "Open ports", fmt.Sprintf("%d", openPortCount(input.Summary.Hosts)))
 	if input.Summary.ElapsedTime != "" {
 		writeLine(&builder, "Elapsed", input.Summary.ElapsedTime+"s")
 	}
@@ -78,6 +79,8 @@ func commandLine(preview scanner.CommandPreview) string {
 
 func writeHosts(builder *strings.Builder, hosts []Host) {
 	if len(hosts) == 0 {
+		builder.WriteString("\n## Hosts\n\n")
+		builder.WriteString("No parsed hosts were reported.\n")
 		return
 	}
 	builder.WriteString("\n## Hosts\n\n")
@@ -109,17 +112,21 @@ func writePorts(builder *strings.Builder, host Host) {
 	builder.WriteString("\n### Ports for ")
 	builder.WriteString(hostLabel(host))
 	builder.WriteString("\n\n")
-	builder.WriteString("| Port | State | Service | Version |\n")
-	builder.WriteString("| --- | --- | --- | --- |\n")
+	builder.WriteString("| Port | State | Reason | Service | Version | Extra |\n")
+	builder.WriteString("| --- | --- | --- | --- | --- | --- |\n")
 	for _, port := range host.Ports {
 		builder.WriteString("| ")
 		builder.WriteString(markdownCell(port.Protocol + "/" + port.ID))
 		builder.WriteString(" | ")
 		builder.WriteString(markdownCell(port.State))
 		builder.WriteString(" | ")
+		builder.WriteString(markdownCell(port.Reason))
+		builder.WriteString(" | ")
 		builder.WriteString(markdownCell(port.Service))
 		builder.WriteString(" | ")
 		builder.WriteString(markdownCell(serviceVersion(port)))
+		builder.WriteString(" | ")
+		builder.WriteString(markdownCell(port.ExtraInfo))
 		builder.WriteString(" |\n")
 	}
 }
@@ -143,4 +150,16 @@ func serviceVersion(port Port) string {
 		parts = append(parts, port.Version)
 	}
 	return strings.Join(parts, " ")
+}
+
+func openPortCount(hosts []Host) int {
+	count := 0
+	for _, host := range hosts {
+		for _, port := range host.Ports {
+			if port.State == "open" {
+				count++
+			}
+		}
+	}
+	return count
 }

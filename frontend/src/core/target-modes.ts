@@ -7,6 +7,7 @@ export interface TargetMode {
   label: string;
   help: string;
   placeholder: string;
+  acceptedSyntax: string;
 }
 
 export type TargetModeValidation = { ok: true } | { ok: false; message: string };
@@ -17,24 +18,29 @@ export const targetModes: TargetMode[] = [
     label: "Single target",
     help: "Scan one hostname or IP address.",
     placeholder: "scanme.nmap.org",
+    acceptedSyntax: "One hostname, IPv4 address, or IPv6 address.",
   },
   {
     id: "range",
     label: "IPv4 range",
     help: "Scan an inclusive IPv4 last-octet range.",
     placeholder: "192.168.1.1-20",
+    acceptedSyntax: "One IPv4 last-octet range like 192.168.1.1-20.",
   },
   {
     id: "subnet",
     label: "Subnet",
     help: "Scan one CIDR subnet.",
     placeholder: "192.168.1.0/24",
+    acceptedSyntax: "One IPv4 or IPv6 CIDR subnet.",
   },
   {
     id: "list",
     label: "Target list",
     help: "Scan comma-separated or newline-separated targets.",
     placeholder: "scanme.nmap.org, 192.168.1.1, 10.0.0.0/24",
+    acceptedSyntax:
+      "Hostnames, IPs, CIDR subnets, or IPv4 ranges separated by commas or new lines.",
   },
 ];
 
@@ -57,6 +63,10 @@ export function targetModeInputLabel(modeID: TargetModeID): string {
     return "CIDR subnet";
   }
   return "Target list";
+}
+
+export function targetModeAcceptedSyntax(modeID: TargetModeID): string {
+  return findTargetMode(modeID).acceptedSyntax;
 }
 
 export function validateTargetsForMode(

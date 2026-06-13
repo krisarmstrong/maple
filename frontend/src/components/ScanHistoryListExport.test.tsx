@@ -21,7 +21,7 @@ describe("ScanHistoryList exports", () => {
   it("exports raw scan XML from history", async () => {
     render(<ScanHistoryList records={[scanRecord("scan-1")]} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Export XML" }));
+    await userEvent.click(screen.getByRole("button", { name: "Raw XML" }));
 
     expect(exportScanHistoryRecordMock).toHaveBeenCalledWith("scan-1", "xml");
   });
@@ -29,7 +29,7 @@ describe("ScanHistoryList exports", () => {
   it("exports raw scan JSON from history", async () => {
     render(<ScanHistoryList records={[scanRecord("scan-1")]} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Export JSON" }));
+    await userEvent.click(screen.getByRole("button", { name: "Full JSON" }));
 
     expect(exportScanHistoryRecordMock).toHaveBeenCalledWith("scan-1", "json");
   });
@@ -37,7 +37,7 @@ describe("ScanHistoryList exports", () => {
   it("exports markdown reports from history", async () => {
     render(<ScanHistoryList records={[scanRecord("scan-1")]} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Export Report" }));
+    await userEvent.click(screen.getByRole("button", { name: "Markdown Report" }));
 
     expect(exportScanHistoryRecordMock).toHaveBeenCalledWith("scan-1", "markdown");
   });
@@ -46,10 +46,10 @@ describe("ScanHistoryList exports", () => {
     exportScanHistoryRecordMock.mockResolvedValue("/Users/krisarmstrong/Desktop/maple-scan.md");
     render(<ScanHistoryList records={[scanRecord("scan-1")]} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Export Report" }));
+    await userEvent.click(screen.getByRole("button", { name: "Markdown Report" }));
 
     expect(
-      await screen.findByText("Exported to /Users/krisarmstrong/Desktop/maple-scan.md"),
+      await screen.findByText("Saved maple-scan.md to /Users/krisarmstrong/Desktop/maple-scan.md"),
     ).toBeInTheDocument();
   });
 });

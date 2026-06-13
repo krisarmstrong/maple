@@ -287,6 +287,7 @@ export namespace scanner {
 	    minRate?: number;
 	    maxRetries?: string;
 	    hostTimeout?: string;
+	    maxRttTimeout?: string;
 	    statsEvery?: string;
 	    packetTrace?: boolean;
 	
@@ -314,6 +315,7 @@ export namespace scanner {
 	        this.minRate = source["minRate"];
 	        this.maxRetries = source["maxRetries"];
 	        this.hostTimeout = source["hostTimeout"];
+	        this.maxRttTimeout = source["maxRttTimeout"];
 	        this.statsEvery = source["statsEvery"];
 	        this.packetTrace = source["packetTrace"];
 	    }

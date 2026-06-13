@@ -24,6 +24,7 @@ export interface ScanOptions {
   minRate: number;
   maxRetries: string;
   hostTimeout: string;
+  maxRttTimeout: string;
   statsEvery: string;
   packetTrace: boolean;
 }
@@ -47,6 +48,7 @@ export const defaultScanOptions: ScanOptions = {
   minRate: 0,
   maxRetries: "",
   hostTimeout: "",
+  maxRttTimeout: "",
   statsEvery: "",
   packetTrace: false,
 };

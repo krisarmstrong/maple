@@ -49,8 +49,19 @@ describe("ScanWorkspace", () => {
       "aria-current",
       "page",
     );
+    expect(screen.getByRole("heading", { name: "Target Builder" })).toBeInTheDocument();
     expect(screen.getByLabelText("Targets")).toBeInTheDocument();
     expect(screen.queryByLabelText("Custom .nse script files")).not.toBeInTheDocument();
+  });
+
+  it("renders the scan subtitle once", () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    expect(
+      screen.getAllByText(
+        "Choose a safe profile, validate targets, preview argv, then run Nmap locally.",
+      ),
+    ).toHaveLength(1);
   });
 
   it("opens NSE controls from the Scripts tab", async () => {
@@ -96,6 +107,15 @@ describe("ScanWorkspace", () => {
     await userEvent.click(screen.getByRole("button", { name: "Preview" }));
 
     expect(screen.getByRole("button", { name: "Output" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("heading", { name: "Preview argv" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Run status" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Live log" })).toBeInTheDocument();
+    expect(screen.getByText("Preview ready")).toBeInTheDocument();
+    expect(
+      screen.getByText("Raw XML is captured for History exports, not shown here."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("nmap")).toHaveClass("argv-token");
+    expect(screen.getByText("--")).toHaveClass("argv-token");
     expect(
       await screen.findByText("nmap -oX <managed-xml-file> -sn -- scanme.nmap.org"),
     ).toBeInTheDocument();
@@ -199,6 +219,7 @@ describe("ScanWorkspace", () => {
         minRate: 0,
         maxRetries: "",
         hostTimeout: "",
+        maxRttTimeout: "",
         statsEvery: "",
         packetTrace: false,
       },
@@ -242,6 +263,8 @@ describe("ScanWorkspace", () => {
       "2",
       "--host-timeout",
       "30m",
+      "--max-rtt-timeout",
+      "2s",
       "--stats-every",
       "10s",
       "--packet-trace",
@@ -268,6 +291,7 @@ describe("ScanWorkspace", () => {
     await userEvent.type(screen.getByLabelText("Minimum packet rate"), "500");
     await userEvent.type(screen.getByLabelText("Maximum retries"), "2");
     await userEvent.type(screen.getByLabelText("Host timeout"), "30m");
+    await userEvent.type(screen.getByLabelText("Max RTT timeout"), "2s");
     await userEvent.type(screen.getByLabelText("Stats interval"), "10s");
     await userEvent.click(screen.getByRole("checkbox", { name: "Packet trace" }));
     await userEvent.click(screen.getByRole("button", { name: "Preview" }));
@@ -298,13 +322,14 @@ describe("ScanWorkspace", () => {
         minRate: 500,
         maxRetries: "2",
         hostTimeout: "30m",
+        maxRttTimeout: "2s",
         statsEvery: "10s",
         packetTrace: true,
       },
     });
     expect(
       await screen.findByText(
-        "nmap -oX <managed-xml-file> -sU -Pn -T4 -p 22,80,443 -sV --version-all -6 -O --traceroute -n -vv --reason --open --min-rate 500 --max-retries 2 --host-timeout 30m --stats-every 10s --packet-trace -- scanme.nmap.org",
+        "nmap -oX <managed-xml-file> -sU -Pn -T4 -p 22,80,443 -sV --version-all -6 -O --traceroute -n -vv --reason --open --min-rate 500 --max-retries 2 --host-timeout 30m --max-rtt-timeout 2s --stats-every 10s --packet-trace -- scanme.nmap.org",
       ),
     ).toBeInTheDocument();
   });
@@ -467,6 +492,9 @@ describe("ScanWorkspace", () => {
     expect(
       screen.getByText("1 hostname, 1 IP address, 1 subnet, 1 IPv4 range"),
     ).toBeInTheDocument();
+    expect(screen.getByText("Parsed targets")).toBeInTheDocument();
+    expect(screen.getByText("Estimated addresses")).toBeInTheDocument();
+    expect(screen.getByText("Accepted syntax")).toBeInTheDocument();
     expect(screen.getByText("4 target expressions, up to 278 addresses")).toBeInTheDocument();
   });
 
@@ -541,6 +569,33 @@ describe("ScanWorkspace", () => {
 
     expect(screen.getByLabelText("Targets")).toHaveValue("scanme.nmap.org");
     expect(screen.getByText("1 hostname")).toBeInTheDocument();
+  });
+
+  it("shows selected script chips and removes one without editing textarea text", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
+    await userEvent.type(screen.getByLabelText("Built-in script names"), "http-title\nssl-cert");
+
+    expect(screen.getByText("Selected scripts")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove http-title" })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Remove http-title" }));
+
+    expect(screen.queryByRole("button", { name: "Remove http-title" })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Built-in script names")).toHaveValue("ssl-cert");
+  });
+
+  it("labels risky NSE categories", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
+
+    expect(screen.getByText("vuln")).toBeInTheDocument();
+    expect(screen.getAllByText("Use carefully")).not.toHaveLength(0);
+    expect(
+      screen.getByText("May be intrusive, exploit-oriented, or disruptive."),
+    ).toBeInTheDocument();
   });
 
   it("blocks scan start for invalid targets", async () => {

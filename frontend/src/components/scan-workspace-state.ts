@@ -10,7 +10,7 @@ export interface LogEntry {
   text: string;
 }
 
-export type ScanStatus = "idle" | "running" | "complete" | "failed";
+export type ScanStatus = "idle" | "previewed" | "running" | "complete" | "failed" | "cancelled";
 
 export interface ScanEventHandlers {
   setRunning: (running: boolean) => void;
@@ -81,8 +81,17 @@ export function handleScanEvent(event: ScanEvent, handlers: ScanEventHandlers): 
 }
 
 export function scanStatusLabel(status: ScanStatus): string {
+  if (status === "idle") {
+    return "Ready to preview";
+  }
+  if (status === "previewed") {
+    return "Preview ready";
+  }
   if (status === "running") {
     return "Scan running";
+  }
+  if (status === "cancelled") {
+    return "Scan cancelled";
   }
   return status === "failed" ? "Scan failed" : "Scan complete";
 }
