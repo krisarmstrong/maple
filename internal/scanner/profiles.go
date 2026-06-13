@@ -26,6 +26,7 @@ type ScanRequest struct {
 	NmapPath       string      `json:"nmapPath"`
 	Options        ScanOptions `json:"options,omitempty"`
 	Scripts        []Script    `json:"scripts,omitempty"`
+	ScriptArgs     string      `json:"scriptArgs,omitempty"`
 	ScriptArgsFile string      `json:"scriptArgsFile,omitempty"`
 }
 

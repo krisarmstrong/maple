@@ -71,6 +71,11 @@ func buildCommandParts(request scanner.ScanRequest) (Command, scanner.Profile, [
 	if err != nil {
 		return Command{}, scanner.Profile{}, nil, err
 	}
+	scriptArgsValueArgs, err := scanner.BuildScriptArgsValueArgs(request.ScriptArgs)
+	if err != nil {
+		return Command{}, scanner.Profile{}, nil, err
+	}
+	scriptArgs = append(scriptArgs, scriptArgsValueArgs...)
 	scriptArgsFileArgs, err := scanner.BuildScriptArgsFileArgs(request.ScriptArgsFile)
 	if err != nil {
 		return Command{}, scanner.Profile{}, nil, err
@@ -121,6 +126,11 @@ func previewCommandParts(request scanner.ScanRequest) (Command, scanner.Profile,
 	if err != nil {
 		return Command{}, scanner.Profile{}, nil, err
 	}
+	scriptArgsValueArgs, err := scanner.BuildScriptArgsValueArgs(request.ScriptArgs)
+	if err != nil {
+		return Command{}, scanner.Profile{}, nil, err
+	}
+	scriptArgs = append(scriptArgs, scriptArgsValueArgs...)
 	scriptArgsFileArgs, err := scanner.BuildScriptArgsFileArgs(request.ScriptArgsFile)
 	if err != nil {
 		return Command{}, scanner.Profile{}, nil, err

@@ -72,6 +72,35 @@ func TestBuildScriptArgsFileArgs(t *testing.T) {
 	}
 }
 
+func TestBuildScriptArgsValueArgs(t *testing.T) {
+	args, err := BuildScriptArgsValueArgs("userdb=/tmp/users.txt,passdb=/tmp/pass.txt")
+	if err != nil {
+		t.Fatalf("BuildScriptArgsValueArgs returned error: %v", err)
+	}
+
+	want := []string{"--script-args", "userdb=/tmp/users.txt,passdb=/tmp/pass.txt"}
+	if !sameStringSlices(args, want) {
+		t.Fatalf("args = %#v, want %#v", args, want)
+	}
+
+	args, err = BuildScriptArgsValueArgs("")
+	if err != nil {
+		t.Fatalf("BuildScriptArgsValueArgs returned error for empty args: %v", err)
+	}
+	if len(args) != 0 {
+		t.Fatalf("args = %#v, want empty", args)
+	}
+}
+
+func TestBuildScriptArgsValueArgsRejectsUnsafeValues(t *testing.T) {
+	tests := []string{"foo=bar\nbaz=qux", "foo=bar\x00"}
+	for _, test := range tests {
+		if _, err := BuildScriptArgsValueArgs(test); !errors.Is(err, ErrInvalidScript) {
+			t.Fatalf("expected ErrInvalidScript for %q, got %v", test, err)
+		}
+	}
+}
+
 func TestBuildScriptArgsFileArgsRejectsUnsafePaths(t *testing.T) {
 	tests := []string{
 		"relative/nse-args.txt",

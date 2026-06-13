@@ -11,6 +11,7 @@ export interface ScanRequest {
   nmapPath?: string;
   options?: ScanOptions;
   scripts?: ScanScript[];
+  scriptArgs?: string;
   scriptArgsFile?: string;
 }
 
@@ -126,6 +127,7 @@ function toBackendRequest(request: ScanRequest): scanner.ScanRequest {
     nmapPath: request.nmapPath ?? "",
     options: request.options,
     scripts: request.scripts ?? [],
+    scriptArgs: request.scriptArgs ?? "",
     scriptArgsFile: request.scriptArgsFile ?? "",
   });
 }

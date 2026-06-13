@@ -56,6 +56,17 @@ func BuildScriptArgs(scripts []Script) ([]string, error) {
 	return args, nil
 }
 
+func BuildScriptArgsValueArgs(value string) ([]string, error) {
+	args := strings.TrimSpace(value)
+	if args == "" {
+		return nil, nil
+	}
+	if strings.ContainsAny(args, "\x00\r\n") {
+		return nil, ErrInvalidScript
+	}
+	return []string{"--script-args", args}, nil
+}
+
 func BuildScriptArgsFileArgs(path string) ([]string, error) {
 	value := strings.TrimSpace(path)
 	if value == "" {

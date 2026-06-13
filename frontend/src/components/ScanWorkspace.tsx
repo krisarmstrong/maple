@@ -54,6 +54,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
   const [scriptCategories, setScriptCategories] = useState<NSECategory[]>([]);
   const [scriptNames, setScriptNames] = useState("");
   const [customScriptPaths, setCustomScriptPaths] = useState("");
+  const [scriptArgs, setScriptArgs] = useState("");
   const [scriptArgsFile, setScriptArgsFile] = useState("");
   const [activePanel, setActivePanel] = useState<ScanPanel>("configure");
   const [error, setError] = useState("");
@@ -85,6 +86,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
       nmapPath,
       scripts,
       scanOptions,
+      scriptArgs,
       scriptArgsFile,
     );
     if (request === undefined) {
@@ -110,6 +112,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
       nmapPath,
       scripts,
       scanOptions,
+      scriptArgs,
       scriptArgsFile,
     );
     if (request === undefined) {
@@ -594,6 +597,18 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
               placeholder="/Users/you/nmap-scripts/custom-check.nse"
               rows={3}
               value={customScriptPaths}
+            />
+          </label>
+          <label className="custom-script-paths">
+            <span>Script arguments</span>
+            <input
+              onChange={(event) => {
+                setScriptArgs(event.target.value);
+                setPreview([]);
+              }}
+              placeholder="http.useragent=Maple,creds.global=/Users/you/creds.txt"
+              type="text"
+              value={scriptArgs}
             />
           </label>
           <label className="custom-script-paths">

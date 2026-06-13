@@ -228,6 +228,7 @@ export namespace scanner {
 	    nmapPath: string;
 	    options?: ScanOptions;
 	    scripts?: Script[];
+	    scriptArgs?: string;
 	    scriptArgsFile?: string;
 	
 	    static createFrom(source: any = {}) {
@@ -241,6 +242,7 @@ export namespace scanner {
 	        this.nmapPath = source["nmapPath"];
 	        this.options = this.convertValues(source["options"], ScanOptions);
 	        this.scripts = this.convertValues(source["scripts"], Script);
+	        this.scriptArgs = source["scriptArgs"];
 	        this.scriptArgsFile = source["scriptArgsFile"];
 	    }
 	

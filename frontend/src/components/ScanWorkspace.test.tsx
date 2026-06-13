@@ -129,6 +129,8 @@ describe("ScanWorkspace", () => {
       "http-title",
       "--script",
       "/Users/krisarmstrong/Scripts/custom-check.nse",
+      "--script-args",
+      "http.useragent=Maple",
       "--script-args-file",
       "/Users/krisarmstrong/nse-args.txt",
       "--",
@@ -145,6 +147,7 @@ describe("ScanWorkspace", () => {
       screen.getByLabelText("Custom .nse script files"),
       "/Users/krisarmstrong/Scripts/custom-check.nse",
     );
+    await userEvent.type(screen.getByLabelText("Script arguments"), "http.useragent=Maple");
     await userEvent.type(
       screen.getByLabelText("Script arguments file"),
       "/Users/krisarmstrong/nse-args.txt",
@@ -155,6 +158,7 @@ describe("ScanWorkspace", () => {
       profileId: "service",
       targets: "scanme.nmap.org",
       nmapPath: "/usr/local/bin/nmap",
+      scriptArgs: "http.useragent=Maple",
       scriptArgsFile: "/Users/krisarmstrong/nse-args.txt",
       options: {
         scanTechnique: "",
@@ -181,7 +185,7 @@ describe("ScanWorkspace", () => {
     });
     expect(
       await screen.findByText(
-        "nmap -oX <managed-xml-file> -sV --version-light --script safe --script http-title --script /Users/krisarmstrong/Scripts/custom-check.nse --script-args-file /Users/krisarmstrong/nse-args.txt -- scanme.nmap.org",
+        "nmap -oX <managed-xml-file> -sV --version-light --script safe --script http-title --script /Users/krisarmstrong/Scripts/custom-check.nse --script-args http.useragent=Maple --script-args-file /Users/krisarmstrong/nse-args.txt -- scanme.nmap.org",
       ),
     ).toBeInTheDocument();
   });
@@ -232,6 +236,7 @@ describe("ScanWorkspace", () => {
       targets: "scanme.nmap.org",
       nmapPath: "/usr/local/bin/nmap",
       scripts: [],
+      scriptArgs: "",
       scriptArgsFile: "",
       options: {
         scanTechnique: "udp",

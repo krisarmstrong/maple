@@ -26,12 +26,21 @@ export function makeRequest(
   nmapPath?: string,
   scripts: readonly ScanScript[] = [],
   options?: ScanOptions,
+  scriptArgs = "",
   scriptArgsFile = "",
 ) {
   if (nmapPath === undefined || !validateTargetsForMode(targetModeId, targets).ok) {
     return undefined;
   }
-  return { profileId, targets, nmapPath, scripts: [...scripts], options, scriptArgsFile };
+  return {
+    profileId,
+    targets,
+    nmapPath,
+    scripts: [...scripts],
+    options,
+    scriptArgs,
+    scriptArgsFile,
+  };
 }
 
 export function updateProfile(
