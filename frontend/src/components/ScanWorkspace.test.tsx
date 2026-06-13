@@ -91,7 +91,7 @@ describe("ScanWorkspace", () => {
     ).toBeInTheDocument();
   });
 
-  it("adds NSE categories and custom scripts to preview requests", async () => {
+  it("adds NSE categories, built-in script names, and custom scripts to preview requests", async () => {
     previewScanCommandMock.mockResolvedValue([
       "nmap",
       "-oX",
@@ -100,6 +100,8 @@ describe("ScanWorkspace", () => {
       "--version-light",
       "--script",
       "safe",
+      "--script",
+      "http-title",
       "--script",
       "/Users/krisarmstrong/Scripts/custom-check.nse",
       "--",
@@ -111,6 +113,7 @@ describe("ScanWorkspace", () => {
     await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
     await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
     await userEvent.click(screen.getByRole("checkbox", { name: "safe" }));
+    await userEvent.type(screen.getByLabelText("Built-in script names"), "http-title");
     await userEvent.type(
       screen.getByLabelText("Custom .nse script files"),
       "/Users/krisarmstrong/Scripts/custom-check.nse",
@@ -133,12 +136,13 @@ describe("ScanWorkspace", () => {
       },
       scripts: [
         { kind: "category", value: "safe" },
+        { kind: "name", value: "http-title" },
         { kind: "path", value: "/Users/krisarmstrong/Scripts/custom-check.nse" },
       ],
     });
     expect(
       await screen.findByText(
-        "nmap -oX <managed-xml-file> -sV --version-light --script safe --script /Users/krisarmstrong/Scripts/custom-check.nse -- scanme.nmap.org",
+        "nmap -oX <managed-xml-file> -sV --version-light --script safe --script http-title --script /Users/krisarmstrong/Scripts/custom-check.nse -- scanme.nmap.org",
       ),
     ).toBeInTheDocument();
   });

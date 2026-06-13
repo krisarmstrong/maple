@@ -43,6 +43,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
   const [profileId, setProfileId] = useState<ScanProfileID>("connect");
   const [scanOptions, setScanOptions] = useState<ScanOptions>(defaultScanOptions);
   const [scriptCategories, setScriptCategories] = useState<NSECategory[]>([]);
+  const [scriptNames, setScriptNames] = useState("");
   const [customScriptPaths, setCustomScriptPaths] = useState("");
   const [activePanel, setActivePanel] = useState<ScanPanel>("configure");
   const [error, setError] = useState("");
@@ -53,7 +54,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
   const targetSummary = summarizeTargets(targets);
   const selectedProfile = findProfile(profileId);
   const scope = scanScope(profileId, targets);
-  const scripts = buildScanScripts(scriptCategories, customScriptPaths);
+  const scripts = buildScanScripts(scriptCategories, scriptNames, customScriptPaths);
 
   useEffect(
     () =>
@@ -385,6 +386,18 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
               </label>
             ))}
           </fieldset>
+          <label className="custom-script-paths">
+            <span>Built-in script names</span>
+            <textarea
+              onChange={(event) => {
+                setScriptNames(event.target.value);
+                setPreview([]);
+              }}
+              placeholder="http-title&#10;ssl-enum-ciphers"
+              rows={3}
+              value={scriptNames}
+            />
+          </label>
           <label className="custom-script-paths">
             <span>Custom .nse script files</span>
             <textarea

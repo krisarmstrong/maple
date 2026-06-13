@@ -5,9 +5,11 @@ import (
 	"testing"
 )
 
-func TestBuildScriptArgsAcceptsCategoriesAndCustomScriptPaths(t *testing.T) {
+func TestBuildScriptArgsAcceptsCategoriesNamedScriptsAndCustomScriptPaths(t *testing.T) {
 	args, err := BuildScriptArgs([]Script{
 		{Kind: ScriptCategory, Value: "safe"},
+		{Kind: ScriptName, Value: "http-title"},
+		{Kind: ScriptName, Value: "ssl-enum-ciphers"},
 		{Kind: ScriptPath, Value: "/Users/krisarmstrong/Scripts/custom-check.nse"},
 		{Kind: ScriptPath, Value: `C:\Users\Kris\Scripts\windows-check.nse`},
 	})
@@ -17,6 +19,8 @@ func TestBuildScriptArgsAcceptsCategoriesAndCustomScriptPaths(t *testing.T) {
 
 	want := []string{
 		"--script", "safe",
+		"--script", "http-title",
+		"--script", "ssl-enum-ciphers",
 		"--script", "/Users/krisarmstrong/Scripts/custom-check.nse",
 		"--script", `C:\Users\Kris\Scripts\windows-check.nse`,
 	}
@@ -33,6 +37,9 @@ func TestBuildScriptArgsRejectsUnknownCategoriesAndScriptExpressions(t *testing.
 		{Kind: ScriptPath, Value: "/Users/krisarmstrong/Scripts/custom-check.lua"},
 		{Kind: ScriptPath, Value: "/Users/krisarmstrong/Scripts/custom,check.nse"},
 		{Kind: ScriptPath, Value: "/Users/krisarmstrong/Scripts/custom\ncheck.nse"},
+		{Kind: ScriptName, Value: "http-title,ssl-cert"},
+		{Kind: ScriptName, Value: "relative/custom-check"},
+		{Kind: ScriptName, Value: "name with spaces"},
 	}
 
 	for _, test := range tests {

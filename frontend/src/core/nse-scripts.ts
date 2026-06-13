@@ -21,20 +21,25 @@ export type NSECategory = (typeof nseCategories)[number];
 
 export function buildScanScripts(
   categories: readonly NSECategory[],
+  scriptNames: string,
   customScriptPaths: string,
 ): ScanScript[] {
   return [
     ...categories.map((category) => ({ kind: "category" as const, value: category })),
-    ...splitCustomScriptPaths(customScriptPaths).map((path) => ({
+    ...splitLines(scriptNames).map((name) => ({
+      kind: "name" as const,
+      value: name,
+    })),
+    ...splitLines(customScriptPaths).map((path) => ({
       kind: "path" as const,
       value: path,
     })),
   ];
 }
 
-function splitCustomScriptPaths(value: string): string[] {
+function splitLines(value: string): string[] {
   return value
     .split(/\n/u)
-    .map((path) => path.trim())
-    .filter((path) => path.length > 0);
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
 }

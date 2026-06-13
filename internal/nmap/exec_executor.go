@@ -36,11 +36,17 @@ func (ExecExecutor) Execute(
 		return Result{}, err
 	}
 
-	var diagnostics bytes.Buffer
+	diagnostics := newDiagnosticsCapture()
 	var waitGroup sync.WaitGroup
+	var emitMutex sync.Mutex
+	emitOutput := func(output scanner.ScanOutput) {
+		emitMutex.Lock()
+		defer emitMutex.Unlock()
+		emit(output)
+	}
 	waitGroup.Add(2)
-	go copyStream(stdout, scanner.StreamStdout, emit, &diagnostics, &waitGroup)
-	go copyStream(stderr, scanner.StreamStderr, emit, &diagnostics, &waitGroup)
+	go copyStream(stdout, scanner.StreamStdout, emitOutput, diagnostics, &waitGroup)
+	go copyStream(stderr, scanner.StreamStderr, emitOutput, diagnostics, &waitGroup)
 
 	processErr := cmd.Wait()
 	waitGroup.Wait()
@@ -62,7 +68,7 @@ func copyStream(
 	reader io.Reader,
 	stream string,
 	emit func(scanner.ScanOutput),
-	capture *bytes.Buffer,
+	capture *diagnosticsCapture,
 	waitGroup *sync.WaitGroup,
 ) {
 	defer waitGroup.Done()
@@ -78,12 +84,33 @@ func copyStream(
 	}
 }
 
-func writeOutput(stream string, chunk []byte, emit func(scanner.ScanOutput), capture *bytes.Buffer) {
+func writeOutput(stream string, chunk []byte, emit func(scanner.ScanOutput), capture *diagnosticsCapture) {
 	text := string(chunk)
 	if capture != nil {
-		_, _ = capture.Write(chunk)
+		capture.Write(chunk)
 	}
 	emit(scanner.ScanOutput{Stream: stream, Text: text})
+}
+
+type diagnosticsCapture struct {
+	buffer bytes.Buffer
+	mutex  sync.Mutex
+}
+
+func newDiagnosticsCapture() *diagnosticsCapture {
+	return &diagnosticsCapture{}
+}
+
+func (c *diagnosticsCapture) Write(chunk []byte) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	_, _ = c.buffer.Write(chunk)
+}
+
+func (c *diagnosticsCapture) String() string {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	return c.buffer.String()
 }
 
 func readXMLFile(path string) (string, error) {

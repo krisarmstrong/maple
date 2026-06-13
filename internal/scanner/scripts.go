@@ -12,12 +12,14 @@ type ScriptKind string
 
 const (
 	ScriptCategory ScriptKind = "category"
+	ScriptName     ScriptKind = "name"
 	ScriptPath     ScriptKind = "path"
 )
 
 var (
-	ErrInvalidScript = errors.New("enter known NSE categories or absolute .nse script file paths")
-	windowsDrivePath = regexp.MustCompile(`^[A-Za-z]:[\\/].+`)
+	ErrInvalidScript  = errors.New("enter known NSE categories, built-in script names, or absolute .nse script file paths")
+	scriptNamePattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.+-]*$`)
+	windowsDrivePath  = regexp.MustCompile(`^[A-Za-z]:[\\/].+`)
 )
 
 type Script struct {
@@ -66,6 +68,10 @@ func validateScript(script Script) (string, error) {
 	switch script.Kind {
 	case ScriptCategory:
 		if slices.Contains(nseCategories, value) {
+			return value, nil
+		}
+	case ScriptName:
+		if scriptNamePattern.MatchString(value) {
 			return value, nil
 		}
 	case ScriptPath:

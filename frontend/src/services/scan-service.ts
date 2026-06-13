@@ -14,7 +14,7 @@ export interface ScanRequest {
 }
 
 export interface ScanScript {
-  kind: "category" | "path";
+  kind: "category" | "name" | "path";
   value: string;
 }
 
