@@ -17,12 +17,15 @@ func TestBuildOptionArgsAddsStructuredNmapOptions(t *testing.T) {
 		VerbosityMode:    VerbosityModeDebug,
 		Reason:           true,
 		OpenOnly:         true,
+		MinRate:          500,
+		MaxRetries:       "2",
+		HostTimeout:      "30m",
 	})
 	if err != nil {
 		t.Fatalf("BuildOptionArgs returned error: %v", err)
 	}
 
-	want := []string{"-sU", "-Pn", "-T4", "-p", "22,80,443", "-sV", "--version-all", "-6", "-O", "--traceroute", "-n", "-vv", "--reason", "--open"}
+	want := []string{"-sU", "-Pn", "-T4", "-p", "22,80,443", "-sV", "--version-all", "-6", "-O", "--traceroute", "-n", "-vv", "--reason", "--open", "--min-rate", "500", "--max-retries", "2", "--host-timeout", "30m"}
 	if !sameStrings(args, want) {
 		t.Fatalf("args = %#v, want %#v", args, want)
 	}
@@ -61,6 +64,12 @@ func TestBuildOptionArgsRejectsInvalidOptions(t *testing.T) {
 		{ScanTechnique: "ack"},
 		{DiscoveryMode: "arp"},
 		{VerbosityMode: "trace"},
+		{MinRate: -1},
+		{MaxRetries: "-1"},
+		{MaxRetries: "abc"},
+		{MaxRetries: "11"},
+		{HostTimeout: "30 minutes"},
+		{HostTimeout: "30m\n--script"},
 	}
 
 	for _, test := range tests {

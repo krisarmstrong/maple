@@ -280,6 +280,9 @@ export namespace scanner {
 	    verbosityMode?: string;
 	    reason?: boolean;
 	    openOnly?: boolean;
+	    minRate?: number;
+	    maxRetries?: string;
+	    hostTimeout?: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new ScanOptions(source);
@@ -302,6 +305,9 @@ export namespace scanner {
 	        this.verbosityMode = source["verbosityMode"];
 	        this.reason = source["reason"];
 	        this.openOnly = source["openOnly"];
+	        this.minRate = source["minRate"];
+	        this.maxRetries = source["maxRetries"];
+	        this.hostTimeout = source["hostTimeout"];
 	    }
 	}
 	export class Script {

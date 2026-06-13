@@ -21,6 +21,9 @@ export interface ScanOptions {
   verbosityMode: VerbosityMode;
   reason: boolean;
   openOnly: boolean;
+  minRate: number;
+  maxRetries: string;
+  hostTimeout: string;
 }
 
 export const defaultScanOptions: ScanOptions = {
@@ -39,6 +42,9 @@ export const defaultScanOptions: ScanOptions = {
   verbosityMode: "",
   reason: false,
   openOnly: false,
+  minRate: 0,
+  maxRetries: "",
+  hostTimeout: "",
 };
 
 export const timingTemplates: readonly { value: TimingTemplate; label: string }[] = [

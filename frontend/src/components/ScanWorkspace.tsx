@@ -430,6 +430,52 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                 value={scanOptions.topPorts === 0 ? "" : scanOptions.topPorts}
               />
             </label>
+            <label>
+              <span>Minimum packet rate</span>
+              <input
+                min={1}
+                max={1000000}
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    minRate: event.target.value === "" ? 0 : Number(event.target.value),
+                  }))
+                }
+                placeholder="500"
+                type="number"
+                value={scanOptions.minRate === 0 ? "" : scanOptions.minRate}
+              />
+            </label>
+            <label>
+              <span>Maximum retries</span>
+              <input
+                min={0}
+                max={10}
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    maxRetries: event.target.value,
+                  }))
+                }
+                placeholder="2"
+                type="number"
+                value={scanOptions.maxRetries}
+              />
+            </label>
+            <label>
+              <span>Host timeout</span>
+              <input
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    hostTimeout: event.target.value,
+                  }))
+                }
+                placeholder="30m"
+                type="text"
+                value={scanOptions.hostTimeout}
+              />
+            </label>
           </div>
           <fieldset className="option-toggle-grid">
             <legend>Scan behavior</legend>
@@ -548,6 +594,11 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
           {scanOptions.discoveryMode === "ping" ? (
             <p className="option-warning">
               Ping discovery only finds live hosts; it does not enumerate ports.
+            </p>
+          ) : null}
+          {scanOptions.minRate > 0 ? (
+            <p className="option-warning">
+              Minimum packet rate can speed scans up, but aggressive values may reduce accuracy.
             </p>
           ) : null}
         </div>

@@ -53,10 +53,16 @@ type ScanOptions struct {
 	VerbosityMode    VerbosityMode `json:"verbosityMode,omitempty"`
 	Reason           bool          `json:"reason,omitempty"`
 	OpenOnly         bool          `json:"openOnly,omitempty"`
+	MinRate          int           `json:"minRate,omitempty"`
+	MaxRetries       string        `json:"maxRetries,omitempty"`
+	HostTimeout      string        `json:"hostTimeout,omitempty"`
 }
 
 func BuildOptionArgs(options ScanOptions) ([]string, error) {
 	if err := validatePortSelection(options); err != nil {
+		return nil, err
+	}
+	if err := validatePerformanceOptions(options); err != nil {
 		return nil, err
 	}
 
@@ -121,6 +127,15 @@ func BuildOptionArgs(options ScanOptions) ([]string, error) {
 	if options.OpenOnly {
 		args = append(args, "--open")
 	}
+	if options.MinRate != 0 {
+		args = append(args, "--min-rate", strconv.Itoa(options.MinRate))
+	}
+	if strings.TrimSpace(options.MaxRetries) != "" {
+		args = append(args, "--max-retries", strings.TrimSpace(options.MaxRetries))
+	}
+	if strings.TrimSpace(options.HostTimeout) != "" {
+		args = append(args, "--host-timeout", strings.TrimSpace(options.HostTimeout))
+	}
 	return args, nil
 }
 
@@ -159,6 +174,18 @@ func ProfileArgsForOptions(profile Profile, options ScanOptions) []string {
 			continue
 		}
 		if options.OpenOnly && arg == "--open" {
+			continue
+		}
+		if options.MinRate != 0 && arg == "--min-rate" {
+			index++
+			continue
+		}
+		if strings.TrimSpace(options.MaxRetries) != "" && arg == "--max-retries" {
+			index++
+			continue
+		}
+		if strings.TrimSpace(options.HostTimeout) != "" && arg == "--host-timeout" {
+			index++
 			continue
 		}
 		args = append(args, arg)
@@ -230,6 +257,22 @@ func hasPortSelection(options ScanOptions) bool {
 	return strings.TrimSpace(options.Ports) != "" || options.AllPorts || options.TopPorts != 0
 }
 
+func validatePerformanceOptions(options ScanOptions) error {
+	if options.MinRate < 0 || options.MinRate > 1_000_000 {
+		return ErrInvalidScanOption
+	}
+	if strings.TrimSpace(options.MaxRetries) != "" {
+		retries, err := strconv.Atoi(strings.TrimSpace(options.MaxRetries))
+		if err != nil || retries < 0 || retries > 10 {
+			return ErrInvalidScanOption
+		}
+	}
+	if _, err := validateDurationExpression(options.HostTimeout); err != nil {
+		return err
+	}
+	return nil
+}
+
 func isTimingArg(value string) bool {
 	switch value {
 	case "-T0", "-T1", "-T2", "-T3", "-T4", "-T5":
@@ -243,6 +286,29 @@ func validateTimingTemplate(value string) (string, error) {
 	switch strings.TrimSpace(value) {
 	case "T0", "T1", "T2", "T3", "T4", "T5":
 		return strings.TrimSpace(value), nil
+	default:
+		return "", ErrInvalidScanOption
+	}
+}
+
+func validateDurationExpression(value string) (string, error) {
+	duration := strings.TrimSpace(value)
+	if duration == "" {
+		return "", nil
+	}
+	if strings.ContainsAny(duration, "\x00\r\n\t ") {
+		return "", ErrInvalidScanOption
+	}
+	index := 0
+	for index < len(duration) && duration[index] >= '0' && duration[index] <= '9' {
+		index++
+	}
+	if index == 0 {
+		return "", ErrInvalidScanOption
+	}
+	switch duration[index:] {
+	case "", "ms", "s", "m", "h":
+		return duration, nil
 	default:
 		return "", ErrInvalidScanOption
 	}

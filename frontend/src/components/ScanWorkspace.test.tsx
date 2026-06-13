@@ -176,6 +176,9 @@ describe("ScanWorkspace", () => {
         verbosityMode: "",
         reason: false,
         openOnly: false,
+        minRate: 0,
+        maxRetries: "",
+        hostTimeout: "",
       },
       scripts: [
         { kind: "category", value: "safe" },
@@ -209,6 +212,12 @@ describe("ScanWorkspace", () => {
       "-vv",
       "--reason",
       "--open",
+      "--min-rate",
+      "500",
+      "--max-retries",
+      "2",
+      "--host-timeout",
+      "30m",
       "--",
       "scanme.nmap.org",
     ]);
@@ -229,6 +238,9 @@ describe("ScanWorkspace", () => {
     await userEvent.selectOptions(screen.getByLabelText("Output detail"), "debug");
     await userEvent.click(screen.getByRole("checkbox", { name: "Show reasons" }));
     await userEvent.click(screen.getByRole("checkbox", { name: "Only open ports" }));
+    await userEvent.type(screen.getByLabelText("Minimum packet rate"), "500");
+    await userEvent.type(screen.getByLabelText("Maximum retries"), "2");
+    await userEvent.type(screen.getByLabelText("Host timeout"), "30m");
     await userEvent.click(screen.getByRole("button", { name: "Preview" }));
 
     expect(previewScanCommandMock).toHaveBeenCalledWith({
@@ -254,11 +266,14 @@ describe("ScanWorkspace", () => {
         verbosityMode: "debug",
         reason: true,
         openOnly: true,
+        minRate: 500,
+        maxRetries: "2",
+        hostTimeout: "30m",
       },
     });
     expect(
       await screen.findByText(
-        "nmap -oX <managed-xml-file> -sU -Pn -T4 -p 22,80,443 -sV --version-all -6 -O --traceroute -n -vv --reason --open -- scanme.nmap.org",
+        "nmap -oX <managed-xml-file> -sU -Pn -T4 -p 22,80,443 -sV --version-all -6 -O --traceroute -n -vv --reason --open --min-rate 500 --max-retries 2 --host-timeout 30m -- scanme.nmap.org",
       ),
     ).toBeInTheDocument();
   });
