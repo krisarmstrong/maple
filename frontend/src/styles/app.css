@@ -487,6 +487,13 @@ textarea {
   padding: var(--space-5) var(--space-7);
 }
 
+.option-warning {
+  color: var(--warning);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-heading);
+  margin: var(--space-0);
+}
+
 .script-category-picker {
   border: 0;
   display: flex;

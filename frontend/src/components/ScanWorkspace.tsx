@@ -430,6 +430,11 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
               <span>Traceroute</span>
             </label>
           </fieldset>
+          {scanOptions.osDetection ? (
+            <p className="option-warning">
+              OS detection often requires elevated privileges on macOS, Linux, and Windows.
+            </p>
+          ) : null}
         </div>
       ) : null}
 

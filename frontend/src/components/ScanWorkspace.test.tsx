@@ -238,6 +238,25 @@ describe("ScanWorkspace", () => {
     ).toBeInTheDocument();
   });
 
+  it("warns that OS detection may need elevated privileges", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Options" }));
+    expect(
+      screen.queryByText(
+        "OS detection often requires elevated privileges on macOS, Linux, and Windows.",
+      ),
+    ).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("checkbox", { name: "OS detection" }));
+
+    expect(
+      screen.getByText(
+        "OS detection often requires elevated privileges on macOS, Linux, and Windows.",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("clears stale command previews when targets change", async () => {
     previewScanCommandMock.mockResolvedValue([
       "nmap",
