@@ -49,6 +49,33 @@ func TestBuildPreviewIncludesStructuredScriptArgsBeforeTargets(t *testing.T) {
 	}
 }
 
+func TestBuildPreviewIncludesStructuredOptionsBeforeScriptsAndTargets(t *testing.T) {
+	preview, err := BuildPreview("/usr/local/bin/nmap", scanner.ScanRequest{
+		ProfileID: "quick",
+		Targets:   "scanme.nmap.org",
+		Options: scanner.ScanOptions{
+			TimingTemplate: "T4",
+			Ports:          "22,80,443",
+			IPv6:           true,
+			DNSMode:        "skip",
+		},
+		Scripts: []scanner.Script{{Kind: scanner.ScriptCategory, Value: "safe"}},
+	})
+	if err != nil {
+		t.Fatalf("BuildPreview returned error: %v", err)
+	}
+
+	wantArgs := []string{
+		"-oX", "<managed-xml-file>",
+		"-T4", "-p", "22,80,443", "-6", "-n",
+		"--script", "safe",
+		"--", "scanme.nmap.org",
+	}
+	if !sameStrings(preview.Args, wantArgs) {
+		t.Fatalf("args = %#v, want %#v", preview.Args, wantArgs)
+	}
+}
+
 func TestBuildPreviewRejectsUnknownProfile(t *testing.T) {
 	_, err := BuildPreview("nmap", scanner.ScanRequest{
 		ProfileID: "unsafe",

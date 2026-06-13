@@ -226,6 +226,7 @@ export namespace scanner {
 	    profileId: string;
 	    targets: string;
 	    nmapPath: string;
+	    options?: ScanOptions;
 	    scripts?: Script[];
 	
 	    static createFrom(source: any = {}) {
@@ -237,6 +238,7 @@ export namespace scanner {
 	        this.profileId = source["profileId"];
 	        this.targets = source["targets"];
 	        this.nmapPath = source["nmapPath"];
+	        this.options = this.convertValues(source["options"], ScanOptions);
 	        this.scripts = this.convertValues(source["scripts"], Script);
 	    }
 	
@@ -257,6 +259,32 @@ export namespace scanner {
 		    }
 		    return a;
 		}
+	}
+	export class ScanOptions {
+	    timingTemplate?: string;
+	    ports?: string;
+	    topPorts?: number;
+	    allPorts?: boolean;
+	    ipv6?: boolean;
+	    osDetection?: boolean;
+	    traceroute?: boolean;
+	    dnsMode?: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ScanOptions(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.timingTemplate = source["timingTemplate"];
+	        this.ports = source["ports"];
+	        this.topPorts = source["topPorts"];
+	        this.allPorts = source["allPorts"];
+	        this.ipv6 = source["ipv6"];
+	        this.osDetection = source["osDetection"];
+	        this.traceroute = source["traceroute"];
+	        this.dnsMode = source["dnsMode"];
+	    }
 	}
 	export class Script {
 	    kind: string;

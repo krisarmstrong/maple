@@ -121,6 +121,16 @@ describe("ScanWorkspace", () => {
       profileId: "service",
       targets: "scanme.nmap.org",
       nmapPath: "/usr/local/bin/nmap",
+      options: {
+        timingTemplate: "",
+        ports: "",
+        topPorts: 0,
+        allPorts: false,
+        ipv6: false,
+        osDetection: false,
+        traceroute: false,
+        dnsMode: "",
+      },
       scripts: [
         { kind: "category", value: "safe" },
         { kind: "path", value: "/Users/krisarmstrong/Scripts/custom-check.nse" },
@@ -129,6 +139,56 @@ describe("ScanWorkspace", () => {
     expect(
       await screen.findByText(
         "nmap -oX <managed-xml-file> -sV --version-light --script safe --script /Users/krisarmstrong/Scripts/custom-check.nse -- scanme.nmap.org",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("adds structured scan options to preview requests", async () => {
+    previewScanCommandMock.mockResolvedValue([
+      "nmap",
+      "-oX",
+      "<managed-xml-file>",
+      "-T4",
+      "-p",
+      "22,80,443",
+      "-6",
+      "-O",
+      "--traceroute",
+      "-n",
+      "--",
+      "scanme.nmap.org",
+    ]);
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
+    await userEvent.click(screen.getByRole("button", { name: "Options" }));
+    await userEvent.selectOptions(screen.getByLabelText("Timing"), "T4");
+    await userEvent.type(screen.getByLabelText("Ports"), "22,80,443");
+    await userEvent.click(screen.getByRole("checkbox", { name: "IPv6" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "OS detection" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "Traceroute" }));
+    await userEvent.selectOptions(screen.getByLabelText("DNS"), "skip");
+    await userEvent.click(screen.getByRole("button", { name: "Preview" }));
+
+    expect(previewScanCommandMock).toHaveBeenCalledWith({
+      profileId: "connect",
+      targets: "scanme.nmap.org",
+      nmapPath: "/usr/local/bin/nmap",
+      scripts: [],
+      options: {
+        timingTemplate: "T4",
+        ports: "22,80,443",
+        topPorts: 0,
+        allPorts: false,
+        ipv6: true,
+        osDetection: true,
+        traceroute: true,
+        dnsMode: "skip",
+      },
+    });
+    expect(
+      await screen.findByText(
+        "nmap -oX <managed-xml-file> -T4 -p 22,80,443 -6 -O --traceroute -n -- scanme.nmap.org",
       ),
     ).toBeInTheDocument();
   });

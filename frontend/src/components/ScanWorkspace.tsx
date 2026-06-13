@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
 import { buildScanScripts, type NSECategory, nseCategories } from "../core/nse-scripts";
+import {
+  defaultScanOptions,
+  dnsModes,
+  isDNSMode,
+  isTimingTemplate,
+  type ScanOptions,
+  timingTemplates,
+} from "../core/scan-options";
 import { findProfile, type ScanProfileID, scanProfiles } from "../core/scan-profiles";
 import { scanScope } from "../core/scan-scope";
 import {
@@ -27,12 +35,13 @@ interface ScanWorkspaceProps {
   onScanFinished?: () => void;
 }
 
-type ScanPanel = "configure" | "scripts" | "output";
+type ScanPanel = "configure" | "options" | "scripts" | "output";
 
 export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps): React.JSX.Element {
   const [targets, setTargets] = useState("");
   const [targetModeId, setTargetModeId] = useState<TargetModeID>("single");
   const [profileId, setProfileId] = useState<ScanProfileID>("connect");
+  const [scanOptions, setScanOptions] = useState<ScanOptions>(defaultScanOptions);
   const [scriptCategories, setScriptCategories] = useState<NSECategory[]>([]);
   const [customScriptPaths, setCustomScriptPaths] = useState("");
   const [activePanel, setActivePanel] = useState<ScanPanel>("configure");
@@ -58,7 +67,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
   );
 
   async function previewCommand(): Promise<void> {
-    const request = makeRequest(profileId, targetModeId, targets, nmapPath, scripts);
+    const request = makeRequest(profileId, targetModeId, targets, nmapPath, scripts, scanOptions);
     if (request === undefined) {
       setActivePanel("configure");
       setError(messageForInvalidTargets(targetModeId, targets));
@@ -70,7 +79,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
   }
 
   async function runScan(): Promise<void> {
-    const request = makeRequest(profileId, targetModeId, targets, nmapPath, scripts);
+    const request = makeRequest(profileId, targetModeId, targets, nmapPath, scripts, scanOptions);
     if (request === undefined) {
       setActivePanel("configure");
       setError(messageForInvalidTargets(targetModeId, targets));
@@ -95,6 +104,11 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
         ? [...current, category].sort()
         : current.filter((candidate) => candidate !== category),
     );
+    setPreview([]);
+  }
+
+  function updateScanOptions(updater: (options: ScanOptions) => ScanOptions): void {
+    setScanOptions((current) => updater(current));
     setPreview([]);
   }
 
@@ -131,6 +145,12 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
           activePanel={activePanel}
           id="configure"
           label="Configure"
+          onSelect={setActivePanel}
+        />
+        <ScanPanelButton
+          activePanel={activePanel}
+          id="options"
+          label="Options"
           onSelect={setActivePanel}
         />
         <ScanPanelButton
@@ -203,6 +223,143 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
               {scope.warning === undefined ? null : <strong>{scope.warning}</strong>}
             </div>
           )}
+        </div>
+      ) : null}
+
+      {activePanel === "options" ? (
+        <div className="scan-panel options-panel">
+          <div>
+            <h3>Nmap options</h3>
+            <p className="target-mode-help">
+              Add common Nmap switches as structured choices. Maple still builds argv directly.
+            </p>
+          </div>
+          <div className="options-grid">
+            <label>
+              <span>Timing</span>
+              <select
+                value={scanOptions.timingTemplate}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  if (isTimingTemplate(value)) {
+                    updateScanOptions((current) => ({ ...current, timingTemplate: value }));
+                  }
+                }}
+              >
+                {timingTemplates.map((template) => (
+                  <option key={template.value || "default"} value={template.value}>
+                    {template.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>DNS</span>
+              <select
+                value={scanOptions.dnsMode}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  if (isDNSMode(value)) {
+                    updateScanOptions((current) => ({ ...current, dnsMode: value }));
+                  }
+                }}
+              >
+                {dnsModes.map((mode) => (
+                  <option key={mode.value || "default"} value={mode.value}>
+                    {mode.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>Ports</span>
+              <input
+                disabled={scanOptions.allPorts}
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    ports: event.target.value,
+                    topPorts: 0,
+                  }))
+                }
+                placeholder="22,80,443 or T:80,U:53"
+                type="text"
+                value={scanOptions.ports}
+              />
+            </label>
+            <label>
+              <span>Top ports</span>
+              <input
+                disabled={scanOptions.allPorts || scanOptions.ports.trim() !== ""}
+                min={1}
+                max={1000}
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    topPorts: Number(event.target.value),
+                    ports: "",
+                  }))
+                }
+                placeholder="100"
+                type="number"
+                value={scanOptions.topPorts === 0 ? "" : scanOptions.topPorts}
+              />
+            </label>
+          </div>
+          <fieldset className="option-toggle-grid">
+            <legend>Scan behavior</legend>
+            <label>
+              <input
+                checked={scanOptions.allPorts}
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    allPorts: event.target.checked,
+                    ports: "",
+                    topPorts: 0,
+                  }))
+                }
+                type="checkbox"
+              />
+              <span>All ports</span>
+            </label>
+            <label>
+              <input
+                checked={scanOptions.ipv6}
+                onChange={(event) =>
+                  updateScanOptions((current) => ({ ...current, ipv6: event.target.checked }))
+                }
+                type="checkbox"
+              />
+              <span>IPv6</span>
+            </label>
+            <label>
+              <input
+                checked={scanOptions.osDetection}
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    osDetection: event.target.checked,
+                  }))
+                }
+                type="checkbox"
+              />
+              <span>OS detection</span>
+            </label>
+            <label>
+              <input
+                checked={scanOptions.traceroute}
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    traceroute: event.target.checked,
+                  }))
+                }
+                type="checkbox"
+              />
+              <span>Traceroute</span>
+            </label>
+          </fieldset>
         </div>
       ) : null}
 

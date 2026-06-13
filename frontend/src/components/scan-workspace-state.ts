@@ -1,5 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import { scanEventIsFinished, scanEventLogLine, scanEventRunningState } from "../core/scan-events";
+import type { ScanOptions } from "../core/scan-options";
 import { isScanProfileID, type ScanProfileID } from "../core/scan-profiles";
 import { type TargetModeID, validateTargetsForMode } from "../core/target-modes";
 import type { ScanEvent, ScanScript } from "../services/scan-service";
@@ -24,11 +25,12 @@ export function makeRequest(
   targets: string,
   nmapPath?: string,
   scripts: readonly ScanScript[] = [],
+  options?: ScanOptions,
 ) {
   if (nmapPath === undefined || !validateTargetsForMode(targetModeId, targets).ok) {
     return undefined;
   }
-  return { profileId, targets, nmapPath, scripts: [...scripts] };
+  return { profileId, targets, nmapPath, scripts: [...scripts], options };
 }
 
 export function updateProfile(

@@ -363,6 +363,7 @@
 }
 
 .history-controls input,
+.options-grid input,
 select,
 textarea {
   background: var(--panel);
@@ -370,7 +371,9 @@ textarea {
   border-radius: var(--radius-sm);
   color: var(--text);
   font: inherit;
+  min-width: var(--space-0);
   padding: var(--space-8) var(--space-9);
+  width: var(--layout-full);
 }
 
 textarea {
@@ -393,6 +396,7 @@ textarea {
   background: transparent;
   border-color: transparent;
   min-height: var(--size-tab-min);
+  overflow-wrap: anywhere;
 }
 
 .scan-panel-tab[aria-current="page"] {
@@ -435,6 +439,51 @@ textarea {
 .advanced-options summary {
   cursor: pointer;
   font-weight: var(--font-weight-heading);
+}
+
+.options-grid {
+  display: grid;
+  gap: var(--space-9);
+  grid-template-columns: repeat(var(--layout-help-columns), minmax(0, 1fr));
+}
+
+.options-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
+}
+
+.options-grid span {
+  color: var(--muted);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-heading);
+}
+
+.option-toggle-grid {
+  border: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-7);
+  margin: var(--space-0);
+  padding: var(--space-0);
+}
+
+.option-toggle-grid legend {
+  color: var(--muted);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-heading);
+  margin-bottom: var(--space-7);
+  padding: var(--space-0);
+  width: var(--layout-full);
+}
+
+.option-toggle-grid label {
+  align-items: center;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  gap: var(--space-5);
+  padding: var(--space-5) var(--space-7);
 }
 
 .script-category-picker {
@@ -720,6 +769,14 @@ textarea {
   }
 
   .history-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .scan-panel-tabs {
+    grid-template-columns: repeat(var(--layout-help-columns), minmax(0, 1fr));
+  }
+
+  .options-grid {
     grid-template-columns: 1fr;
   }
 

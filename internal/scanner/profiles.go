@@ -21,10 +21,11 @@ type Profile struct {
 }
 
 type ScanRequest struct {
-	ProfileID ProfileID `json:"profileId"`
-	Targets   string    `json:"targets"`
-	NmapPath  string    `json:"nmapPath"`
-	Scripts   []Script  `json:"scripts,omitempty"`
+	ProfileID ProfileID   `json:"profileId"`
+	Targets   string      `json:"targets"`
+	NmapPath  string      `json:"nmapPath"`
+	Options   ScanOptions `json:"options,omitempty"`
+	Scripts   []Script    `json:"scripts,omitempty"`
 }
 
 type CommandPreview struct {
@@ -91,13 +92,15 @@ func BuildArgv(
 	nmapPath string,
 	xmlOutputPath string,
 	profile Profile,
+	optionArgs []string,
 	scriptArgs []string,
 	targets []Target,
 ) []string {
-	argv := make([]string, 0, 4+len(profile.Args)+len(scriptArgs)+len(targets))
+	argv := make([]string, 0, 4+len(profile.Args)+len(optionArgs)+len(scriptArgs)+len(targets))
 	argv = append(argv, nmapPath)
 	argv = append(argv, "-oX", xmlOutputPath)
 	argv = append(argv, profile.Args...)
+	argv = append(argv, optionArgs...)
 	argv = append(argv, scriptArgs...)
 	argv = append(argv, "--")
 	for _, target := range targets {

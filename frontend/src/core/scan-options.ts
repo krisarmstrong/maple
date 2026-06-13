@@ -1,0 +1,48 @@
+export type TimingTemplate = "" | "T0" | "T1" | "T2" | "T3" | "T4" | "T5";
+export type DNSMode = "" | "skip" | "system";
+
+export interface ScanOptions {
+  timingTemplate: TimingTemplate;
+  ports: string;
+  topPorts: number;
+  allPorts: boolean;
+  ipv6: boolean;
+  osDetection: boolean;
+  traceroute: boolean;
+  dnsMode: DNSMode;
+}
+
+export const defaultScanOptions: ScanOptions = {
+  timingTemplate: "",
+  ports: "",
+  topPorts: 0,
+  allPorts: false,
+  ipv6: false,
+  osDetection: false,
+  traceroute: false,
+  dnsMode: "",
+};
+
+export const timingTemplates: readonly { value: TimingTemplate; label: string }[] = [
+  { value: "", label: "Profile default" },
+  { value: "T0", label: "T0 paranoid" },
+  { value: "T1", label: "T1 sneaky" },
+  { value: "T2", label: "T2 polite" },
+  { value: "T3", label: "T3 normal" },
+  { value: "T4", label: "T4 faster" },
+  { value: "T5", label: "T5 fastest" },
+];
+
+export const dnsModes: readonly { value: DNSMode; label: string }[] = [
+  { value: "", label: "Default DNS" },
+  { value: "skip", label: "Skip DNS lookup" },
+  { value: "system", label: "Use system DNS resolver" },
+];
+
+export function isTimingTemplate(value: string): value is TimingTemplate {
+  return timingTemplates.some((template) => template.value === value);
+}
+
+export function isDNSMode(value: string): value is DNSMode {
+  return dnsModes.some((mode) => mode.value === value);
+}

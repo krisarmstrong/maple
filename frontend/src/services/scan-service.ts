@@ -1,6 +1,7 @@
 import { CancelScan, PreviewScan, StartScan } from "../../wailsjs/go/main/App";
 import { scanner } from "../../wailsjs/go/models";
 import { EventsOn } from "../../wailsjs/runtime/runtime";
+import type { ScanOptions } from "../core/scan-options";
 import type { ScanProfileID } from "../core/scan-profiles";
 import { hasWailsBackend, hasWailsRuntime, unavailableBridgeError } from "./wails-bridge";
 
@@ -8,6 +9,7 @@ export interface ScanRequest {
   profileId: ScanProfileID;
   targets: string;
   nmapPath?: string;
+  options?: ScanOptions;
   scripts?: ScanScript[];
 }
 
@@ -121,6 +123,7 @@ function toBackendRequest(request: ScanRequest): scanner.ScanRequest {
     profileId: request.profileId,
     targets: request.targets,
     nmapPath: request.nmapPath ?? "",
+    options: request.options,
     scripts: request.scripts ?? [],
   });
 }

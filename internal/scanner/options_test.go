@@ -1,0 +1,83 @@
+package scanner
+
+import "testing"
+
+func TestBuildOptionArgsAddsStructuredNmapOptions(t *testing.T) {
+	args, err := BuildOptionArgs(ScanOptions{
+		TimingTemplate: "T4",
+		Ports:          "22,80,443",
+		IPv6:           true,
+		OSDetection:    true,
+		Traceroute:     true,
+		DNSMode:        "skip",
+	})
+	if err != nil {
+		t.Fatalf("BuildOptionArgs returned error: %v", err)
+	}
+
+	want := []string{"-T4", "-p", "22,80,443", "-6", "-O", "--traceroute", "-n"}
+	if !sameStrings(args, want) {
+		t.Fatalf("args = %#v, want %#v", args, want)
+	}
+}
+
+func TestBuildOptionArgsSupportsAllPortsAndTopPorts(t *testing.T) {
+	args, err := BuildOptionArgs(ScanOptions{AllPorts: true})
+	if err != nil {
+		t.Fatalf("BuildOptionArgs returned error: %v", err)
+	}
+	if !sameStrings(args, []string{"-p-"}) {
+		t.Fatalf("args = %#v", args)
+	}
+
+	args, err = BuildOptionArgs(ScanOptions{TopPorts: 250})
+	if err != nil {
+		t.Fatalf("BuildOptionArgs returned error: %v", err)
+	}
+	if !sameStrings(args, []string{"--top-ports", "250"}) {
+		t.Fatalf("args = %#v", args)
+	}
+}
+
+func TestBuildOptionArgsRejectsInvalidOptions(t *testing.T) {
+	tests := []ScanOptions{
+		{TimingTemplate: "fast"},
+		{Ports: "22;rm"},
+		{Ports: "22 80"},
+		{TopPorts: -1},
+		{TopPorts: 1001},
+		{Ports: "22", AllPorts: true},
+		{Ports: "22", TopPorts: 10},
+		{AllPorts: true, TopPorts: 10},
+		{DNSMode: "recursive"},
+	}
+
+	for _, test := range tests {
+		if _, err := BuildOptionArgs(test); err == nil {
+			t.Fatalf("expected error for %#v", test)
+		}
+	}
+}
+
+func TestProfileArgsForOptionsRemovesOverriddenProfileDefaults(t *testing.T) {
+	profile := Profile{Args: []string{"-sT", "-Pn", "-T3", "--top-ports", "100"}}
+
+	args := ProfileArgsForOptions(profile, ScanOptions{TimingTemplate: "T4", Ports: "22,80"})
+
+	want := []string{"-sT", "-Pn"}
+	if !sameStrings(args, want) {
+		t.Fatalf("args = %#v, want %#v", args, want)
+	}
+}
+
+func sameStrings(got []string, want []string) bool {
+	if len(got) != len(want) {
+		return false
+	}
+	for index := range got {
+		if got[index] != want[index] {
+			return false
+		}
+	}
+	return true
+}
