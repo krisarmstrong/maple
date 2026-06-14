@@ -12,7 +12,25 @@ describe("history filters", () => {
       scanRecord("scan-2", {
         profileName: "Service Scan",
         command: ["nmap", "-sV", "--", "192.0.2.10"],
-        hosts: [{ address: "192.0.2.10", hostname: "router.example", ports: [] }],
+        hosts: [
+          {
+            address: "192.0.2.10",
+            hostname: "router.example",
+            state: "up",
+            ports: [
+              {
+                id: "443",
+                protocol: "tcp",
+                state: "open",
+                service: "https",
+                product: "nginx",
+                version: "1.25",
+                extraInfo: "ALPN h2",
+                reason: "syn-ack",
+              },
+            ],
+          },
+        ],
       }),
       scanRecord("scan-3", {
         error: "Unable to parse Nmap XML: unexpected EOF",
@@ -24,6 +42,15 @@ describe("history filters", () => {
       "scan-2",
     ]);
     expect(filterHistoryRecords(records, "router", "all").map((record) => record.runId)).toEqual([
+      "scan-2",
+    ]);
+    expect(filterHistoryRecords(records, "nginx", "all").map((record) => record.runId)).toEqual([
+      "scan-2",
+    ]);
+    expect(filterHistoryRecords(records, "443", "all").map((record) => record.runId)).toEqual([
+      "scan-2",
+    ]);
+    expect(filterHistoryRecords(records, "syn-ack", "all").map((record) => record.runId)).toEqual([
       "scan-2",
     ]);
     expect(

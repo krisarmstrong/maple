@@ -38,10 +38,36 @@ function searchableText(record: ScanHistoryRecord): string {
     record.profileName,
     record.command.join(" "),
     record.targets.map((target) => target.value).join(" "),
-    record.hosts.map((host) => [host.address, host.hostname].filter(Boolean).join(" ")).join(" "),
+    record.hosts.map(hostSearchText).join(" "),
     record.error ?? "",
     record.diagnostics ?? "",
   ]
     .join(" ")
     .toLowerCase();
+}
+
+function hostSearchText(recordHost: ScanHistoryRecord["hosts"][number]): string {
+  return [
+    recordHost.address,
+    recordHost.hostname,
+    recordHost.state,
+    recordHost.ports.map(portSearchText).join(" "),
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function portSearchText(port: ScanHistoryRecord["hosts"][number]["ports"][number]): string {
+  return [
+    port.id,
+    port.protocol,
+    port.state,
+    port.service,
+    port.product,
+    port.version,
+    port.extraInfo,
+    port.reason,
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
