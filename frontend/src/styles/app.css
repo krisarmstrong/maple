@@ -15,7 +15,7 @@
 .app-sidebar {
   background: var(--color-sidebar);
   border-right: var(--border-width) solid var(--color-sidebar-border);
-  color: var(--accent-contrast);
+  color: var(--color-sidebar-text);
   display: grid;
   grid-template-rows: auto 1fr auto;
   min-height: var(--space-0);
@@ -128,7 +128,7 @@
   align-items: start;
   background: transparent;
   border-color: var(--color-sidebar-border);
-  color: var(--accent-contrast);
+  color: var(--color-sidebar-text);
   display: grid;
   gap: var(--space-3);
   justify-items: start;
@@ -161,7 +161,7 @@
 }
 
 .nav-button small,
-.sidebar-footer span {
+.sidebar-footer > span {
   color: var(--color-sidebar-muted);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-label);
@@ -274,6 +274,7 @@
   font-weight: var(--font-weight-label);
   gap: var(--space-5);
   padding: var(--space-5) var(--space-7);
+  white-space: nowrap;
 }
 
 .theme-option:has(input:checked) {
@@ -620,6 +621,18 @@
   padding: var(--space-9);
 }
 
+.preset-bar label {
+  display: grid;
+  gap: var(--space-4);
+  min-width: var(--space-0);
+}
+
+.preset-bar span {
+  color: var(--muted);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-heading);
+}
+
 .preset-library {
   background: var(--panel-subtle);
   border: var(--border-width) solid var(--border);
@@ -776,6 +789,7 @@
 .history-result-search input,
 .custom-script-paths input,
 .options-grid input,
+.preset-bar input,
 select,
 textarea {
   background: var(--panel);
@@ -797,6 +811,7 @@ textarea {
 .history-result-search input:focus,
 .custom-script-paths input:focus,
 .options-grid input:focus,
+.preset-bar input:focus,
 select:focus,
 textarea:focus {
   border-color: var(--accent);
@@ -1435,7 +1450,7 @@ textarea:focus {
   }
 
   .app-nav {
-    grid-template-columns: repeat(var(--layout-app-nav-columns), minmax(0, 1fr));
+    grid-template-columns: repeat(var(--layout-help-columns), minmax(0, 1fr));
     margin-top: var(--space-11);
   }
 

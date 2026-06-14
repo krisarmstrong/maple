@@ -4,6 +4,7 @@
   --color-surface-raised: #ffffff;
   --color-surface-subtle: #e8efed;
   --color-sidebar: #17231f;
+  --color-sidebar-text: #f2fbf7;
   --color-sidebar-muted: #afc4bc;
   --color-sidebar-border: #2d4039;
   --color-text: #17211f;
@@ -129,6 +130,7 @@
   --color-surface-raised: #1e2a27;
   --color-surface-subtle: #23312d;
   --color-sidebar: #0a100f;
+  --color-sidebar-text: #edf8f4;
   --color-sidebar-muted: #9bb1aa;
   --color-sidebar-border: #20312d;
   --color-text: #eef7f4;
