@@ -5,7 +5,13 @@ import "testing"
 func TestBuildOptionArgsAddsStructuredNmapOptions(t *testing.T) {
 	args, err := BuildOptionArgs(ScanOptions{
 		ScanTechnique:    ScanTechniqueUDP,
-		DiscoveryMode:    DiscoveryModeSkip,
+		TCPSYNProbes:     "22,80,443",
+		TCPACKProbes:     "80,443",
+		UDPProbes:        "53,161",
+		SCTPInitProbes:   "80",
+		ICMPEchoProbe:    true,
+		ICMPTimestamp:    true,
+		ICMPNetmask:      true,
 		TargetInputFile:  "/Users/krisarmstrong/targets.txt",
 		ExcludeTargets:   "192.168.1.10, scanme.nmap.org",
 		ExcludeFile:      "/Users/krisarmstrong/exclude-targets.txt",
@@ -31,7 +37,24 @@ func TestBuildOptionArgsAddsStructuredNmapOptions(t *testing.T) {
 		t.Fatalf("BuildOptionArgs returned error: %v", err)
 	}
 
-	want := []string{"-sU", "-Pn", "-iL", "/Users/krisarmstrong/targets.txt", "--exclude", "192.168.1.10,scanme.nmap.org", "--excludefile", "/Users/krisarmstrong/exclude-targets.txt", "-T4", "-p", "22,80,443", "-sV", "--version-all", "-6", "-O", "--traceroute", "-n", "-vv", "--reason", "--open", "--min-rate", "500", "--max-retries", "2", "--host-timeout", "30m", "--max-rtt-timeout", "2s", "--stats-every", "10s", "--packet-trace"}
+	want := []string{"-sU", "-PS22,80,443", "-PA80,443", "-PU53,161", "-PY80", "-PE", "-PP", "-PM", "-iL", "/Users/krisarmstrong/targets.txt", "--exclude", "192.168.1.10,scanme.nmap.org", "--excludefile", "/Users/krisarmstrong/exclude-targets.txt", "-T4", "-p", "22,80,443", "-sV", "--version-all", "-6", "-O", "--traceroute", "-n", "-vv", "--reason", "--open", "--min-rate", "500", "--max-retries", "2", "--host-timeout", "30m", "--max-rtt-timeout", "2s", "--stats-every", "10s", "--packet-trace"}
+	if !sameStrings(args, want) {
+		t.Fatalf("args = %#v, want %#v", args, want)
+	}
+}
+
+func TestBuildOptionArgsAddsDiscoveryProbeRanges(t *testing.T) {
+	args, err := BuildOptionArgs(ScanOptions{
+		TCPSYNProbes:   "1-1024",
+		TCPACKProbes:   "80,443",
+		UDPProbes:      "53",
+		SCTPInitProbes: "3868",
+	})
+	if err != nil {
+		t.Fatalf("BuildOptionArgs returned error: %v", err)
+	}
+
+	want := []string{"-PS1-1024", "-PA80,443", "-PU53", "-PY3868"}
 	if !sameStrings(args, want) {
 		t.Fatalf("args = %#v, want %#v", args, want)
 	}
@@ -69,6 +92,18 @@ func TestBuildOptionArgsRejectsInvalidOptions(t *testing.T) {
 		{VersionMode: "deep"},
 		{ScanTechnique: "ack"},
 		{DiscoveryMode: "arp"},
+		{DiscoveryMode: DiscoveryModeSkip, TCPSYNProbes: "22"},
+		{TCPSYNProbes: "22 80"},
+		{TCPSYNProbes: "22;80"},
+		{TCPSYNProbes: "-22"},
+		{TCPSYNProbes: "+22"},
+		{TCPSYNProbes: "0"},
+		{TCPSYNProbes: "65536"},
+		{TCPSYNProbes: "1024-22"},
+		{TCPSYNProbes: "1-+1024"},
+		{TCPACKProbes: "http"},
+		{UDPProbes: "53\n--script"},
+		{SCTPInitProbes: "80,,443"},
 		{VerbosityMode: "trace"},
 		{MinRate: -1},
 		{MaxRetries: "-1"},
@@ -111,6 +146,28 @@ func TestProfileArgsForOptionsRemovesOverriddenProfileDefaults(t *testing.T) {
 	})
 
 	want := []string{}
+	if !sameStrings(args, want) {
+		t.Fatalf("args = %#v, want %#v", args, want)
+	}
+}
+
+func TestProfileArgsForOptionsRemovesDiscoveryDefaultsWhenProbesAreSelected(t *testing.T) {
+	profile := Profile{Args: []string{"-sT", "-Pn", "-T3", "--top-ports", "100"}}
+
+	args := ProfileArgsForOptions(profile, ScanOptions{TCPSYNProbes: "22,80"})
+
+	want := []string{"-sT", "-T3", "--top-ports", "100"}
+	if !sameStrings(args, want) {
+		t.Fatalf("args = %#v, want %#v", args, want)
+	}
+}
+
+func TestProfileArgsForOptionsPreservesPingSweepWhenProbesAreSelected(t *testing.T) {
+	profile := Profile{Args: []string{"-sn"}}
+
+	args := ProfileArgsForOptions(profile, ScanOptions{TCPSYNProbes: "22,80"})
+
+	want := []string{"-sn"}
 	if !sameStrings(args, want) {
 		t.Fatalf("args = %#v, want %#v", args, want)
 	}

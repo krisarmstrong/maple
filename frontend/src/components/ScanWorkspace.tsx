@@ -473,7 +473,10 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                 onChange={(event) => {
                   const value = event.target.value;
                   if (isDiscoveryMode(value)) {
-                    updateScanOptions((current) => ({ ...current, discoveryMode: value }));
+                    updateScanOptions((current) => {
+                      const next = { ...current, discoveryMode: value };
+                      return value === "skip" ? clearDiscoveryProbes(next) : next;
+                    });
                   }
                 }}
               >
@@ -521,6 +524,71 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                   </option>
                 ))}
               </select>
+            </label>
+            <h4 className="option-section-heading">Discovery probes</h4>
+            <label>
+              <span>TCP SYN probe ports</span>
+              <input
+                aria-label="TCP SYN probe ports"
+                disabled={scanOptions.discoveryMode === "skip"}
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    tcpSynProbes: event.target.value,
+                  }))
+                }
+                placeholder="22,80,443"
+                type="text"
+                value={scanOptions.tcpSynProbes}
+              />
+            </label>
+            <label>
+              <span>TCP ACK probe ports</span>
+              <input
+                aria-label="TCP ACK probe ports"
+                disabled={scanOptions.discoveryMode === "skip"}
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    tcpAckProbes: event.target.value,
+                  }))
+                }
+                placeholder="80,443"
+                type="text"
+                value={scanOptions.tcpAckProbes}
+              />
+            </label>
+            <label>
+              <span>UDP probe ports</span>
+              <input
+                aria-label="UDP probe ports"
+                disabled={scanOptions.discoveryMode === "skip"}
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    udpProbes: event.target.value,
+                  }))
+                }
+                placeholder="53,161"
+                type="text"
+                value={scanOptions.udpProbes}
+              />
+            </label>
+            <label>
+              <span>SCTP INIT probe ports</span>
+              <input
+                aria-label="SCTP INIT probe ports"
+                disabled={scanOptions.discoveryMode === "skip"}
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    sctpInitProbes: event.target.value,
+                  }))
+                }
+                placeholder="3868"
+                type="text"
+                value={scanOptions.sctpInitProbes}
+              />
             </label>
             <h4 className="option-section-heading">Target scope</h4>
             <label>
@@ -725,6 +793,48 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
             <legend>Scan behavior</legend>
             <label>
               <input
+                checked={scanOptions.icmpEchoProbe}
+                disabled={scanOptions.discoveryMode === "skip"}
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    icmpEchoProbe: event.target.checked,
+                  }))
+                }
+                type="checkbox"
+              />
+              <span>ICMP echo probe</span>
+            </label>
+            <label>
+              <input
+                checked={scanOptions.icmpTimestamp}
+                disabled={scanOptions.discoveryMode === "skip"}
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    icmpTimestamp: event.target.checked,
+                  }))
+                }
+                type="checkbox"
+              />
+              <span>ICMP timestamp probe</span>
+            </label>
+            <label>
+              <input
+                checked={scanOptions.icmpNetmask}
+                disabled={scanOptions.discoveryMode === "skip"}
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    icmpNetmask: event.target.checked,
+                  }))
+                }
+                type="checkbox"
+              />
+              <span>ICMP netmask probe</span>
+            </label>
+            <label>
+              <input
                 checked={scanOptions.allPorts}
                 onChange={(event) =>
                   updateScanOptions((current) => ({
@@ -851,6 +961,11 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
           {scanOptions.discoveryMode === "ping" ? (
             <p className="option-warning">
               Ping discovery only finds live hosts; it does not enumerate ports.
+            </p>
+          ) : null}
+          {hasDiscoveryProbeOptions(scanOptions) ? (
+            <p className="option-warning">
+              Discovery probes tune host reachability checks before the scan starts.
             </p>
           ) : null}
           {scanOptions.minRate > 0 ? (
@@ -1134,6 +1249,31 @@ function isRiskyNSECategory(category: NSECategory): boolean {
   return (
     category === "dos" || category === "exploit" || category === "intrusive" || category === "vuln"
   );
+}
+
+function hasDiscoveryProbeOptions(options: ScanOptions): boolean {
+  return (
+    options.tcpSynProbes.trim() !== "" ||
+    options.tcpAckProbes.trim() !== "" ||
+    options.udpProbes.trim() !== "" ||
+    options.sctpInitProbes.trim() !== "" ||
+    options.icmpEchoProbe ||
+    options.icmpTimestamp ||
+    options.icmpNetmask
+  );
+}
+
+function clearDiscoveryProbes(options: ScanOptions): ScanOptions {
+  return {
+    ...options,
+    tcpSynProbes: "",
+    tcpAckProbes: "",
+    udpProbes: "",
+    sctpInitProbes: "",
+    icmpEchoProbe: false,
+    icmpTimestamp: false,
+    icmpNetmask: false,
+  };
 }
 
 function errorMessage(caught: unknown): string {

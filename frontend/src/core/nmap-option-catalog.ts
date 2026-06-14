@@ -102,8 +102,8 @@ export const nmapOptionCatalog: readonly NmapOptionCatalogEntry[] = [
     "discovery",
     "Specific discovery probes",
     ["-PS", "-PA", "-PU", "-PY", "-PE", "-PP", "-PM"],
-    "planned",
-    "Probe-specific controls should be grouped by protocol.",
+    "structured",
+    "TCP, UDP, SCTP, and ICMP discovery probes are exposed as structured controls.",
   ),
   entry(
     "scan",

@@ -23,6 +23,7 @@ describe("nmap option catalog", () => {
 
     expect(supportedSwitches).toContain("-sT");
     expect(supportedSwitches).toContain("-iL");
+    expect(supportedSwitches).toContain("-PS");
     expect(supportedSwitches).toContain("-sV");
     expect(supportedSwitches).toContain("--script-args-file");
     expect(supportedSwitches).toContain("--max-rtt-timeout");
@@ -40,9 +41,9 @@ describe("nmap option catalog", () => {
 
   it("summarizes coverage by implementation status", () => {
     expect(optionCoverageCounts()).toEqual({
-      structured: 17,
+      structured: 18,
       "escape-hatch": 2,
-      planned: 5,
+      planned: 4,
       blocked: 3,
     });
   });

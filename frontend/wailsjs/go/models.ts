@@ -271,6 +271,13 @@ export namespace scanner {
 	export class ScanOptions {
 	    scanTechnique?: string;
 	    discoveryMode?: string;
+	    tcpSynProbes?: string;
+	    tcpAckProbes?: string;
+	    udpProbes?: string;
+	    sctpInitProbes?: string;
+	    icmpEchoProbe?: boolean;
+	    icmpTimestamp?: boolean;
+	    icmpNetmask?: boolean;
 	    targetInputFile?: string;
 	    excludeTargets?: string;
 	    excludeFile?: string;
@@ -302,6 +309,13 @@ export namespace scanner {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.scanTechnique = source["scanTechnique"];
 	        this.discoveryMode = source["discoveryMode"];
+	        this.tcpSynProbes = source["tcpSynProbes"];
+	        this.tcpAckProbes = source["tcpAckProbes"];
+	        this.udpProbes = source["udpProbes"];
+	        this.sctpInitProbes = source["sctpInitProbes"];
+	        this.icmpEchoProbe = source["icmpEchoProbe"];
+	        this.icmpTimestamp = source["icmpTimestamp"];
+	        this.icmpNetmask = source["icmpNetmask"];
 	        this.targetInputFile = source["targetInputFile"];
 	        this.excludeTargets = source["excludeTargets"];
 	        this.excludeFile = source["excludeFile"];

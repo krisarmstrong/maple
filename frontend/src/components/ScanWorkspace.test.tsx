@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { defaultScanOptions } from "../core/scan-options";
 import {
   cancelScan,
   onScanEvent,
@@ -217,30 +218,7 @@ describe("ScanWorkspace", () => {
       scriptArgs: "http.useragent=Maple",
       scriptArgsFile: "/Users/krisarmstrong/nse-args.txt",
       options: {
-        scanTechnique: "",
-        discoveryMode: "",
-        targetInputFile: "",
-        excludeTargets: "",
-        excludeFile: "",
-        timingTemplate: "",
-        ports: "",
-        topPorts: 0,
-        allPorts: false,
-        serviceDetection: false,
-        versionMode: "",
-        ipv6: false,
-        osDetection: false,
-        traceroute: false,
-        dnsMode: "",
-        verbosityMode: "",
-        reason: false,
-        openOnly: false,
-        minRate: 0,
-        maxRetries: "",
-        hostTimeout: "",
-        maxRttTimeout: "",
-        statsEvery: "",
-        packetTrace: false,
+        ...defaultScanOptions,
       },
       scripts: [
         { kind: "category", value: "safe" },
@@ -263,7 +241,13 @@ describe("ScanWorkspace", () => {
       "-oX",
       "<managed-xml-file>",
       "-sU",
-      "-Pn",
+      "-PS22,80,443",
+      "-PA80,443",
+      "-PU53,161",
+      "-PY3868",
+      "-PE",
+      "-PP",
+      "-PM",
       "-T4",
       "-p",
       "22,80,443",
@@ -292,28 +276,42 @@ describe("ScanWorkspace", () => {
     ]);
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
-    await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
-    await userEvent.click(screen.getByRole("button", { name: "Options" }));
-    await userEvent.selectOptions(screen.getByLabelText("Scan technique"), "udp");
-    await userEvent.selectOptions(screen.getByLabelText("Host discovery"), "skip");
-    await userEvent.selectOptions(screen.getByLabelText("Timing"), "T4");
-    await userEvent.click(screen.getByRole("checkbox", { name: "Service detection" }));
-    await userEvent.selectOptions(screen.getByLabelText("Version detail"), "all");
+    fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
+    fireEvent.click(screen.getByRole("button", { name: "Options" }));
+    fireEvent.change(screen.getByLabelText("Scan technique"), { target: { value: "udp" } });
+    fireEvent.change(screen.getByLabelText("TCP SYN probe ports"), {
+      target: { value: "22,80,443" },
+    });
+    fireEvent.change(screen.getByLabelText("TCP ACK probe ports"), {
+      target: { value: "80,443" },
+    });
+    fireEvent.change(screen.getByLabelText("UDP probe ports"), {
+      target: { value: "53,161" },
+    });
+    fireEvent.change(screen.getByLabelText("SCTP INIT probe ports"), {
+      target: { value: "3868" },
+    });
+    fireEvent.click(screen.getByRole("checkbox", { name: "ICMP echo probe" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "ICMP timestamp probe" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "ICMP netmask probe" }));
+    fireEvent.change(screen.getByLabelText("Timing"), { target: { value: "T4" } });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Service detection" }));
+    fireEvent.change(screen.getByLabelText("Version detail"), { target: { value: "all" } });
     fireEvent.change(screen.getByLabelText("Ports"), { target: { value: "22,80,443" } });
-    await userEvent.click(screen.getByRole("checkbox", { name: "IPv6" }));
-    await userEvent.click(screen.getByRole("checkbox", { name: "OS detection" }));
-    await userEvent.click(screen.getByRole("checkbox", { name: "Traceroute" }));
-    await userEvent.selectOptions(screen.getByLabelText("DNS"), "skip");
-    await userEvent.selectOptions(screen.getByLabelText("Output detail"), "debug");
-    await userEvent.click(screen.getByRole("checkbox", { name: "Show reasons" }));
-    await userEvent.click(screen.getByRole("checkbox", { name: "Only open ports" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "IPv6" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "OS detection" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Traceroute" }));
+    fireEvent.change(screen.getByLabelText("DNS"), { target: { value: "skip" } });
+    fireEvent.change(screen.getByLabelText("Output detail"), { target: { value: "debug" } });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Show reasons" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Only open ports" }));
     fireEvent.change(screen.getByLabelText("Minimum packet rate"), { target: { value: "500" } });
     fireEvent.change(screen.getByLabelText("Maximum retries"), { target: { value: "2" } });
     fireEvent.change(screen.getByLabelText("Host timeout"), { target: { value: "30m" } });
     fireEvent.change(screen.getByLabelText("Max RTT timeout"), { target: { value: "2s" } });
     fireEvent.change(screen.getByLabelText("Stats interval"), { target: { value: "10s" } });
-    await userEvent.click(screen.getByRole("checkbox", { name: "Packet trace" }));
-    await userEvent.click(screen.getByRole("button", { name: "Preview" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Packet trace" }));
+    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
 
     expect(previewScanCommandMock).toHaveBeenCalledWith({
       profileId: "connect",
@@ -323,17 +321,22 @@ describe("ScanWorkspace", () => {
       scriptArgs: "",
       scriptArgsFile: "",
       options: {
+        ...defaultScanOptions,
         scanTechnique: "udp",
-        discoveryMode: "skip",
+        tcpSynProbes: "22,80,443",
+        tcpAckProbes: "80,443",
+        udpProbes: "53,161",
+        sctpInitProbes: "3868",
+        icmpEchoProbe: true,
+        icmpTimestamp: true,
+        icmpNetmask: true,
         targetInputFile: "",
         excludeTargets: "",
         excludeFile: "",
-        timingTemplate: "T4",
-        ports: "22,80,443",
         serviceDetection: true,
         versionMode: "all",
-        topPorts: 0,
-        allPorts: false,
+        timingTemplate: "T4",
+        ports: "22,80,443",
         ipv6: true,
         osDetection: true,
         traceroute: true,
@@ -351,7 +354,7 @@ describe("ScanWorkspace", () => {
     });
     expect(
       await screen.findByText(
-        "nmap -oX <managed-xml-file> -sU -Pn -T4 -p 22,80,443 -sV --version-all -6 -O --traceroute -n -vv --reason --open --min-rate 500 --max-retries 2 --host-timeout 30m --max-rtt-timeout 2s --stats-every 10s --packet-trace -- scanme.nmap.org",
+        "nmap -oX <managed-xml-file> -sU -PS22,80,443 -PA80,443 -PU53,161 -PY3868 -PE -PP -PM -T4 -p 22,80,443 -sV --version-all -6 -O --traceroute -n -vv --reason --open --min-rate 500 --max-retries 2 --host-timeout 30m --max-rtt-timeout 2s --stats-every 10s --packet-trace -- scanme.nmap.org",
       ),
     ).toBeInTheDocument();
   });
@@ -393,30 +396,10 @@ describe("ScanWorkspace", () => {
       scriptArgs: "",
       scriptArgsFile: "",
       options: {
-        scanTechnique: "",
-        discoveryMode: "",
+        ...defaultScanOptions,
         targetInputFile: "/Users/krisarmstrong/targets.txt",
         excludeTargets: "192.168.1.10,scanme.nmap.org",
         excludeFile: "/Users/krisarmstrong/excludes.txt",
-        timingTemplate: "",
-        ports: "",
-        topPorts: 0,
-        allPorts: false,
-        serviceDetection: false,
-        versionMode: "",
-        ipv6: false,
-        osDetection: false,
-        traceroute: false,
-        dnsMode: "",
-        verbosityMode: "",
-        reason: false,
-        openOnly: false,
-        minRate: 0,
-        maxRetries: "",
-        hostTimeout: "",
-        maxRttTimeout: "",
-        statsEvery: "",
-        packetTrace: false,
       },
     });
     expect(
@@ -437,12 +420,14 @@ describe("ScanWorkspace", () => {
         "Skip host discovery treats every target as online and can make large scans slower.",
       ),
     ).toBeInTheDocument();
+    expect(screen.getByLabelText("TCP SYN probe ports")).toBeDisabled();
 
     await userEvent.selectOptions(screen.getByLabelText("Host discovery"), "ping");
 
     expect(
       screen.getByText("Ping discovery only finds live hosts; it does not enumerate ports."),
     ).toBeInTheDocument();
+    expect(screen.getByLabelText("TCP SYN probe ports")).toBeEnabled();
   });
 
   it("warns when scan technique can require privileges or run slowly", async () => {

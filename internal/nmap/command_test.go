@@ -59,6 +59,8 @@ func TestBuildPreviewIncludesStructuredOptionsBeforeScriptsAndTargets(t *testing
 		Targets:   "scanme.nmap.org",
 		Options: scanner.ScanOptions{
 			TimingTemplate: "T4",
+			TCPSYNProbes:   "22,80",
+			ICMPEchoProbe:  true,
 			Ports:          "22,80,443",
 			IPv6:           true,
 			DNSMode:        "skip",
@@ -71,8 +73,54 @@ func TestBuildPreviewIncludesStructuredOptionsBeforeScriptsAndTargets(t *testing
 
 	wantArgs := []string{
 		"-oX", "<managed-xml-file>",
-		"-T4", "-p", "22,80,443", "-6", "-n",
+		"-PS22,80", "-PE", "-T4", "-p", "22,80,443", "-6", "-n",
 		"--script", "safe",
+		"--", "scanme.nmap.org",
+	}
+	if !sameStrings(preview.Args, wantArgs) {
+		t.Fatalf("args = %#v, want %#v", preview.Args, wantArgs)
+	}
+}
+
+func TestBuildPreviewRemovesProfileDiscoveryDefaultsWhenProbesAreSelected(t *testing.T) {
+	preview, err := BuildPreview("/usr/local/bin/nmap", scanner.ScanRequest{
+		ProfileID: scanner.ProfileConnect,
+		Targets:   "scanme.nmap.org",
+		Options: scanner.ScanOptions{
+			TCPSYNProbes:  "22,80",
+			ICMPEchoProbe: true,
+		},
+	})
+	if err != nil {
+		t.Fatalf("BuildPreview returned error: %v", err)
+	}
+
+	wantArgs := []string{
+		"-oX", "<managed-xml-file>",
+		"-sT", "-T3", "--top-ports", "100",
+		"-PS22,80", "-PE",
+		"--", "scanme.nmap.org",
+	}
+	if !sameStrings(preview.Args, wantArgs) {
+		t.Fatalf("args = %#v, want %#v", preview.Args, wantArgs)
+	}
+}
+
+func TestBuildPreviewPreservesPingSweepWhenProbesAreSelected(t *testing.T) {
+	preview, err := BuildPreview("/usr/local/bin/nmap", scanner.ScanRequest{
+		ProfileID: scanner.ProfilePing,
+		Targets:   "scanme.nmap.org",
+		Options: scanner.ScanOptions{
+			TCPSYNProbes: "22,80",
+		},
+	})
+	if err != nil {
+		t.Fatalf("BuildPreview returned error: %v", err)
+	}
+
+	wantArgs := []string{
+		"-oX", "<managed-xml-file>",
+		"-sn", "-PS22,80",
 		"--", "scanme.nmap.org",
 	}
 	if !sameStrings(preview.Args, wantArgs) {

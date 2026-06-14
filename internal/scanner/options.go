@@ -40,6 +40,13 @@ var ErrInvalidScanOption = errors.New("enter valid structured Nmap options")
 type ScanOptions struct {
 	ScanTechnique    ScanTechnique `json:"scanTechnique,omitempty"`
 	DiscoveryMode    DiscoveryMode `json:"discoveryMode,omitempty"`
+	TCPSYNProbes     string        `json:"tcpSynProbes,omitempty"`
+	TCPACKProbes     string        `json:"tcpAckProbes,omitempty"`
+	UDPProbes        string        `json:"udpProbes,omitempty"`
+	SCTPInitProbes   string        `json:"sctpInitProbes,omitempty"`
+	ICMPEchoProbe    bool          `json:"icmpEchoProbe,omitempty"`
+	ICMPTimestamp    bool          `json:"icmpTimestamp,omitempty"`
+	ICMPNetmask      bool          `json:"icmpNetmask,omitempty"`
 	TargetInputFile  string        `json:"targetInputFile,omitempty"`
 	ExcludeTargets   string        `json:"excludeTargets,omitempty"`
 	ExcludeFile      string        `json:"excludeFile,omitempty"`
@@ -68,6 +75,9 @@ func BuildOptionArgs(options ScanOptions) ([]string, error) {
 	if err := validatePortSelection(options); err != nil {
 		return nil, err
 	}
+	if err := validateDiscoveryOptions(options); err != nil {
+		return nil, err
+	}
 	if err := validatePerformanceOptions(options); err != nil {
 		return nil, err
 	}
@@ -87,6 +97,11 @@ func BuildOptionArgs(options ScanOptions) ([]string, error) {
 		return nil, err
 	}
 	args = append(args, discoveryArgs...)
+	probeArgs, err := buildDiscoveryProbeArgs(options)
+	if err != nil {
+		return nil, err
+	}
+	args = append(args, probeArgs...)
 	args = append(args, targetScopeArgs...)
 	if options.TimingTemplate != "" {
 		timing, err := validateTimingTemplate(options.TimingTemplate)
@@ -184,7 +199,7 @@ func ProfileArgsForOptions(profile Profile, options ScanOptions) []string {
 		if options.ScanTechnique != ScanTechniqueDefault && isTechniqueArg(arg) {
 			continue
 		}
-		if options.DiscoveryMode != DiscoveryModeDefault && isDiscoveryArg(arg) {
+		if shouldStripDiscoveryArg(arg, options) {
 			continue
 		}
 		if options.VerbosityMode != VerbosityModeDefault && isVerbosityArg(arg) {
@@ -235,11 +250,43 @@ func isTechniqueArg(value string) bool {
 
 func isDiscoveryArg(value string) bool {
 	switch value {
-	case "-Pn", "-sn":
+	case "-Pn", "-sn", "-PE", "-PP", "-PM":
 		return true
 	default:
-		return false
+		return strings.HasPrefix(value, "-PS") ||
+			strings.HasPrefix(value, "-PA") ||
+			strings.HasPrefix(value, "-PU") ||
+			strings.HasPrefix(value, "-PY")
 	}
+}
+
+func shouldStripDiscoveryArg(arg string, options ScanOptions) bool {
+	if options.DiscoveryMode != DiscoveryModeDefault {
+		return isDiscoveryArg(arg)
+	}
+	return hasDiscoveryProbeSelection(options) && isDiscoveryProbeOrSkipArg(arg)
+}
+
+func isDiscoveryProbeOrSkipArg(value string) bool {
+	switch value {
+	case "-Pn", "-PE", "-PP", "-PM":
+		return true
+	default:
+		return strings.HasPrefix(value, "-PS") ||
+			strings.HasPrefix(value, "-PA") ||
+			strings.HasPrefix(value, "-PU") ||
+			strings.HasPrefix(value, "-PY")
+	}
+}
+
+func hasDiscoveryProbeSelection(options ScanOptions) bool {
+	return strings.TrimSpace(options.TCPSYNProbes) != "" ||
+		strings.TrimSpace(options.TCPACKProbes) != "" ||
+		strings.TrimSpace(options.UDPProbes) != "" ||
+		strings.TrimSpace(options.SCTPInitProbes) != "" ||
+		options.ICMPEchoProbe ||
+		options.ICMPTimestamp ||
+		options.ICMPNetmask
 }
 
 func isVerbosityArg(value string) bool {
@@ -279,6 +326,13 @@ func validatePortSelection(options ScanOptions) error {
 		return ErrInvalidScanOption
 	}
 	if options.TopPorts < 0 || options.TopPorts > 1000 {
+		return ErrInvalidScanOption
+	}
+	return nil
+}
+
+func validateDiscoveryOptions(options ScanOptions) error {
+	if options.DiscoveryMode == DiscoveryModeSkip && hasDiscoveryProbeSelection(options) {
 		return ErrInvalidScanOption
 	}
 	return nil
@@ -334,6 +388,98 @@ func buildTargetScopeArgs(options ScanOptions) ([]string, error) {
 		args = append(args, "--excludefile", excludeFile)
 	}
 	return args, nil
+}
+
+func buildDiscoveryProbeArgs(options ScanOptions) ([]string, error) {
+	args := make([]string, 0, 7)
+	tcpSynProbes, err := validateDiscoveryProbePorts(options.TCPSYNProbes)
+	if err != nil {
+		return nil, err
+	}
+	if tcpSynProbes != "" {
+		args = append(args, "-PS"+tcpSynProbes)
+	}
+	tcpACKProbes, err := validateDiscoveryProbePorts(options.TCPACKProbes)
+	if err != nil {
+		return nil, err
+	}
+	if tcpACKProbes != "" {
+		args = append(args, "-PA"+tcpACKProbes)
+	}
+	udpProbes, err := validateDiscoveryProbePorts(options.UDPProbes)
+	if err != nil {
+		return nil, err
+	}
+	if udpProbes != "" {
+		args = append(args, "-PU"+udpProbes)
+	}
+	sctpInitProbes, err := validateDiscoveryProbePorts(options.SCTPInitProbes)
+	if err != nil {
+		return nil, err
+	}
+	if sctpInitProbes != "" {
+		args = append(args, "-PY"+sctpInitProbes)
+	}
+	if options.ICMPEchoProbe {
+		args = append(args, "-PE")
+	}
+	if options.ICMPTimestamp {
+		args = append(args, "-PP")
+	}
+	if options.ICMPNetmask {
+		args = append(args, "-PM")
+	}
+	return args, nil
+}
+
+func validateDiscoveryProbePorts(value string) (string, error) {
+	ports := strings.TrimSpace(value)
+	if ports == "" {
+		return "", nil
+	}
+	if strings.ContainsAny(ports, "\x00\r\n\t ") || strings.HasPrefix(ports, "-") {
+		return "", ErrInvalidScanOption
+	}
+	for _, part := range strings.Split(ports, ",") {
+		if err := validateDiscoveryProbePortPart(part); err != nil {
+			return "", err
+		}
+	}
+	return ports, nil
+}
+
+func validateDiscoveryProbePortPart(value string) error {
+	if value == "" {
+		return ErrInvalidScanOption
+	}
+	bounds := strings.Split(value, "-")
+	if len(bounds) > 2 {
+		return ErrInvalidScanOption
+	}
+	ports := make([]int, 0, len(bounds))
+	for _, bound := range bounds {
+		port, err := parseDiscoveryProbePort(bound)
+		if err != nil || port < 1 || port > 65535 {
+			return ErrInvalidScanOption
+		}
+		ports = append(ports, port)
+	}
+	if len(ports) == 2 && ports[0] > ports[1] {
+		return ErrInvalidScanOption
+	}
+	return nil
+}
+
+func parseDiscoveryProbePort(value string) (int, error) {
+	if value == "" {
+		return 0, ErrInvalidScanOption
+	}
+	for _, char := range value {
+		if char < '0' || char > '9' {
+			return 0, ErrInvalidScanOption
+		}
+	}
+	return strconv.Atoi(value)
 }
 
 func validateExcludeTargets(value string) (string, error) {

@@ -8,6 +8,13 @@ export type VersionMode = "" | "light" | "all";
 export interface ScanOptions {
   scanTechnique: ScanTechnique;
   discoveryMode: DiscoveryMode;
+  tcpSynProbes: string;
+  tcpAckProbes: string;
+  udpProbes: string;
+  sctpInitProbes: string;
+  icmpEchoProbe: boolean;
+  icmpTimestamp: boolean;
+  icmpNetmask: boolean;
   targetInputFile: string;
   excludeTargets: string;
   excludeFile: string;
@@ -35,6 +42,13 @@ export interface ScanOptions {
 export const defaultScanOptions: ScanOptions = {
   scanTechnique: "",
   discoveryMode: "",
+  tcpSynProbes: "",
+  tcpAckProbes: "",
+  udpProbes: "",
+  sctpInitProbes: "",
+  icmpEchoProbe: false,
+  icmpTimestamp: false,
+  icmpNetmask: false,
   targetInputFile: "",
   excludeTargets: "",
   excludeFile: "",
