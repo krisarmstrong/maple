@@ -62,6 +62,12 @@ The GitHub release workflow builds unsigned artifacts for:
 
 Linux artifacts build on Ubuntu 24.04 runners with the Wails `webkit2_41` tag and WebKitGTK 4.1 package dependencies. Manual workflow runs keep artifacts on the run. Tag builds publish the artifacts to a GitHub Release. Every platform artifact includes a SHA256 manifest. Signing and notarization are intentionally not part of this gate until the required platform credentials are available.
 
+Before upload, CI verifies that each platform produced the expected files:
+
+- macOS: compressed Wails output, Wails `.app`, unsigned `.pkg`, and SHA256 manifest.
+- Linux: compressed Wails output, `.deb`, `.rpm`, and SHA256 manifest.
+- Windows: compressed Wails output containing installer/executable output and SHA256 manifest.
+
 ## Release Constraints
 
 - Keep Wails v2.12.0.

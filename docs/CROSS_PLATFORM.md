@@ -71,7 +71,7 @@ The `.github/workflows/release.yml` workflow builds the release matrix in CI:
 | `maple-windows-amd64` | `windows-2025` | `windows/amd64` |
 | `maple-windows-arm64` | `windows-11-arm` | `windows/arm64` |
 
-The workflow runs on version tags and can also be started manually. Tag builds publish the generated artifacts to a GitHub Release. Manual runs keep artifacts attached to the workflow run for inspection. Each matrix artifact includes a per-platform SHA256 manifest.
+The workflow runs on version tags and can also be started manually. Tag builds publish the generated artifacts to a GitHub Release. Manual runs keep artifacts attached to the workflow run for inspection. Each matrix artifact includes a per-platform SHA256 manifest, and CI verifies the expected app, installer, package, archive, and checksum files before upload.
 
 ## Release Gate
 

@@ -186,6 +186,22 @@ jobs:
             shasum -a 256 -- * | sort -k 2 > "${ARTIFACT_NAME}-SHA256SUMS.txt"
           )
 
+      - name: Verify release artifacts
+        env:
+          ARCHIVE_EXT: ${{ matrix.archive_ext }}
+          PACKAGE_ARCH: ${{ matrix.package_arch }}
+        run: |
+          package_version="${{ github.event.inputs.version }}"
+          if [[ -z "$package_version" ]]; then
+            package_version="${GITHUB_REF_NAME#v}"
+          fi
+          scripts/verify-release-artifacts.sh \
+            "${{ matrix.os }}" \
+            "${{ matrix.name }}" \
+            "$package_version" \
+            "$PACKAGE_ARCH" \
+            "$ARCHIVE_EXT"
+
       - name: Upload release artifact
         uses: actions/upload-artifact@v6.0.0
         with:
