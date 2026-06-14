@@ -22,21 +22,25 @@ Expected:
 Recommended scan:
 
 1. In Target Builder, choose `Single target` and enter `127.0.0.1`.
-2. Confirm Target Builder shows accepted syntax, parsed target type, and estimated addresses.
-3. Open Options and confirm structured controls render for discovery, scan technique, ports, timing, packet shaping, and identity/evasion.
-4. Open Scripts and confirm built-in categories, named scripts, absolute custom script paths, custom script directories, script args, and script args files are available without raw shell input.
-5. Click `Preview`.
-6. Confirm Output shows Run status, Preview argv, Live log, and Diagnostics sections.
-7. Confirm the command is shown as argv tokens and includes `--` before the target.
+2. Confirm Target Builder shows accepted syntax, parsed target type, estimated addresses, and `Matches selected target type`.
+3. Switch to `Subnet` without changing the target and confirm Target Builder explains the mismatch before preview or run.
+4. Switch back to `Single target`.
+5. Open Options and confirm structured controls render for discovery, scan technique, ports, timing, packet shaping, and identity/evasion.
+6. Open Scripts and confirm built-in categories, named scripts, absolute custom script paths, custom script directories, script args, and script args files are available without raw shell input.
+7. Click `Preview`.
+8. Confirm Output shows Run status, Preview argv, Live log, and Diagnostics sections.
+9. Confirm the command is shown as argv tokens and includes `--` before the target.
    The XML output path should appear as Maple's managed XML placeholder, not as `-oX -`.
-8. Click `Run Scan`.
-9. Confirm the live log does not show raw XML.
-10. Confirm a history row appears with `exit 0` for a successful Nmap run.
-11. Open `Details` and confirm host/port rows are grouped and readable.
-12. Test Details filters: `All ports`, `Open ports`, `Hosts up`, and `Hosts with findings`.
-13. Export Raw XML, Full JSON, and Markdown Report.
-14. Confirm each export shows the generated filename and saved path.
-15. Open Help and confirm Nmap Option Coverage reports zero planned option gaps.
+10. Click `Copy argv` and confirm Maple reports that argv was copied.
+11. Click `Run Scan`.
+12. Confirm the live log does not show raw XML.
+13. Confirm a history row appears with `exit 0` for a successful Nmap run.
+14. Open `Details` and confirm host/port rows are grouped and readable.
+15. Test Details filters: `All ports`, `Open ports`, `Hosts up`, and `Hosts with findings`.
+16. Export Raw XML, Full JSON, and Markdown Report.
+17. Confirm each export shows the generated filename and saved path.
+18. Open Help and confirm Nmap Option Coverage reports zero planned option gaps.
+19. Load local Nmap help and confirm search filters the local help output.
 
 ## Windows Smoke
 
