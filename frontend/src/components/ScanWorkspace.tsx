@@ -617,7 +617,11 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                     onChange={(event) => {
                       const value = event.target.value;
                       if (isDNSMode(value)) {
-                        updateScanOptions((current) => ({ ...current, dnsMode: value }));
+                        updateScanOptions((current) => ({
+                          ...current,
+                          dnsMode: value,
+                          dnsServers: value === "skip" ? "" : current.dnsServers,
+                        }));
                       }
                     }}
                   >
@@ -627,6 +631,22 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                       </option>
                     ))}
                   </select>
+                </label>
+                <label>
+                  <span>DNS servers</span>
+                  <input
+                    aria-label="DNS servers"
+                    disabled={scanOptions.dnsMode === "skip"}
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        dnsServers: event.target.value,
+                      }))
+                    }
+                    placeholder="1.1.1.1,8.8.8.8"
+                    type="text"
+                    value={scanOptions.dnsServers}
+                  />
                 </label>
                 <h4 className="option-section-heading">Discovery probes</h4>
                 <label>
@@ -756,6 +776,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                           ...current,
                           serviceDetection: value === "" ? current.serviceDetection : true,
                           versionMode: value,
+                          versionIntensity: value === "" ? current.versionIntensity : "",
                         }));
                       }
                     }}
@@ -766,6 +787,26 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                       </option>
                     ))}
                   </select>
+                </label>
+                <label>
+                  <span>Version intensity</span>
+                  <input
+                    aria-label="Version intensity"
+                    disabled={scanOptions.versionMode !== ""}
+                    max={9}
+                    min={0}
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        serviceDetection:
+                          event.target.value === "" ? current.serviceDetection : true,
+                        versionIntensity: event.target.value,
+                      }))
+                    }
+                    placeholder="0-9"
+                    type="number"
+                    value={scanOptions.versionIntensity}
+                  />
                 </label>
                 <label>
                   <span>Output detail</span>
@@ -1204,6 +1245,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                       ...current,
                       serviceDetection: event.target.checked,
                       versionMode: event.target.checked ? current.versionMode : "",
+                      versionIntensity: event.target.checked ? current.versionIntensity : "",
                     }))
                   }
                   type="checkbox"

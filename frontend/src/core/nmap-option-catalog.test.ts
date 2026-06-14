@@ -26,6 +26,8 @@ describe("nmap option catalog", () => {
     expect(supportedSwitches).toContain("-iL");
     expect(supportedSwitches).toContain("-PS");
     expect(supportedSwitches).toContain("-sV");
+    expect(supportedSwitches).toContain("--version-intensity");
+    expect(supportedSwitches).toContain("--dns-servers");
     expect(supportedSwitches).toContain("--script-args-file");
     expect(supportedSwitches).toContain("--max-rtt-timeout");
     expect(supportedSwitches).toContain("--max-rate");

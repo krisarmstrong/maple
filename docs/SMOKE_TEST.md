@@ -42,22 +42,24 @@ Recommended scan:
 2. Confirm Target Builder shows accepted syntax, parsed target type, estimated addresses, and `Matches selected target type`.
 3. Switch to `Subnet` without changing the target and confirm Target Builder explains the mismatch before preview or run.
 4. Switch back to `Single target`.
-5. Open Options and confirm structured controls render for discovery, scan technique, ports, timing, packet shaping, and identity/evasion.
-6. Open Scripts and confirm built-in categories, named scripts, absolute custom script paths, custom script directories, script args, and script args files are available without raw shell input.
-7. Click `Preview`.
-8. Confirm Output shows Run status, Preview argv, Live log, and Diagnostics sections.
-9. Confirm the command is shown as argv tokens and includes `--` before the target.
+5. Open Options and confirm structured controls render for discovery, DNS, scan technique, ports, version detail, timing, packet shaping, and identity/evasion.
+6. In Scan shape, enter DNS servers such as `1.1.1.1,8.8.8.8`, then switch DNS to `Skip DNS lookup` and confirm the resolver list clears.
+7. In Ports, enter Version intensity `7` and confirm Service detection is enabled. Select `All probes` and confirm the custom intensity clears.
+8. Open Scripts and confirm built-in categories, named scripts, absolute custom script paths, custom script directories, script args, and script args files are available without raw shell input.
+9. Click `Preview`.
+10. Confirm Output shows Run status, Preview argv, Live log, and Diagnostics sections.
+11. Confirm the command is shown as argv tokens and includes `--` before the target.
    The XML output path should appear as Maple's managed XML placeholder, not as `-oX -`.
-10. Click `Copy argv` and confirm Maple reports that argv was copied.
-11. Click `Run Scan`.
-12. Confirm the live log does not show raw XML.
-13. Confirm a history row appears with `exit 0` for a successful Nmap run.
-14. Open `Details` and confirm host/port rows are grouped and readable.
-15. Test Details filters: `All ports`, `Open ports`, `Hosts up`, and `Hosts with findings`.
-16. Export Raw XML, Full JSON, and Markdown Report.
-17. Confirm each export shows the generated filename and saved path.
-18. Open Help and confirm Nmap Option Coverage reports zero planned option gaps.
-19. Load local Nmap help and confirm search filters the local help output.
+12. Click `Copy argv` and confirm Maple reports that argv was copied.
+13. Click `Run Scan`.
+14. Confirm the live log does not show raw XML.
+15. Confirm a history row appears with `exit 0` for a successful Nmap run.
+16. Open `Details` and confirm host/port rows are grouped and readable.
+17. Test Details filters: `All ports`, `Open ports`, `Hosts up`, and `Hosts with findings`.
+18. Export Raw XML, Full JSON, and Markdown Report.
+19. Confirm each export shows the generated filename and saved path.
+20. Open Help and confirm Nmap Option Coverage reports zero planned option gaps.
+21. Load local Nmap help and confirm search filters the local help output.
 
 ## Windows Smoke
 
@@ -72,7 +74,7 @@ Expected:
 - Maple starts without requiring bundled Nmap or bundled Npcap.
 - Tool detection finds user-installed `nmap.exe` when it is on `PATH`.
 - Missing Nmap is reported cleanly.
-- Target Builder, preview argv tokens, scan/history/details, and all three export formats pass.
+- Target Builder, DNS resolver validation, version intensity, preview argv tokens, scan/history/details, and all three export formats pass against a safe local target such as `127.0.0.1`.
 - The macOS `make package-windows-dryrun` command is documented as the local package command-generation gate; final smoke happens on Windows.
 
 ## Linux Smoke
@@ -87,7 +89,7 @@ Expected:
 - Maple starts with the system WebKit dependencies required by Wails.
 - Tool detection finds user-installed `nmap` when it is on `PATH`.
 - Missing Nmap is reported cleanly.
-- Target Builder, preview argv tokens, scan/history/details, and all three export formats pass.
+- Target Builder, DNS resolver validation, version intensity, preview argv tokens, scan/history/details, and all three export formats pass against a safe local target such as `127.0.0.1`.
 - The macOS `make package-linux-dryrun` command records Wails' cross-compilation limitation; final smoke happens on Linux.
 
 ## Invariants

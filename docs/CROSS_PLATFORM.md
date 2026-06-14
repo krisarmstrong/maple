@@ -57,9 +57,13 @@ make test
 make test-e2e
 make security
 make build
+make package-dryrun
 ```
 
 Then run the relevant smoke checklist in `docs/SMOKE_TEST.md` on the target operating system.
+For Windows and Linux, the target-host smoke must include target validation, DNS resolver validation,
+version intensity, preview argv tokens, one safe local scan, History details, and Raw XML, Full JSON,
+and Markdown Report exports.
 
 ## MVP Platform Bar
 

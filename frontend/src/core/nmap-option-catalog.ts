@@ -94,9 +94,9 @@ export const nmapOptionCatalog: readonly NmapOptionCatalogEntry[] = [
   entry(
     "discovery",
     "DNS behavior",
-    ["-n", "--system-dns"],
+    ["-n", "--system-dns", "--dns-servers"],
     "structured",
-    "Common DNS modes are exposed as structured choices.",
+    "Common DNS modes and literal DNS resolver lists are exposed as structured choices.",
   ),
   entry(
     "discovery",
@@ -129,9 +129,9 @@ export const nmapOptionCatalog: readonly NmapOptionCatalogEntry[] = [
   entry(
     "service",
     "Service version detection",
-    ["-sV", "--version-light", "--version-all"],
+    ["-sV", "--version-light", "--version-all", "--version-intensity"],
     "structured",
-    "Version intensity presets are exposed.",
+    "Version intensity presets and custom 0-9 intensity are exposed.",
   ),
   entry(
     "service",

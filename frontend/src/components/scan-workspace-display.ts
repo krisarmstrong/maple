@@ -125,6 +125,18 @@ export function hasIdentityOptions(options: ScanOptions): boolean {
 }
 
 export function messageForInvalidScanOptions(options: ScanOptions): string {
+  if (options.dnsMode === "skip" && options.dnsServers.trim() !== "") {
+    return "DNS servers cannot be used when DNS lookup is skipped.";
+  }
+  if (!isValidDNSResolverList(options.dnsServers)) {
+    return "DNS servers must be comma-separated IP addresses.";
+  }
+  if (options.versionMode !== "" && options.versionIntensity.trim() !== "") {
+    return "Version intensity cannot be combined with version detail presets.";
+  }
+  if (!isValidVersionIntensity(options.versionIntensity)) {
+    return "Version intensity must be a number from 0 to 9.";
+  }
   if (options.minRate !== 0 && options.maxRate !== 0 && options.minRate > options.maxRate) {
     return "Minimum packet rate cannot be greater than maximum packet rate.";
   }
@@ -142,4 +154,68 @@ export function messageForInvalidScanOptions(options: ScanOptions): string {
     return "Custom MTU must be a multiple of 8 between 8 and 1500.";
   }
   return "";
+}
+
+function isValidVersionIntensity(value: string): boolean {
+  const intensity = value.trim();
+  if (intensity === "") {
+    return true;
+  }
+  return /^[0-9]$/u.test(intensity);
+}
+
+function isValidDNSResolverList(value: string): boolean {
+  const servers = value.trim();
+  if (servers === "") {
+    return true;
+  }
+  if (hasForbiddenDNSCharacter(servers) || servers.startsWith("-")) {
+    return false;
+  }
+  return servers.split(",").every(isIPLiteral);
+}
+
+function hasForbiddenDNSCharacter(value: string): boolean {
+  return [...value].some((char) => char.charCodeAt(0) === 0 || /\s|;/u.test(char));
+}
+
+function isIPLiteral(value: string): boolean {
+  return isIPv4Literal(value) || isIPv6Literal(value);
+}
+
+function isIPv4Literal(value: string): boolean {
+  const parts = value.split(".");
+  return (
+    parts.length === 4 &&
+    parts.every((part) => {
+      if (part === "" || !/^[0-9]+$/u.test(part)) {
+        return false;
+      }
+      const octet = Number(part);
+      return octet >= 0 && octet <= 255;
+    })
+  );
+}
+
+function isIPv6Literal(value: string): boolean {
+  if (!value.includes(":") || value.includes(":::") || !/^[0-9A-Fa-f:]+$/u.test(value)) {
+    return false;
+  }
+  const compressionCount = value.split("::").length - 1;
+  if (compressionCount > 1) {
+    return false;
+  }
+  const groups = value.split(":");
+  if (compressionCount === 0 && groups.length !== 8) {
+    return false;
+  }
+  if (groups.length > 8) {
+    return false;
+  }
+  return groups.every((group) => {
+    if (group === "") {
+      return compressionCount === 1;
+    }
+    return group.length <= 4;
+  });
 }

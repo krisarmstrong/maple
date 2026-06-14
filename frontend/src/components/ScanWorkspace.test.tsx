@@ -508,6 +508,52 @@ describe("ScanWorkspace", () => {
     expect(screen.getByLabelText("Minimum packet rate")).toHaveValue(250);
   });
 
+  it("adds custom version intensity and DNS servers as structured options", async () => {
+    previewScanCommandMock.mockResolvedValue([
+      "nmap",
+      "-oX",
+      "<managed-xml-file>",
+      "-sV",
+      "--version-intensity",
+      "7",
+      "--dns-servers",
+      "1.1.1.1,2606:4700:4700::1111",
+      "--",
+      "scanme.nmap.org",
+    ]);
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
+    await userEvent.click(screen.getByRole("button", { name: "Options" }));
+    fireEvent.change(screen.getByLabelText("DNS servers"), {
+      target: { value: "1.1.1.1,2606:4700:4700::1111" },
+    });
+    await userEvent.click(screen.getByRole("button", { name: "Ports" }));
+    fireEvent.change(screen.getByLabelText("Version intensity"), { target: { value: "7" } });
+
+    await userEvent.click(screen.getByRole("button", { name: "Preview" }));
+
+    expect(previewScanCommandMock).toHaveBeenCalledWith({
+      profileId: "connect",
+      targets: "scanme.nmap.org",
+      nmapPath: "/usr/local/bin/nmap",
+      scripts: [],
+      scriptArgs: "",
+      scriptArgsFile: "",
+      options: {
+        ...defaultScanOptions,
+        serviceDetection: true,
+        versionIntensity: "7",
+        dnsServers: "1.1.1.1,2606:4700:4700::1111",
+      },
+    });
+    expect(
+      await screen.findByText(
+        "nmap -oX <managed-xml-file> -sV --version-intensity 7 --dns-servers 1.1.1.1,2606:4700:4700::1111 -- scanme.nmap.org",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("validates timing range relationships before preview", async () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 

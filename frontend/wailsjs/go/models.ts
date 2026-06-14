@@ -287,10 +287,12 @@ export namespace scanner {
 	    allPorts?: boolean;
 	    serviceDetection?: boolean;
 	    versionMode?: string;
+	    versionIntensity?: string;
 	    ipv6?: boolean;
 	    osDetection?: boolean;
 	    traceroute?: boolean;
 	    dnsMode?: string;
+	    dnsServers?: string;
 	    verbosityMode?: string;
 	    reason?: boolean;
 	    openOnly?: boolean;
@@ -340,10 +342,12 @@ export namespace scanner {
 	        this.allPorts = source["allPorts"];
 	        this.serviceDetection = source["serviceDetection"];
 	        this.versionMode = source["versionMode"];
+	        this.versionIntensity = source["versionIntensity"];
 	        this.ipv6 = source["ipv6"];
 	        this.osDetection = source["osDetection"];
 	        this.traceroute = source["traceroute"];
 	        this.dnsMode = source["dnsMode"];
+	        this.dnsServers = source["dnsServers"];
 	        this.verbosityMode = source["verbosityMode"];
 	        this.reason = source["reason"];
 	        this.openOnly = source["openOnly"];

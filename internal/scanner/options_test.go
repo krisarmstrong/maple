@@ -18,11 +18,11 @@ func TestBuildOptionArgsAddsStructuredNmapOptions(t *testing.T) {
 		TimingTemplate:   "T4",
 		Ports:            "22,80,443",
 		ServiceDetection: true,
-		VersionMode:      VersionModeAll,
+		VersionIntensity: "7",
 		IPv6:             true,
 		OSDetection:      true,
 		Traceroute:       true,
-		DNSMode:          "skip",
+		DNSServers:       "1.1.1.1,2606:4700:4700::1111",
 		VerbosityMode:    VerbosityModeDebug,
 		Reason:           true,
 		OpenOnly:         true,
@@ -51,7 +51,7 @@ func TestBuildOptionArgsAddsStructuredNmapOptions(t *testing.T) {
 		t.Fatalf("BuildOptionArgs returned error: %v", err)
 	}
 
-	want := []string{"-sU", "-PS22,80,443", "-PA80,443", "-PU53,161", "-PY80", "-PE", "-PP", "-PM", "-iL", "/Users/krisarmstrong/targets.txt", "--exclude", "192.168.1.10,scanme.nmap.org", "--excludefile", "/Users/krisarmstrong/exclude-targets.txt", "-T4", "-p", "22,80,443", "-sV", "--version-all", "-6", "-O", "--traceroute", "-n", "-vv", "--reason", "--open", "--min-rate", "500", "--max-rate", "2000", "--max-retries", "2", "--host-timeout", "30m", "--max-rtt-timeout", "2s", "--stats-every", "10s", "--scan-delay", "50ms", "--max-scan-delay", "1s", "--min-hostgroup", "8", "--max-hostgroup", "256", "--min-parallelism", "4", "--max-parallelism", "64", "-f", "--data-length", "24", "--source-port", "53", "-D", "ME,198.51.100.10,RND:2", "-S", "192.0.2.20", "-e", "en0", "--spoof-mac", "02:11:22:33:44:55", "--packet-trace"}
+	want := []string{"-sU", "-PS22,80,443", "-PA80,443", "-PU53,161", "-PY80", "-PE", "-PP", "-PM", "-iL", "/Users/krisarmstrong/targets.txt", "--exclude", "192.168.1.10,scanme.nmap.org", "--excludefile", "/Users/krisarmstrong/exclude-targets.txt", "-T4", "-p", "22,80,443", "-sV", "--version-intensity", "7", "-6", "-O", "--traceroute", "--dns-servers", "1.1.1.1,2606:4700:4700::1111", "-vv", "--reason", "--open", "--min-rate", "500", "--max-rate", "2000", "--max-retries", "2", "--host-timeout", "30m", "--max-rtt-timeout", "2s", "--stats-every", "10s", "--scan-delay", "50ms", "--max-scan-delay", "1s", "--min-hostgroup", "8", "--max-hostgroup", "256", "--min-parallelism", "4", "--max-parallelism", "64", "-f", "--data-length", "24", "--source-port", "53", "-D", "ME,198.51.100.10,RND:2", "-S", "192.0.2.20", "-e", "en0", "--spoof-mac", "02:11:22:33:44:55", "--packet-trace"}
 	if !sameStrings(args, want) {
 		t.Fatalf("args = %#v, want %#v", args, want)
 	}
@@ -161,7 +161,16 @@ func TestBuildOptionArgsRejectsInvalidOptions(t *testing.T) {
 		{Ports: "22", TopPorts: 10},
 		{AllPorts: true, TopPorts: 10},
 		{DNSMode: "recursive"},
+		{DNSMode: DNSModeSkip, DNSServers: "1.1.1.1"},
+		{DNSServers: "resolver.example.com"},
+		{DNSServers: "1.1.1.1 --script"},
+		{DNSServers: "1.1.1.1,,8.8.8.8"},
 		{VersionMode: "deep"},
+		{VersionMode: VersionModeAll, VersionIntensity: "7"},
+		{VersionIntensity: "-1"},
+		{VersionIntensity: "10"},
+		{VersionIntensity: "fast"},
+		{VersionIntensity: "7\n--script"},
 		{ScanTechnique: "idle"},
 		{DiscoveryMode: "arp"},
 		{DiscoveryMode: DiscoveryModeSkip, TCPSYNProbes: "22"},

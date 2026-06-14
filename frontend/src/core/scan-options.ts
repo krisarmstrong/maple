@@ -37,10 +37,12 @@ export interface ScanOptions {
   allPorts: boolean;
   serviceDetection: boolean;
   versionMode: VersionMode;
+  versionIntensity: string;
   ipv6: boolean;
   osDetection: boolean;
   traceroute: boolean;
   dnsMode: DNSMode;
+  dnsServers: string;
   verbosityMode: VerbosityMode;
   reason: boolean;
   openOnly: boolean;
@@ -86,10 +88,12 @@ export const defaultScanOptions: ScanOptions = {
   allPorts: false,
   serviceDetection: false,
   versionMode: "",
+  versionIntensity: "",
   ipv6: false,
   osDetection: false,
   traceroute: false,
   dnsMode: "",
+  dnsServers: "",
   verbosityMode: "",
   reason: false,
   openOnly: false,

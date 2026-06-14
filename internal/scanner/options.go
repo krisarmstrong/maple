@@ -67,10 +67,12 @@ type ScanOptions struct {
 	AllPorts         bool          `json:"allPorts,omitempty"`
 	ServiceDetection bool          `json:"serviceDetection,omitempty"`
 	VersionMode      VersionMode   `json:"versionMode,omitempty"`
+	VersionIntensity string        `json:"versionIntensity,omitempty"`
 	IPv6             bool          `json:"ipv6,omitempty"`
 	OSDetection      bool          `json:"osDetection,omitempty"`
 	Traceroute       bool          `json:"traceroute,omitempty"`
 	DNSMode          DNSMode       `json:"dnsMode,omitempty"`
+	DNSServers       string        `json:"dnsServers,omitempty"`
 	VerbosityMode    VerbosityMode `json:"verbosityMode,omitempty"`
 	Reason           bool          `json:"reason,omitempty"`
 	OpenOnly         bool          `json:"openOnly,omitempty"`
@@ -168,6 +170,11 @@ func BuildOptionArgs(options ScanOptions) ([]string, error) {
 		return nil, err
 	}
 	args = append(args, dnsArgs...)
+	dnsServerArgs, err := buildDNSServerArgs(options)
+	if err != nil {
+		return nil, err
+	}
+	args = append(args, dnsServerArgs...)
 	verbosityArgs, err := buildVerbosityArgs(options.VerbosityMode)
 	if err != nil {
 		return nil, err
@@ -429,7 +436,9 @@ func isVerbosityArg(value string) bool {
 }
 
 func hasVersionSelection(options ScanOptions) bool {
-	return options.ServiceDetection || options.VersionMode != VersionModeDefault
+	return options.ServiceDetection ||
+		options.VersionMode != VersionModeDefault ||
+		strings.TrimSpace(options.VersionIntensity) != ""
 }
 
 func isVersionArg(value string) bool {
@@ -463,6 +472,9 @@ func validatePortSelection(options ScanOptions) error {
 
 func validateDiscoveryOptions(options ScanOptions) error {
 	if options.DiscoveryMode == DiscoveryModeSkip && hasDiscoveryProbeSelection(options) {
+		return ErrInvalidScanOption
+	}
+	if options.DNSMode == DNSModeSkip && strings.TrimSpace(options.DNSServers) != "" {
 		return ErrInvalidScanOption
 	}
 	return nil
@@ -953,6 +965,34 @@ func buildDNSArgs(mode DNSMode) ([]string, error) {
 	}
 }
 
+func buildDNSServerArgs(options ScanOptions) ([]string, error) {
+	servers, err := validateDNSServers(options.DNSServers)
+	if err != nil || servers == "" {
+		return nil, err
+	}
+	return []string{"--dns-servers", servers}, nil
+}
+
+func validateDNSServers(value string) (string, error) {
+	servers := strings.TrimSpace(value)
+	if servers == "" {
+		return "", nil
+	}
+	if strings.ContainsAny(servers, "\x00\r\n\t ") || strings.HasPrefix(servers, "-") {
+		return "", ErrInvalidScanOption
+	}
+	parts := strings.Split(servers, ",")
+	for _, part := range parts {
+		if part == "" {
+			return "", ErrInvalidScanOption
+		}
+		if _, err := netip.ParseAddr(part); err != nil {
+			return "", ErrInvalidScanOption
+		}
+	}
+	return servers, nil
+}
+
 func buildTechniqueArgs(technique ScanTechnique) ([]string, error) {
 	switch technique {
 	case ScanTechniqueDefault:
@@ -1019,12 +1059,30 @@ func buildVersionArgs(options ScanOptions) ([]string, error) {
 	args := []string{"-sV"}
 	switch options.VersionMode {
 	case VersionModeDefault:
-		return args, nil
+		return appendVersionIntensity(args, options.VersionIntensity)
 	case VersionModeLight:
+		if strings.TrimSpace(options.VersionIntensity) != "" {
+			return nil, ErrInvalidScanOption
+		}
 		return append(args, "--version-light"), nil
 	case VersionModeAll:
+		if strings.TrimSpace(options.VersionIntensity) != "" {
+			return nil, ErrInvalidScanOption
+		}
 		return append(args, "--version-all"), nil
 	default:
 		return nil, ErrInvalidScanOption
 	}
+}
+
+func appendVersionIntensity(args []string, value string) ([]string, error) {
+	intensity := strings.TrimSpace(value)
+	if intensity == "" {
+		return args, nil
+	}
+	parsed, err := strconv.Atoi(intensity)
+	if err != nil || parsed < 0 || parsed > 9 {
+		return nil, ErrInvalidScanOption
+	}
+	return append(args, "--version-intensity", intensity), nil
 }

@@ -80,6 +80,38 @@ describe("scan workspace display helpers", () => {
     expect(
       messageForInvalidScanOptions({
         ...defaultScanOptions,
+        dnsMode: "skip",
+        dnsServers: "1.1.1.1",
+      }),
+    ).toBe("DNS servers cannot be used when DNS lookup is skipped.");
+    expect(
+      messageForInvalidScanOptions({
+        ...defaultScanOptions,
+        dnsServers: "resolver.example.com",
+      }),
+    ).toBe("DNS servers must be comma-separated IP addresses.");
+    expect(
+      messageForInvalidScanOptions({
+        ...defaultScanOptions,
+        dnsServers: "1.1.1.1 --script",
+      }),
+    ).toBe("DNS servers must be comma-separated IP addresses.");
+    expect(
+      messageForInvalidScanOptions({
+        ...defaultScanOptions,
+        versionMode: "all",
+        versionIntensity: "7",
+      }),
+    ).toBe("Version intensity cannot be combined with version detail presets.");
+    expect(
+      messageForInvalidScanOptions({
+        ...defaultScanOptions,
+        versionIntensity: "10",
+      }),
+    ).toBe("Version intensity must be a number from 0 to 9.");
+    expect(
+      messageForInvalidScanOptions({
+        ...defaultScanOptions,
         fragmentPackets: true,
         mtu: 24,
       }),
