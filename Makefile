@@ -4,13 +4,16 @@ GO_BUILD_TAGS ?= desktop,wv2runtime.download,production
 GO_LDFLAGS ?= -w -s -extldflags '-framework UniformTypeIdentifiers'
 WAILS ?= wails
 WAILS_LDFLAGS ?= -w -s
-WAILS_BUILD_FLAGS ?= -clean -trimpath -tags "$(GO_BUILD_TAGS)"
+PACKAGE_BUILD_TAGS ?= $(GO_BUILD_TAGS)
+WAILS_BUILD_FLAGS ?= -clean -trimpath -tags "$(PACKAGE_BUILD_TAGS)"
 PACKAGE_PLATFORM ?= darwin/arm64
 PACKAGE_LDFLAGS ?= $(WAILS_LDFLAGS)
 WAILS_PLATFORM_FLAGS ?=
 PACKAGE_VERSION ?= 0.1.0
 PACKAGE_RELEASE ?= 1
 PACKAGE_ARCH ?= amd64
+PACKAGE_DEB_WEBKIT_DEP ?= libwebkit2gtk-4.0-37
+PACKAGE_RPM_WEBKIT_DEP ?= webkit2gtk3
 LINUX_PACKAGE_PLATFORM ?= linux/$(PACKAGE_ARCH)
 
 .PHONY: build dev fmt fmt-check lint package-all package-dryrun package-linux package-linux-deb package-linux-dryrun package-linux-installers package-linux-rpm package-macos package-macos-dryrun package-macos-installer package-macos-pkg package-platform package-windows package-windows-dryrun rc-check security test test-e2e test-go test-ui tidy
@@ -77,11 +80,11 @@ package-linux:
 
 package-linux-deb:
 	mkdir -p dist
-	MAPLE_PACKAGE_ARCH=$(PACKAGE_ARCH) MAPLE_PACKAGE_VERSION=$(PACKAGE_VERSION) MAPLE_PACKAGE_RELEASE=$(PACKAGE_RELEASE) nfpm package --config packaging/linux/nfpm.yaml --packager deb --target dist
+	MAPLE_DEB_WEBKIT_DEP=$(PACKAGE_DEB_WEBKIT_DEP) MAPLE_RPM_WEBKIT_DEP=$(PACKAGE_RPM_WEBKIT_DEP) MAPLE_PACKAGE_ARCH=$(PACKAGE_ARCH) MAPLE_PACKAGE_VERSION=$(PACKAGE_VERSION) MAPLE_PACKAGE_RELEASE=$(PACKAGE_RELEASE) nfpm package --config packaging/linux/nfpm.yaml --packager deb --target dist
 
 package-linux-rpm:
 	mkdir -p dist
-	MAPLE_PACKAGE_ARCH=$(PACKAGE_ARCH) MAPLE_PACKAGE_VERSION=$(PACKAGE_VERSION) MAPLE_PACKAGE_RELEASE=$(PACKAGE_RELEASE) nfpm package --config packaging/linux/nfpm.yaml --packager rpm --target dist
+	MAPLE_DEB_WEBKIT_DEP=$(PACKAGE_DEB_WEBKIT_DEP) MAPLE_RPM_WEBKIT_DEP=$(PACKAGE_RPM_WEBKIT_DEP) MAPLE_PACKAGE_ARCH=$(PACKAGE_ARCH) MAPLE_PACKAGE_VERSION=$(PACKAGE_VERSION) MAPLE_PACKAGE_RELEASE=$(PACKAGE_RELEASE) nfpm package --config packaging/linux/nfpm.yaml --packager rpm --target dist
 
 package-linux-installers: package-linux package-linux-deb package-linux-rpm
 

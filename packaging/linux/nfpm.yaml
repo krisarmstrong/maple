@@ -18,11 +18,11 @@ overrides:
   deb:
     depends:
       - libgtk-3-0
-      - libwebkit2gtk-4.0-37
+      - ${MAPLE_DEB_WEBKIT_DEP}
   rpm:
     depends:
       - gtk3
-      - webkit2gtk3
+      - ${MAPLE_RPM_WEBKIT_DEP}
 contents:
   - src: build/bin/maple
     dst: /usr/bin/maple

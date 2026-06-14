@@ -49,6 +49,7 @@ make package-linux-dryrun
 
 - Targets: `linux/amd64`, `linux/arm64`
 - Runtime: Wails WebKitGTK stack.
+- CI baseline: Ubuntu 24.04 with Wails' `webkit2_41` build tag and WebKitGTK 4.1 runtime dependencies.
 - Nmap must be installed separately through the distribution package manager or the Nmap Project packages.
 - Maple must not ship Nmap, Ndiff, Ncat, or Nping binaries.
 - Wails v2.12 reports that cross-compiling to Linux is not supported from macOS; run `make package-linux` on a Linux packaging host.
@@ -61,8 +62,8 @@ The `.github/workflows/release.yml` workflow builds the release matrix in CI:
 | Artifact | Runner | Platform |
 |---|---|---|
 | `maple-macos-arm64` | `macos-15` | `darwin/arm64` |
-| `maple-linux-amd64` | `ubuntu-22.04` | `linux/amd64` |
-| `maple-linux-arm64` | `ubuntu-22.04-arm` | `linux/arm64` |
+| `maple-linux-amd64` | `ubuntu-24.04` | `linux/amd64` |
+| `maple-linux-arm64` | `ubuntu-24.04-arm` | `linux/arm64` |
 | `maple-windows-amd64` | `windows-2025` | `windows/amd64` |
 | `maple-windows-arm64` | `windows-11-arm` | `windows/arm64` |
 

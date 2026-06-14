@@ -60,7 +60,7 @@ The GitHub release workflow builds unsigned artifacts for:
 - Windows x86: Wails `windows/amd64` with NSIS enabled.
 - Windows ARM: Wails `windows/arm64` with NSIS enabled.
 
-Manual workflow runs keep artifacts on the run. Tag builds publish the artifacts to a GitHub Release. Every platform artifact includes a SHA256 manifest. Signing and notarization are intentionally not part of this gate until the required platform credentials are available.
+Linux artifacts build on Ubuntu 24.04 runners with the Wails `webkit2_41` tag and WebKitGTK 4.1 package dependencies. Manual workflow runs keep artifacts on the run. Tag builds publish the artifacts to a GitHub Release. Every platform artifact includes a SHA256 manifest. Signing and notarization are intentionally not part of this gate until the required platform credentials are available.
 
 ## Release Constraints
 
