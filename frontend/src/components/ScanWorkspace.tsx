@@ -32,6 +32,7 @@ import {
   targetModePlaceholder,
   targetModes,
 } from "../core/target-modes";
+import { copyText } from "../services/clipboard-service";
 import { cancelScan, onScanEvent, previewScanCommand, startScan } from "../services/scan-service";
 import { ProfileSummary } from "./ProfileSummary";
 import {
@@ -84,6 +85,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
   const [activePanel, setActivePanel] = useState<ScanPanel>("configure");
   const [activeOptionGroup, setActiveOptionGroup] = useState<OptionGroup>("shape");
   const [error, setError] = useState("");
+  const [copyMessage, setCopyMessage] = useState("");
   const [preview, setPreview] = useState<string[]>([]);
   const [log, setLog] = useState<LogEntry[]>([]);
   const [running, setRunning] = useState(false);
@@ -146,6 +148,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
       return;
     }
     setError("");
+    setCopyMessage("");
     try {
       setPreview(await previewScanCommand(request));
       setStatus("previewed");
@@ -179,6 +182,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
       return;
     }
     setError("");
+    setCopyMessage("");
     setLog([]);
     setStatus("running");
     setActivePanel("output");
@@ -189,6 +193,16 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
       setStatus("failed");
       setActivePanel("configure");
       setError(errorMessage(caught));
+    }
+  }
+
+  async function copyPreviewCommand(): Promise<void> {
+    setCopyMessage("");
+    try {
+      await copyText(preview.join(" "));
+      setCopyMessage("Copied argv to clipboard.");
+    } catch (caught) {
+      setCopyMessage(clipboardErrorMessage(caught));
     }
   }
 
@@ -1470,6 +1484,22 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                   ))}
                 </ul>
                 <code className="command-preview">{preview.join(" ")}</code>
+                <div className="preview-command-actions">
+                  <button type="button" onClick={() => void copyPreviewCommand()}>
+                    Copy argv
+                  </button>
+                  {copyMessage === "" ? null : (
+                    <p
+                      className={
+                        copyMessage === "Copied argv to clipboard."
+                          ? "copy-status copy-status-success"
+                          : "copy-status error"
+                      }
+                    >
+                      {copyMessage}
+                    </p>
+                  )}
+                </div>
               </>
             )}
           </section>
@@ -1539,6 +1569,10 @@ function clearDiscoveryProbes(options: ScanOptions): ScanOptions {
 
 function errorMessage(caught: unknown): string {
   return caught instanceof Error ? caught.message : "Unable to start scan.";
+}
+
+function clipboardErrorMessage(caught: unknown): string {
+  return caught instanceof Error ? caught.message : "Unable to copy argv to clipboard.";
 }
 
 interface ScanPanelButtonProps {

@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { defaultScanOptions } from "../core/scan-options";
+import { copyText } from "../services/clipboard-service";
 import {
   cancelScan,
   onScanEvent,
@@ -17,8 +18,12 @@ vi.mock("../services/scan-service", () => ({
   previewScanCommand: vi.fn(),
   startScan: vi.fn(),
 }));
+vi.mock("../services/clipboard-service", () => ({
+  copyText: vi.fn(),
+}));
 
 const cancelScanMock = vi.mocked(cancelScan);
+const copyTextMock = vi.mocked(copyText);
 const onScanEventMock = vi.mocked(onScanEvent);
 const previewScanCommandMock = vi.mocked(previewScanCommand);
 const startScanMock = vi.mocked(startScan);
@@ -34,6 +39,8 @@ describe("ScanWorkspace", () => {
     });
     previewScanCommandMock.mockReset();
     startScanMock.mockReset();
+    copyTextMock.mockReset();
+    copyTextMock.mockResolvedValue(undefined);
     scanEventListener = undefined;
   });
 
@@ -134,6 +141,47 @@ describe("ScanWorkspace", () => {
     expect(screen.getByText("--")).toHaveClass("argv-token");
     expect(
       await screen.findByText("nmap -oX <managed-xml-file> -sn -- scanme.nmap.org"),
+    ).toBeInTheDocument();
+  });
+
+  it("copies the preview argv command from Output", async () => {
+    previewScanCommandMock.mockResolvedValue([
+      "nmap",
+      "-oX",
+      "<managed-xml-file>",
+      "-sn",
+      "--",
+      "scanme.nmap.org",
+    ]);
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
+    await userEvent.click(screen.getByRole("button", { name: "Preview" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Copy argv" }));
+
+    expect(copyTextMock).toHaveBeenCalledWith("nmap -oX <managed-xml-file> -sn -- scanme.nmap.org");
+    expect(await screen.findByText("Copied argv to clipboard.")).toBeInTheDocument();
+  });
+
+  it("shows copy failures without clearing the preview", async () => {
+    previewScanCommandMock.mockResolvedValue([
+      "nmap",
+      "-oX",
+      "<managed-xml-file>",
+      "-sn",
+      "--",
+      "scanme.nmap.org",
+    ]);
+    copyTextMock.mockRejectedValue(new Error("Unable to copy argv to clipboard."));
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
+    await userEvent.click(screen.getByRole("button", { name: "Preview" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Copy argv" }));
+
+    expect(await screen.findByText("Unable to copy argv to clipboard.")).toBeInTheDocument();
+    expect(
+      screen.getByText("nmap -oX <managed-xml-file> -sn -- scanme.nmap.org"),
     ).toBeInTheDocument();
   });
 

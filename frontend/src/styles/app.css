@@ -873,6 +873,23 @@ textarea {
   white-space: pre;
 }
 
+.preview-command-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.copy-status {
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-0);
+}
+
+.copy-status-success {
+  color: var(--accent-strong);
+  font-weight: var(--font-weight-strong);
+}
+
 .target-summary {
   color: var(--accent-strong);
   font-size: var(--font-size-body);
