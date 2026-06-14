@@ -42,6 +42,12 @@ describe("scan events", () => {
         output: { runId: "scan-1", stream: "stdout", text: "  <nmaprun />" },
       }),
     ).toBeUndefined();
+    expect(
+      scanEventLogLine({
+        type: "output",
+        output: { runId: "scan-1", stream: "stdout", text: "</nmaprun>" },
+      }),
+    ).toBeUndefined();
   });
 
   it("keeps stderr diagnostics in the live log", () => {

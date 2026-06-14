@@ -16,7 +16,7 @@ PACKAGE_DEB_WEBKIT_DEP ?= libwebkit2gtk-4.0-37
 PACKAGE_RPM_WEBKIT_DEP ?= webkit2gtk3
 LINUX_PACKAGE_PLATFORM ?= linux/$(PACKAGE_ARCH)
 
-.PHONY: build dev fmt fmt-check lint package-all package-dryrun package-linux package-linux-deb package-linux-dryrun package-linux-installers package-linux-rpm package-macos package-macos-dryrun package-macos-installer package-macos-pkg package-platform package-windows package-windows-dryrun rc-check security test test-e2e test-go test-ui tidy
+.PHONY: build dev fmt fmt-check lint package-all package-dryrun package-linux package-linux-amd64-dryrun package-linux-arm64-dryrun package-linux-deb package-linux-dryrun package-linux-installers package-linux-rpm package-macos package-macos-dryrun package-macos-installer package-macos-pkg package-platform package-windows package-windows-amd64-dryrun package-windows-arm64-dryrun package-windows-dryrun rc-check security test test-e2e test-go test-ui tidy
 
 build:
 	npm --prefix frontend run build
@@ -72,8 +72,13 @@ package-macos-dryrun:
 package-windows:
 	GOCACHE=$(GOCACHE) $(WAILS) build $(WAILS_BUILD_FLAGS) -ldflags "$(WAILS_LDFLAGS)" -platform windows/amd64 -webview2 download
 
-package-windows-dryrun:
+package-windows-dryrun: package-windows-amd64-dryrun
+
+package-windows-amd64-dryrun:
 	GOCACHE=$(GOCACHE) $(WAILS) build -dryrun $(WAILS_BUILD_FLAGS) -ldflags "$(WAILS_LDFLAGS)" -platform windows/amd64 -webview2 download
+
+package-windows-arm64-dryrun:
+	GOCACHE=$(GOCACHE) $(WAILS) build -dryrun $(WAILS_BUILD_FLAGS) -ldflags "$(WAILS_LDFLAGS)" -platform windows/arm64 -webview2 download
 
 package-linux:
 	GOCACHE=$(GOCACHE) $(WAILS) build $(WAILS_BUILD_FLAGS) -ldflags "$(WAILS_LDFLAGS)" -platform $(LINUX_PACKAGE_PLATFORM)
@@ -88,11 +93,16 @@ package-linux-rpm:
 
 package-linux-installers: package-linux package-linux-deb package-linux-rpm
 
-package-linux-dryrun:
+package-linux-dryrun: package-linux-amd64-dryrun
+
+package-linux-amd64-dryrun:
 	GOCACHE=$(GOCACHE) $(WAILS) build -dryrun $(WAILS_BUILD_FLAGS) -ldflags "$(WAILS_LDFLAGS)" -platform linux/amd64
+
+package-linux-arm64-dryrun:
+	GOCACHE=$(GOCACHE) $(WAILS) build -dryrun $(WAILS_BUILD_FLAGS) -ldflags "$(WAILS_LDFLAGS)" -platform linux/arm64
 
 package-all: package-macos package-windows package-linux
 
-package-dryrun: package-macos-dryrun package-windows-dryrun package-linux-dryrun
+package-dryrun: package-macos-dryrun package-windows-amd64-dryrun package-windows-arm64-dryrun package-linux-amd64-dryrun package-linux-arm64-dryrun
 
 rc-check: fmt-check lint test test-e2e security build package-dryrun

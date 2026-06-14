@@ -185,8 +185,10 @@ interface NavButtonProps {
 }
 
 function NavButton({ activeView, id, label, meta, onSelect }: NavButtonProps): React.JSX.Element {
+  const accessibleLabel = meta === undefined || meta === "" ? label : `${label}, ${meta}`;
   return (
     <button
+      aria-label={accessibleLabel}
       aria-current={activeView === id ? "page" : undefined}
       className="nav-button"
       type="button"

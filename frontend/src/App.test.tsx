@@ -96,6 +96,18 @@ describe("App", () => {
     expect((await screen.findAllByText("1 tools detected")).length).toBeGreaterThan(0);
   });
 
+  it("gives navigation badges readable accessible names", async () => {
+    detectToolsMock.mockResolvedValue([]);
+    loadScanHistoryMock.mockResolvedValue([]);
+
+    render(<App />);
+
+    expect(await screen.findByRole("button", { name: "History, 0 scans" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("button", { name: "Environment, 0 tools detected" }),
+    ).toBeInTheDocument();
+  });
+
   it("defaults theme selection to system mode", () => {
     detectToolsMock.mockResolvedValue([]);
 

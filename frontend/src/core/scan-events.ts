@@ -36,5 +36,7 @@ function scanFinishedMessage(result: Extract<ScanEvent, { type: "finished" }>["r
 
 function isXMLLike(value: string): boolean {
   const trimmed = value.trimStart();
-  return trimmed.startsWith("<?xml") || trimmed.startsWith("<nmaprun");
+  return (
+    trimmed.startsWith("<?xml") || trimmed.startsWith("<nmaprun") || trimmed.startsWith("</nmaprun")
+  );
 }

@@ -1,6 +1,9 @@
 package reports
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
 func TestSummarizeNmapXMLCountsHostStatuses(t *testing.T) {
 	summary, err := SummarizeNmapXML(`<nmaprun args="nmap -sn -- 192.0.2.1" startstr="Fri Jun 12 10:00:00 2026">
@@ -166,6 +169,43 @@ func TestSummarizeNmapXMLCountsHostStatuses(t *testing.T) {
 	}
 }
 
+func TestSummarizeNmapXMLHandlesRealLocalhostScan(t *testing.T) {
+	content, err := os.ReadFile("testdata/nmap-localhost-top-ports.xml")
+	if err != nil {
+		t.Fatalf("ReadFile returned error: %v", err)
+	}
+
+	summary, err := SummarizeNmapXML(string(content))
+	if err != nil {
+		t.Fatalf("SummarizeNmapXML returned error: %v", err)
+	}
+
+	if summary.HostCount != 1 || summary.HostsUp != 1 || summary.HostsDown != 0 {
+		t.Fatalf("summary counts = %#v", summary)
+	}
+	if summary.ElapsedTime != "0.05" {
+		t.Fatalf("ElapsedTime = %q", summary.ElapsedTime)
+	}
+	if len(summary.Hosts) != 1 {
+		t.Fatalf("len(Hosts) = %d, want 1", len(summary.Hosts))
+	}
+	host := summary.Hosts[0]
+	if host.Address != "127.0.0.1" || host.Hostname != "localhost" || host.State != "up" {
+		t.Fatalf("host = %#v", host)
+	}
+	if len(host.Ports) != 10 {
+		t.Fatalf("len(Ports) = %d, want 10", len(host.Ports))
+	}
+	openHTTP := findPort(host.Ports, "tcp", "80")
+	if openHTTP == nil || openHTTP.State != "open" || openHTTP.Service != "http" {
+		t.Fatalf("tcp/80 = %#v", openHTTP)
+	}
+	closedSSH := findPort(host.Ports, "tcp", "22")
+	if closedSSH == nil || closedSSH.State != "closed" || closedSSH.Reason != "conn-refused" {
+		t.Fatalf("tcp/22 = %#v", closedSSH)
+	}
+}
+
 func TestSummarizeNmapXMLAllowsEmptyInput(t *testing.T) {
 	summary, err := SummarizeNmapXML("  ")
 	if err != nil {
@@ -206,4 +246,13 @@ func TestSummarizeNmapXMLRejectsMalformedXML(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error")
 	}
+}
+
+func findPort(ports []Port, protocol string, id string) *Port {
+	for index := range ports {
+		if ports[index].Protocol == protocol && ports[index].ID == id {
+			return &ports[index]
+		}
+	}
+	return nil
 }

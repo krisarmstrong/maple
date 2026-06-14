@@ -22,7 +22,11 @@ Command-generation checks that do not require the target OS packaging toolchain:
 make package-dryrun
 make package-macos-dryrun
 make package-windows-dryrun
+make package-windows-amd64-dryrun
+make package-windows-arm64-dryrun
 make package-linux-dryrun
+make package-linux-amd64-dryrun
+make package-linux-arm64-dryrun
 ```
 
 ## Platform Notes
@@ -96,4 +100,4 @@ Signed and notarized installers require platform signing credentials. Unsigned C
 
 On macOS 26 SDK with Wails v2.12.0, `make build` succeeds and produces a runnable desktop binary, but `wails build` package mode currently reports `exit status 1` during the Wails compile wrapper even when the equivalent `go build` command succeeds. Keep `make build` as the validated local binary path until this Wails/SDK packaging issue is resolved on the packaging host.
 
-`make package-dryrun` validates macOS and Windows package command generation on macOS. Linux dry-run reports Wails' cross-compilation limitation and should be treated as a reminder to package Linux on Linux.
+`make package-dryrun` validates macOS ARM, Windows x86/ARM, and Linux x86/ARM package command generation on macOS. Linux dry-runs report Wails' cross-compilation limitation and should be treated as a reminder to package Linux on Linux or in CI.
