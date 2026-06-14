@@ -31,7 +31,17 @@ export function loadSavedPresets(storage: Storage): ScanPreset[] {
 }
 
 function normalizePreset(preset: ScanPreset): ScanPreset {
-  return { ...preset, options: { ...defaultScanOptions, ...preset.options } };
+  return {
+    ...preset,
+    options: normalizePresetOptions({ ...defaultScanOptions, ...preset.options }),
+  };
+}
+
+function normalizePresetOptions(options: ScanOptions): ScanOptions {
+  if (options.fragmentPackets) {
+    return { ...options, mtu: 0 };
+  }
+  return options;
 }
 
 export function savePreset(

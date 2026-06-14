@@ -82,6 +82,10 @@ type ScanOptions struct {
 	MaxScanDelay     string        `json:"maxScanDelay,omitempty"`
 	MinParallelism   int           `json:"minParallelism,omitempty"`
 	MaxParallelism   int           `json:"maxParallelism,omitempty"`
+	FragmentPackets  bool          `json:"fragmentPackets,omitempty"`
+	MTU              int           `json:"mtu,omitempty"`
+	DataLength       int           `json:"dataLength,omitempty"`
+	SourcePort       string        `json:"sourcePort,omitempty"`
 	PacketTrace      bool          `json:"packetTrace,omitempty"`
 }
 
@@ -194,6 +198,18 @@ func BuildOptionArgs(options ScanOptions) ([]string, error) {
 	if options.MaxParallelism != 0 {
 		args = append(args, "--max-parallelism", strconv.Itoa(options.MaxParallelism))
 	}
+	if options.FragmentPackets {
+		args = append(args, "-f")
+	}
+	if options.MTU != 0 {
+		args = append(args, "--mtu", strconv.Itoa(options.MTU))
+	}
+	if options.DataLength != 0 {
+		args = append(args, "--data-length", strconv.Itoa(options.DataLength))
+	}
+	if strings.TrimSpace(options.SourcePort) != "" {
+		args = append(args, "--source-port", strings.TrimSpace(options.SourcePort))
+	}
 	if options.PacketTrace {
 		args = append(args, "--packet-trace")
 	}
@@ -270,6 +286,21 @@ func ProfileArgsForOptions(profile Profile, options ScanOptions) []string {
 			continue
 		}
 		if options.MaxParallelism != 0 && arg == "--max-parallelism" {
+			index++
+			continue
+		}
+		if options.FragmentPackets && arg == "-f" {
+			continue
+		}
+		if options.MTU != 0 && arg == "--mtu" {
+			index++
+			continue
+		}
+		if options.DataLength != 0 && arg == "--data-length" {
+			index++
+			continue
+		}
+		if strings.TrimSpace(options.SourcePort) != "" && arg == "--source-port" {
 			index++
 			continue
 		}
@@ -415,6 +446,9 @@ func validatePerformanceOptions(options ScanOptions) error {
 	if err := validateParallelismOptions(options); err != nil {
 		return err
 	}
+	if err := validatePacketShapingOptions(options); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -443,6 +477,25 @@ func validateParallelismOptions(options ScanOptions) error {
 	if options.MinParallelism != 0 && options.MaxParallelism != 0 &&
 		options.MinParallelism > options.MaxParallelism {
 		return ErrInvalidScanOption
+	}
+	return nil
+}
+
+func validatePacketShapingOptions(options ScanOptions) error {
+	if options.FragmentPackets && options.MTU != 0 {
+		return ErrInvalidScanOption
+	}
+	if options.MTU < 0 || options.MTU > 1500 || (options.MTU != 0 && options.MTU%8 != 0) {
+		return ErrInvalidScanOption
+	}
+	if options.DataLength < 0 || options.DataLength > 4096 {
+		return ErrInvalidScanOption
+	}
+	if strings.TrimSpace(options.SourcePort) != "" {
+		sourcePort, err := parseDiscoveryProbePort(strings.TrimSpace(options.SourcePort))
+		if err != nil || sourcePort < 1 || sourcePort > 65535 {
+			return ErrInvalidScanOption
+		}
 	}
 	return nil
 }

@@ -303,6 +303,10 @@ export namespace scanner {
 	    maxScanDelay?: string;
 	    minParallelism?: number;
 	    maxParallelism?: number;
+	    fragmentPackets?: boolean;
+	    mtu?: number;
+	    dataLength?: number;
+	    sourcePort?: string;
 	    packetTrace?: boolean;
 	
 	    static createFrom(source: any = {}) {
@@ -345,6 +349,10 @@ export namespace scanner {
 	        this.maxScanDelay = source["maxScanDelay"];
 	        this.minParallelism = source["minParallelism"];
 	        this.maxParallelism = source["maxParallelism"];
+	        this.fragmentPackets = source["fragmentPackets"];
+	        this.mtu = source["mtu"];
+	        this.dataLength = source["dataLength"];
+	        this.sourcePort = source["sourcePort"];
 	        this.packetTrace = source["packetTrace"];
 	    }
 	}

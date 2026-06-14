@@ -235,8 +235,8 @@ export const nmapOptionCatalog: readonly NmapOptionCatalogEntry[] = [
     "evasion",
     "Packet shaping",
     ["-f", "--mtu", "--data-length", "--source-port"],
-    "planned",
-    "Advanced controls should explain when these affect accuracy or policy.",
+    "structured",
+    "Fragmentation, MTU, data padding, and numeric source port controls are bounded and validated.",
   ),
   entry(
     "evasion",

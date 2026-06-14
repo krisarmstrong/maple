@@ -35,13 +35,28 @@ func TestBuildOptionArgsAddsStructuredNmapOptions(t *testing.T) {
 		MaxScanDelay:     "1s",
 		MinParallelism:   4,
 		MaxParallelism:   64,
+		FragmentPackets:  true,
+		DataLength:       24,
+		SourcePort:       "53",
 		PacketTrace:      true,
 	})
 	if err != nil {
 		t.Fatalf("BuildOptionArgs returned error: %v", err)
 	}
 
-	want := []string{"-sU", "-PS22,80,443", "-PA80,443", "-PU53,161", "-PY80", "-PE", "-PP", "-PM", "-iL", "/Users/krisarmstrong/targets.txt", "--exclude", "192.168.1.10,scanme.nmap.org", "--excludefile", "/Users/krisarmstrong/exclude-targets.txt", "-T4", "-p", "22,80,443", "-sV", "--version-all", "-6", "-O", "--traceroute", "-n", "-vv", "--reason", "--open", "--min-rate", "500", "--max-retries", "2", "--host-timeout", "30m", "--max-rtt-timeout", "2s", "--stats-every", "10s", "--scan-delay", "50ms", "--max-scan-delay", "1s", "--min-parallelism", "4", "--max-parallelism", "64", "--packet-trace"}
+	want := []string{"-sU", "-PS22,80,443", "-PA80,443", "-PU53,161", "-PY80", "-PE", "-PP", "-PM", "-iL", "/Users/krisarmstrong/targets.txt", "--exclude", "192.168.1.10,scanme.nmap.org", "--excludefile", "/Users/krisarmstrong/exclude-targets.txt", "-T4", "-p", "22,80,443", "-sV", "--version-all", "-6", "-O", "--traceroute", "-n", "-vv", "--reason", "--open", "--min-rate", "500", "--max-retries", "2", "--host-timeout", "30m", "--max-rtt-timeout", "2s", "--stats-every", "10s", "--scan-delay", "50ms", "--max-scan-delay", "1s", "--min-parallelism", "4", "--max-parallelism", "64", "-f", "--data-length", "24", "--source-port", "53", "--packet-trace"}
+	if !sameStrings(args, want) {
+		t.Fatalf("args = %#v, want %#v", args, want)
+	}
+}
+
+func TestBuildOptionArgsAddsCustomMTU(t *testing.T) {
+	args, err := BuildOptionArgs(ScanOptions{MTU: 24})
+	if err != nil {
+		t.Fatalf("BuildOptionArgs returned error: %v", err)
+	}
+
+	want := []string{"--mtu", "24"}
 	if !sameStrings(args, want) {
 		t.Fatalf("args = %#v, want %#v", args, want)
 	}
@@ -158,6 +173,16 @@ func TestBuildOptionArgsRejectsInvalidOptions(t *testing.T) {
 		{MinParallelism: 1001},
 		{MaxParallelism: 1001},
 		{MinParallelism: 50, MaxParallelism: 10},
+		{FragmentPackets: true, MTU: 24},
+		{MTU: -1},
+		{MTU: 7},
+		{MTU: 1504},
+		{DataLength: -1},
+		{DataLength: 4097},
+		{SourcePort: "0"},
+		{SourcePort: "65536"},
+		{SourcePort: "domain"},
+		{SourcePort: "53\n--script"},
 		{TargetInputFile: "relative-targets.txt"},
 		{TargetInputFile: "/Users/krisarmstrong/targets\n--script.txt"},
 		{ExcludeFile: "relative-excludes.txt"},
@@ -230,6 +255,28 @@ func TestProfileArgsForOptionsRemovesDetailedTimingDefaults(t *testing.T) {
 		MaxScanDelay:   "500ms",
 		MinParallelism: 4,
 		MaxParallelism: 16,
+	})
+
+	want := []string{"-T3"}
+	if !sameStrings(args, want) {
+		t.Fatalf("args = %#v, want %#v", args, want)
+	}
+}
+
+func TestProfileArgsForOptionsRemovesPacketShapingDefaults(t *testing.T) {
+	profile := Profile{Args: []string{
+		"-f",
+		"--mtu", "24",
+		"--data-length", "16",
+		"--source-port", "53",
+		"-T3",
+	}}
+
+	args := ProfileArgsForOptions(profile, ScanOptions{
+		FragmentPackets: true,
+		MTU:             32,
+		DataLength:      24,
+		SourcePort:      "80",
 	})
 
 	want := []string{"-T3"}

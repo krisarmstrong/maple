@@ -125,6 +125,12 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
       setError(messageForInvalidTargets(targetModeId, targets));
       return;
     }
+    const optionsMessage = messageForInvalidScanOptions(scanOptions);
+    if (optionsMessage !== "") {
+      setActivePanel("options");
+      setError(optionsMessage);
+      return;
+    }
     setError("");
     try {
       setPreview(await previewScanCommand(request));
@@ -150,6 +156,12 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
     if (request === undefined) {
       setActivePanel("configure");
       setError(messageForInvalidTargets(targetModeId, targets));
+      return;
+    }
+    const optionsMessage = messageForInvalidScanOptions(scanOptions);
+    if (optionsMessage !== "") {
+      setActivePanel("options");
+      setError(optionsMessage);
       return;
     }
     setError("");
@@ -848,6 +860,56 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                 value={scanOptions.maxParallelism === 0 ? "" : scanOptions.maxParallelism}
               />
             </label>
+            <label>
+              <span>Custom MTU</span>
+              <input
+                disabled={scanOptions.fragmentPackets}
+                max="1500"
+                min="8"
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    mtu: event.target.value === "" ? 0 : Number(event.target.value),
+                  }))
+                }
+                placeholder="24"
+                step="8"
+                type="number"
+                value={scanOptions.mtu === 0 ? "" : scanOptions.mtu}
+              />
+            </label>
+            <label>
+              <span>Data length</span>
+              <input
+                max="4096"
+                min="1"
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    dataLength: event.target.value === "" ? 0 : Number(event.target.value),
+                  }))
+                }
+                placeholder="24"
+                type="number"
+                value={scanOptions.dataLength === 0 ? "" : scanOptions.dataLength}
+              />
+            </label>
+            <label>
+              <span>Source port</span>
+              <input
+                max="65535"
+                min="1"
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    sourcePort: event.target.value,
+                  }))
+                }
+                placeholder="53"
+                type="number"
+                value={scanOptions.sourcePort}
+              />
+            </label>
           </div>
           <fieldset className="option-toggle-grid">
             <legend>Scan behavior</legend>
@@ -986,6 +1048,20 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
             </label>
             <label>
               <input
+                checked={scanOptions.fragmentPackets}
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    fragmentPackets: event.target.checked,
+                    mtu: event.target.checked ? 0 : current.mtu,
+                  }))
+                }
+                type="checkbox"
+              />
+              <span>Fragment packets</span>
+            </label>
+            <label>
+              <input
                 checked={scanOptions.packetTrace}
                 onChange={(event) =>
                   updateScanOptions((current) => ({
@@ -1047,6 +1123,12 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
           {scanOptions.minParallelism > 0 || scanOptions.maxParallelism > 0 ? (
             <p className="option-warning">
               Parallelism bounds can change scan speed and accuracy on lossy networks.
+            </p>
+          ) : null}
+          {hasPacketShapingOptions(scanOptions) ? (
+            <p className="option-warning">
+              Packet shaping can change scan accuracy and may violate network policy without
+              authorization.
             </p>
           ) : null}
           {scanOptions.packetTrace ? (
@@ -1351,6 +1433,25 @@ function hasDiscoveryProbeOptions(options: ScanOptions): boolean {
     options.icmpTimestamp ||
     options.icmpNetmask
   );
+}
+
+function hasPacketShapingOptions(options: ScanOptions): boolean {
+  return (
+    options.fragmentPackets ||
+    options.mtu > 0 ||
+    options.dataLength > 0 ||
+    options.sourcePort.trim() !== ""
+  );
+}
+
+function messageForInvalidScanOptions(options: ScanOptions): string {
+  if (options.fragmentPackets && options.mtu !== 0) {
+    return "Fragment packets and custom MTU cannot be used together.";
+  }
+  if (options.mtu !== 0 && (options.mtu < 8 || options.mtu > 1500 || options.mtu % 8 !== 0)) {
+    return "Custom MTU must be a multiple of 8 between 8 and 1500.";
+  }
+  return "";
 }
 
 function clearDiscoveryProbes(options: ScanOptions): ScanOptions {

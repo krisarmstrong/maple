@@ -29,6 +29,7 @@ describe("nmap option catalog", () => {
     expect(supportedSwitches).toContain("--script-args-file");
     expect(supportedSwitches).toContain("--max-rtt-timeout");
     expect(supportedSwitches).toContain("--scan-delay");
+    expect(supportedSwitches).toContain("--data-length");
   });
 
   it("keeps raw shell command input and unmanaged output paths blocked", () => {
@@ -43,9 +44,9 @@ describe("nmap option catalog", () => {
 
   it("summarizes coverage by implementation status", () => {
     expect(optionCoverageCounts()).toEqual({
-      structured: 19,
+      structured: 20,
       "escape-hatch": 2,
-      planned: 2,
+      planned: 1,
       blocked: 3,
     });
   });

@@ -278,6 +278,11 @@ describe("ScanWorkspace", () => {
       "4",
       "--max-parallelism",
       "64",
+      "-f",
+      "--data-length",
+      "24",
+      "--source-port",
+      "53",
       "--packet-trace",
       "--",
       "scanme.nmap.org",
@@ -322,6 +327,9 @@ describe("ScanWorkspace", () => {
     fireEvent.change(screen.getByLabelText("Max scan delay"), { target: { value: "1s" } });
     fireEvent.change(screen.getByLabelText("Minimum parallelism"), { target: { value: "4" } });
     fireEvent.change(screen.getByLabelText("Maximum parallelism"), { target: { value: "64" } });
+    fireEvent.click(screen.getByRole("checkbox", { name: "Fragment packets" }));
+    fireEvent.change(screen.getByLabelText("Data length"), { target: { value: "24" } });
+    fireEvent.change(screen.getByLabelText("Source port"), { target: { value: "53" } });
     fireEvent.click(screen.getByRole("checkbox", { name: "Packet trace" }));
     fireEvent.click(screen.getByRole("button", { name: "Preview" }));
 
@@ -365,14 +373,67 @@ describe("ScanWorkspace", () => {
         maxScanDelay: "1s",
         minParallelism: 4,
         maxParallelism: 64,
+        fragmentPackets: true,
+        dataLength: 24,
+        sourcePort: "53",
         packetTrace: true,
       },
     });
     expect(
       await screen.findByText(
-        "nmap -oX <managed-xml-file> -sU -PS22,80,443 -PA80,443 -PU53,161 -PY3868 -PE -PP -PM -T4 -p 22,80,443 -sV --version-all -6 -O --traceroute -n -vv --reason --open --min-rate 500 --max-retries 2 --host-timeout 30m --max-rtt-timeout 2s --stats-every 10s --scan-delay 50ms --max-scan-delay 1s --min-parallelism 4 --max-parallelism 64 --packet-trace -- scanme.nmap.org",
+        "nmap -oX <managed-xml-file> -sU -PS22,80,443 -PA80,443 -PU53,161 -PY3868 -PE -PP -PM -T4 -p 22,80,443 -sV --version-all -6 -O --traceroute -n -vv --reason --open --min-rate 500 --max-retries 2 --host-timeout 30m --max-rtt-timeout 2s --stats-every 10s --scan-delay 50ms --max-scan-delay 1s --min-parallelism 4 --max-parallelism 64 -f --data-length 24 --source-port 53 --packet-trace -- scanme.nmap.org",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("validates custom MTU and clears it when packet fragmentation is selected", async () => {
+    previewScanCommandMock.mockResolvedValue([
+      "nmap",
+      "-oX",
+      "<managed-xml-file>",
+      "--mtu",
+      "24",
+      "--",
+      "scanme.nmap.org",
+    ]);
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
+    await userEvent.click(screen.getByRole("button", { name: "Options" }));
+    const mtuInput = screen.getByLabelText("Custom MTU");
+    await userEvent.type(mtuInput, "9");
+    await userEvent.click(screen.getByRole("button", { name: "Preview" }));
+
+    expect(
+      screen.getByText("Custom MTU must be a multiple of 8 between 8 and 1500."),
+    ).toBeInTheDocument();
+    expect(previewScanCommandMock).not.toHaveBeenCalled();
+
+    await userEvent.clear(mtuInput);
+    await userEvent.type(mtuInput, "24");
+    await userEvent.click(screen.getByRole("button", { name: "Preview" }));
+
+    expect(previewScanCommandMock).toHaveBeenCalledWith({
+      profileId: "connect",
+      targets: "scanme.nmap.org",
+      nmapPath: "/usr/local/bin/nmap",
+      scripts: [],
+      scriptArgs: "",
+      scriptArgsFile: "",
+      options: {
+        ...defaultScanOptions,
+        mtu: 24,
+      },
+    });
+    expect(
+      await screen.findByText("nmap -oX <managed-xml-file> --mtu 24 -- scanme.nmap.org"),
+    ).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Options" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "Fragment packets" }));
+    const clearedMTUInput = screen.getByLabelText("Custom MTU");
+    expect(clearedMTUInput).toBeDisabled();
+    expect(clearedMTUInput).toHaveValue(null);
   });
 
   it("sends specialized scan techniques through preview requests", async () => {

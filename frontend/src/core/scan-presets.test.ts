@@ -49,6 +49,31 @@ describe("scan-presets", () => {
     });
   });
 
+  it("normalizes fragmented presets by clearing custom MTU", () => {
+    const storage = storageWith(
+      JSON.stringify([
+        {
+          id: "fragmented-check",
+          name: "Fragmented Check",
+          profileId: "connect",
+          options: { fragmentPackets: true, mtu: 24 },
+          scriptCategories: [],
+          scriptNames: "",
+          customScriptPaths: "",
+          customScriptDirectories: "",
+          scriptArgs: "",
+          scriptArgsFile: "",
+        },
+      ]),
+    );
+
+    expect(loadSavedPresets(storage)[0]?.options).toEqual({
+      ...defaultScanOptions,
+      fragmentPackets: true,
+      mtu: 0,
+    });
+  });
+
   it("ignores malformed storage", () => {
     expect(loadSavedPresets(storageWith("{bad json"))).toEqual([]);
     expect(loadSavedPresets(storageWith(JSON.stringify([{ id: 42 }])))).toEqual([]);

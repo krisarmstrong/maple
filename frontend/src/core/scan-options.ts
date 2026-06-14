@@ -53,6 +53,10 @@ export interface ScanOptions {
   maxScanDelay: string;
   minParallelism: number;
   maxParallelism: number;
+  fragmentPackets: boolean;
+  mtu: number;
+  dataLength: number;
+  sourcePort: string;
   packetTrace: boolean;
 }
 
@@ -91,6 +95,10 @@ export const defaultScanOptions: ScanOptions = {
   maxScanDelay: "",
   minParallelism: 0,
   maxParallelism: 0,
+  fragmentPackets: false,
+  mtu: 0,
+  dataLength: 0,
+  sourcePort: "",
   packetTrace: false,
 };
 
