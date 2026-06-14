@@ -1,0 +1,11 @@
+name: Setup Node
+description: Install the pinned Node.js toolchain for Maple CI.
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v6.4.0
+      with:
+        node-version: 26.3.0
+        cache: npm
+        cache-dependency-path: frontend/package-lock.json

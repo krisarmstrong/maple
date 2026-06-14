@@ -31,6 +31,7 @@ Maple is not affiliated with or endorsed by the Nmap Project. Maple does not bun
 make tidy
 npm --prefix frontend ci
 make test
+make security
 make dev
 ```
 

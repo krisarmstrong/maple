@@ -1,0 +1,9 @@
+name: Setup Go
+description: Install the Go toolchain for Maple CI.
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-go@v6.4.0
+      with:
+        go-version-file: go.mod
