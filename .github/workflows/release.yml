@@ -135,6 +135,15 @@ jobs:
             PACKAGE_LDFLAGS="${{ matrix.ldflags }}" \
             WAILS_PLATFORM_FLAGS="${{ matrix.wails_flags }}"
 
+      - name: Build macOS installer
+        if: matrix.os == 'macos'
+        run: |
+          package_version="${{ github.event.inputs.version }}"
+          if [[ -z "$package_version" ]]; then
+            package_version="${GITHUB_REF_NAME#v}"
+          fi
+          make package-macos-pkg PACKAGE_VERSION="$package_version" PACKAGE_ARCH="${{ matrix.package_arch }}"
+
       - name: Build Linux installers
         if: matrix.os == 'linux'
         run: |
@@ -157,6 +166,15 @@ jobs:
           else
             tar -czf "dist/${ARTIFACT_NAME}.tar.gz" -C build/bin .
           fi
+
+      - name: Generate checksums
+        env:
+          ARTIFACT_NAME: maple-${{ matrix.name }}
+        run: |
+          (
+            cd dist
+            shasum -a 256 -- * | sort -k 2 > "${ARTIFACT_NAME}-SHA256SUMS.txt"
+          )
 
       - name: Upload release artifact
         uses: actions/upload-artifact@v6.0.0

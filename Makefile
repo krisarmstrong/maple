@@ -13,7 +13,7 @@ PACKAGE_RELEASE ?= 1
 PACKAGE_ARCH ?= amd64
 LINUX_PACKAGE_PLATFORM ?= linux/$(PACKAGE_ARCH)
 
-.PHONY: build dev fmt fmt-check lint package-all package-dryrun package-linux package-linux-deb package-linux-dryrun package-linux-installers package-linux-rpm package-macos package-macos-dryrun package-platform package-windows package-windows-dryrun rc-check security test test-e2e test-go test-ui tidy
+.PHONY: build dev fmt fmt-check lint package-all package-dryrun package-linux package-linux-deb package-linux-dryrun package-linux-installers package-linux-rpm package-macos package-macos-dryrun package-macos-installer package-macos-pkg package-platform package-windows package-windows-dryrun rc-check security test test-e2e test-go test-ui tidy
 
 build:
 	npm --prefix frontend run build
@@ -57,6 +57,11 @@ package-platform:
 
 package-macos:
 	GOCACHE=$(GOCACHE) $(WAILS) build $(WAILS_BUILD_FLAGS) -ldflags "$(GO_LDFLAGS)" -platform darwin/arm64
+
+package-macos-pkg:
+	scripts/package-macos-pkg.sh "$(PACKAGE_VERSION)" "$(PACKAGE_ARCH)"
+
+package-macos-installer: package-macos package-macos-pkg
 
 package-macos-dryrun:
 	GOCACHE=$(GOCACHE) $(WAILS) build -dryrun $(WAILS_BUILD_FLAGS) -ldflags "$(GO_LDFLAGS)" -platform darwin/arm64

@@ -6,6 +6,7 @@ Maple is a Wails desktop app. The frontend is React, but the deliverable is a na
 
 ```bash
 make package-macos
+make package-macos-installer
 make package-windows
 make package-linux
 make package-linux-installers
@@ -31,7 +32,7 @@ make package-linux-dryrun
 - Target: `darwin/arm64`
 - Runtime: Wails WebKit wrapper.
 - Nmap must be installed separately, for example through Homebrew or the Nmap Project package.
-- CI artifact: compressed Wails `.app` output from the `macos-15` runner.
+- CI artifacts: compressed Wails `.app` output plus an unsigned `.pkg` installer from the `macos-15` runner.
 - Signing and notarization require Apple credentials and are tracked separately from unsigned release-candidate artifacts.
 
 ### Windows
@@ -65,7 +66,7 @@ The `.github/workflows/release.yml` workflow builds the release matrix in CI:
 | `maple-windows-amd64` | `windows-2025` | `windows/amd64` |
 | `maple-windows-arm64` | `windows-11-arm` | `windows/arm64` |
 
-The workflow runs on version tags and can also be started manually. Tag builds publish the generated artifacts to a GitHub Release. Manual runs keep artifacts attached to the workflow run for inspection.
+The workflow runs on version tags and can also be started manually. Tag builds publish the generated artifacts to a GitHub Release. Manual runs keep artifacts attached to the workflow run for inspection. Each matrix artifact includes a per-platform SHA256 manifest.
 
 ## Release Gate
 
@@ -84,7 +85,7 @@ and Markdown Report exports.
 
 The release candidate platform bar is:
 
-- macOS: `make build` produces a runnable desktop binary, CI builds the `darwin/arm64` Wails artifact, and the macOS smoke checklist passes.
+- macOS: `make build` produces a runnable desktop binary, CI builds the `darwin/arm64` Wails artifact plus `.pkg` installer, and the macOS smoke checklist passes.
 - Windows: CI builds `windows/amd64` and `windows/arm64` Wails artifacts with NSIS enabled; final smoke runs on a Windows host with user-installed Nmap and, when needed, user-installed Npcap.
 - Linux: CI builds `linux/amd64` and `linux/arm64` Wails artifacts plus `.deb` and `.rpm` packages; final smoke runs on a Linux host with user-installed Nmap and WebKitGTK dependencies.
 

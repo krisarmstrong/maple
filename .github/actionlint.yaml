@@ -1,0 +1,8 @@
+self-hosted-runner:
+  labels:
+    # GitHub-hosted Windows ARM label may lag actionlint's built-in label list.
+    - windows-11-arm
+
+config-variables: null
+
+paths:
