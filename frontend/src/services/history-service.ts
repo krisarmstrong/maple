@@ -5,6 +5,7 @@ import {
   ScanHistory,
   ScanReport,
 } from "../../wailsjs/go/main/App";
+import type { reports } from "../../wailsjs/go/models";
 import { hasWailsBackend, unavailableBridgeError } from "./wails-bridge";
 
 export interface ScanHistoryRecord {
@@ -86,35 +87,15 @@ export interface ScanHistoryTraceHop {
   rtt?: string;
 }
 
-interface BackendSummary {
-  elapsedTime?: string;
-  hostCount: number;
-  hostsUp: number;
-  hostsDown: number;
-  hosts?: ScanHistoryHost[];
-}
-
-interface BackendHistoryRecord {
-  runId: string;
-  startedAt: string;
-  finishedAt: string;
-  preview: {
-    executable: string;
-    args: string[];
-    profile?: { name?: string };
-    targets: ScanHistoryTarget[];
-  };
-  summary?: BackendSummary;
-  exitCode: number;
-  diagnostics?: string;
-  error?: string;
-}
-
 export async function loadScanHistory(): Promise<ScanHistoryRecord[]> {
   if (!hasWailsBackend()) {
     return [];
   }
-  const records = (await ScanHistory()) as BackendHistoryRecord[];
+  // No cast: ScanHistory() is typed Promise<store.ScanRecord[]> from the
+  // generated Wails bindings, so this mapping reads the Go structs through the
+  // generated types directly and fails to compile if a field it depends on is
+  // renamed or retyped, surfacing drift instead of hiding it behind a cast.
+  const records = await ScanHistory();
   return records.map((record) => ({
     runId: record.runId,
     startedAt: record.startedAt,
@@ -166,7 +147,7 @@ export function clearScanHistory(): Promise<void> {
   return ClearScanHistory();
 }
 
-function normalizeHosts(hosts: ScanHistoryHost[]): ScanHistoryHost[] {
+function normalizeHosts(hosts: reports.Host[]): ScanHistoryHost[] {
   return hosts.map((host) => ({
     ...host,
     osMatches: host.osMatches ?? [],
@@ -181,21 +162,21 @@ function normalizeHosts(hosts: ScanHistoryHost[]): ScanHistoryHost[] {
   }));
 }
 
-function normalizeScripts(scripts: ScanHistoryScriptOutput[]): ScanHistoryScriptOutput[] {
+function normalizeScripts(scripts: reports.ScriptOutput[]): ScanHistoryScriptOutput[] {
   return scripts.map((script) => ({
     ...script,
     details: normalizeScriptElements(script.details ?? []),
   }));
 }
 
-function normalizeScriptElements(details: ScanHistoryScriptElement[]): ScanHistoryScriptElement[] {
+function normalizeScriptElements(details: reports.ScriptElement[]): ScanHistoryScriptElement[] {
   return details.map((detail) => ({
     ...detail,
     children: normalizeScriptElements(detail.children ?? []),
   }));
 }
 
-function countOpenPorts(hosts: ScanHistoryHost[]): number {
+function countOpenPorts(hosts: reports.Host[]): number {
   return hosts.reduce(
     (total, host) => total + (host.ports ?? []).filter((port) => port.state === "open").length,
     0,
