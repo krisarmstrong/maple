@@ -287,6 +287,30 @@
   margin-bottom: var(--space-0);
 }
 
+.local-help-search {
+  align-items: end;
+  display: grid;
+  gap: var(--space-8);
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.local-help-search label {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.local-help-search span {
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-heading);
+}
+
+.local-help-search p {
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-4);
+}
+
 .local-help-output pre {
   background: var(--code-bg);
   border: var(--border-width) solid var(--border);
@@ -1221,6 +1245,11 @@ textarea {
   }
 
   .option-coverage-controls {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+
+  .local-help-search {
     align-items: stretch;
     grid-template-columns: 1fr;
   }

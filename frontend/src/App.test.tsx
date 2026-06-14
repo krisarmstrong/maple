@@ -187,6 +187,33 @@ describe("App", () => {
     expect(screen.getByRole("button", { name: /Help/u })).toHaveAttribute("aria-current", "page");
   });
 
+  it("filters loaded local Nmap help by line text", async () => {
+    detectToolsMock.mockResolvedValue([]);
+    loadNmapHelpMock.mockResolvedValue({
+      path: "/usr/local/bin/nmap",
+      output: [
+        "Nmap usage: nmap [Scan Type] [Options] {target}",
+        "  -sS: TCP SYN scan",
+        "  --script: run selected NSE scripts",
+        "  --script-args: pass NSE script arguments",
+      ].join("\n"),
+    });
+
+    render(<App />);
+
+    await userEvent.click(screen.getByRole("button", { name: /Help/u }));
+    await userEvent.click(screen.getByRole("button", { name: "Load local Nmap help" }));
+    await userEvent.type(
+      await screen.findByRole("searchbox", { name: "Search local Nmap help" }),
+      "script",
+    );
+
+    expect(screen.getByText("2 matching lines")).toBeInTheDocument();
+    expect(screen.getByText(/--script: run selected NSE scripts/u)).toBeInTheDocument();
+    expect(screen.getByText(/--script-args: pass NSE script arguments/u)).toBeInTheDocument();
+    expect(screen.queryByText(/-sS: TCP SYN scan/u)).not.toBeInTheDocument();
+  });
+
   it("opens official Nmap reference links from the Help workspace", async () => {
     detectToolsMock.mockResolvedValue([]);
 

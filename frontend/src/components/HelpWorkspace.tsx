@@ -19,6 +19,9 @@ type OptionCoverageFilter = "all" | NmapOptionCatalogEntry["status"];
 export function HelpWorkspace(): React.JSX.Element {
   const [state, setState] = useState<HelpState>({ status: "idle" });
   const [linkError, setLinkError] = useState("");
+  const [localHelpQuery, setLocalHelpQuery] = useState("");
+  const localHelpOutput =
+    state.status === "ready" ? filterLocalHelpLines(state.help.output, localHelpQuery) : undefined;
 
   return (
     <section className="workspace help-workspace">
@@ -105,7 +108,24 @@ export function HelpWorkspace(): React.JSX.Element {
         {state.status === "ready" ? (
           <div className="local-help-output">
             <p className="help-source-note">Loaded from {state.help.path}</p>
-            <pre>{state.help.output}</pre>
+            <div className="local-help-search">
+              <label>
+                <span>Search local Nmap help</span>
+                <input
+                  aria-label="Search local Nmap help"
+                  onChange={(event) => setLocalHelpQuery(event.target.value)}
+                  placeholder="Try script, timing, ports, DNS"
+                  type="search"
+                  value={localHelpQuery}
+                />
+              </label>
+              <p>
+                {localHelpQuery.trim() === ""
+                  ? `${lineCount(state.help.output)} total lines`
+                  : `${localHelpOutput?.matchCount ?? 0} matching lines`}
+              </p>
+            </div>
+            <pre>{localHelpOutput?.output}</pre>
           </div>
         ) : null}
       </article>
@@ -271,6 +291,29 @@ function OptionCatalogEntry({ entry }: { entry: NmapOptionCatalogEntry }): React
 
 function switchLabel(switches: readonly string[]): string {
   return switches.length === 0 ? "No argv switch" : switches.join(" ");
+}
+
+function filterLocalHelpLines(
+  output: string,
+  query: string,
+): { output: string; matchCount: number } {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (normalizedQuery === "") {
+    return { output, matchCount: lineCount(output) };
+  }
+  const matches = output.split("\n").filter((line) => line.toLowerCase().includes(normalizedQuery));
+  return {
+    output:
+      matches.length === 0 ? "No local Nmap help lines match that search." : matches.join("\n"),
+    matchCount: matches.length,
+  };
+}
+
+function lineCount(output: string): number {
+  if (output === "") {
+    return 0;
+  }
+  return output.split("\n").length;
 }
 
 async function loadLocalHelp(setState: (state: HelpState) => void): Promise<void> {
