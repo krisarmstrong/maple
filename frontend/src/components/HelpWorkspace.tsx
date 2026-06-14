@@ -1,4 +1,10 @@
 import { useState } from "react";
+import {
+  catalogGroups,
+  type NmapOptionCatalogEntry,
+  optionCoverageCounts,
+  optionStatusLabel,
+} from "../core/nmap-option-catalog";
 import type { ToolHelp } from "../core/tool-help";
 import { loadNmapHelp, openNmapNSEDocs, openNmapReferenceGuide } from "../services/tool-service";
 
@@ -101,8 +107,70 @@ export function HelpWorkspace(): React.JSX.Element {
           </div>
         ) : null}
       </article>
+
+      <OptionCoveragePanel />
     </section>
   );
+}
+
+function OptionCoveragePanel(): React.JSX.Element {
+  const counts = optionCoverageCounts();
+  return (
+    <article className="help-panel option-coverage-panel">
+      <div>
+        <h3>Nmap Option Coverage</h3>
+        <p>
+          Maple tracks Nmap support as structured controls, advanced escape hatches, planned
+          controls, and blocked-by-design behavior.
+        </p>
+      </div>
+      <div className="option-coverage-summary">
+        <CoverageMetric label="Structured controls" value={counts.structured} />
+        <CoverageMetric label="Advanced escape hatches" value={counts["escape-hatch"]} />
+        <CoverageMetric label="Planned controls" value={counts.planned} />
+        <CoverageMetric label="Blocked by design" value={counts.blocked} />
+      </div>
+      <div className="option-catalog-groups">
+        {catalogGroups().map(({ group, entries }) => (
+          <section className="option-catalog-group" key={group.id}>
+            <h4>{group.name}</h4>
+            <p>{group.description}</p>
+            <div className="option-catalog-list">
+              {entries.map((entry) => (
+                <OptionCatalogEntry entry={entry} key={`${group.id}:${entry.name}`} />
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+    </article>
+  );
+}
+
+function CoverageMetric({ label, value }: { label: string; value: number }): React.JSX.Element {
+  return (
+    <div>
+      <strong>{value}</strong>
+      <span>{label}</span>
+    </div>
+  );
+}
+
+function OptionCatalogEntry({ entry }: { entry: NmapOptionCatalogEntry }): React.JSX.Element {
+  return (
+    <div className={`option-catalog-entry option-catalog-entry--${entry.status}`}>
+      <div>
+        <strong>{entry.name}</strong>
+        <span>{optionStatusLabel(entry.status)}</span>
+      </div>
+      <code>{switchLabel(entry.switches)}</code>
+      <p>{entry.note}</p>
+    </div>
+  );
+}
+
+function switchLabel(switches: readonly string[]): string {
+  return switches.length === 0 ? "No argv switch" : switches.join(" ");
 }
 
 async function loadLocalHelp(setState: (state: HelpState) => void): Promise<void> {

@@ -298,6 +298,121 @@
   white-space: pre-wrap;
 }
 
+.option-coverage-panel {
+  gap: var(--space-11);
+}
+
+.option-coverage-panel > div > p,
+.option-catalog-group > p {
+  color: var(--muted);
+  margin-bottom: var(--space-0);
+}
+
+.option-coverage-summary {
+  display: grid;
+  gap: var(--space-7);
+  grid-template-columns: repeat(auto-fit, minmax(var(--size-history-metric-min), 1fr));
+}
+
+.option-coverage-summary div {
+  background: var(--panel-subtle);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-sm);
+  display: grid;
+  gap: var(--space-2);
+  min-height: var(--size-chip-min);
+  padding: var(--space-7);
+}
+
+.option-coverage-summary strong {
+  font-size: var(--font-size-lg);
+}
+
+.option-coverage-summary span {
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-heading);
+}
+
+.option-catalog-groups {
+  display: grid;
+  gap: var(--space-9);
+}
+
+.option-catalog-group {
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-sm);
+  display: grid;
+  gap: var(--space-7);
+  padding: var(--space-9);
+}
+
+.option-catalog-group h4 {
+  margin: var(--space-0);
+}
+
+.option-catalog-list {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.option-catalog-entry {
+  align-items: start;
+  background: var(--panel-subtle);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-sm);
+  display: grid;
+  gap: var(--space-6);
+  grid-template-columns: minmax(0, 1fr) minmax(var(--size-target-summary-min), auto) minmax(
+      0,
+      1.6fr
+    );
+  padding: var(--space-7);
+}
+
+.option-catalog-entry div {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.option-catalog-entry span {
+  border-radius: var(--radius-pill);
+  color: var(--text);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-heading);
+  justify-self: start;
+  padding: var(--space-2) var(--space-6);
+}
+
+.option-catalog-entry--structured span,
+.option-catalog-entry--escape-hatch span {
+  background: var(--color-success-surface);
+  color: var(--accent-strong);
+}
+
+.option-catalog-entry--planned span {
+  background: var(--panel);
+  border: var(--border-width) solid var(--border);
+}
+
+.option-catalog-entry--blocked span {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+}
+
+.option-catalog-entry code {
+  background: var(--code-bg);
+  border-radius: var(--radius-sm);
+  color: var(--code-text);
+  overflow-wrap: anywhere;
+  padding: var(--space-4) var(--space-6);
+}
+
+.option-catalog-entry p {
+  color: var(--muted);
+  margin-bottom: var(--space-0);
+}
+
 .history-controls {
   display: grid;
   gap: var(--space-9);

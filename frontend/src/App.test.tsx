@@ -215,6 +215,22 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows Nmap option coverage in the Help workspace", async () => {
+    detectToolsMock.mockResolvedValue([]);
+
+    render(<App />);
+
+    await userEvent.click(screen.getByRole("button", { name: /Help/u }));
+
+    expect(screen.getByText("Nmap Option Coverage")).toBeInTheDocument();
+    expect(screen.getByText("Structured controls")).toBeInTheDocument();
+    expect(screen.getByText("Advanced escape hatches")).toBeInTheDocument();
+    expect(screen.getByText("Raw shell command input")).toBeInTheDocument();
+    expect(screen.getAllByText("Blocked by design").length).toBeGreaterThan(0);
+    expect(screen.getByText("-sT -sS -sU")).toBeInTheDocument();
+    expect(screen.getByText("--script-args --script-args-file")).toBeInTheDocument();
+  });
+
   it("shows local Nmap help failures in the Help workspace", async () => {
     detectToolsMock.mockResolvedValue([]);
     loadNmapHelpMock.mockRejectedValue(new Error("nmap is not installed or not available on PATH"));
