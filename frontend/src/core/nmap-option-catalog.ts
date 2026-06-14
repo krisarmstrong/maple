@@ -172,8 +172,8 @@ export const nmapOptionCatalog: readonly NmapOptionCatalogEntry[] = [
     "timing",
     "Detailed timing knobs",
     ["--scan-delay", "--max-scan-delay", "--min-parallelism", "--max-parallelism"],
-    "planned",
-    "Powerful but easy to misuse; should be advanced controls.",
+    "structured",
+    "Advanced delay and parallelism controls are bounded and validated.",
   ),
   entry(
     "nse",

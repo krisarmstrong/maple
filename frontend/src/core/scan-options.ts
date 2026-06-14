@@ -49,6 +49,10 @@ export interface ScanOptions {
   hostTimeout: string;
   maxRttTimeout: string;
   statsEvery: string;
+  scanDelay: string;
+  maxScanDelay: string;
+  minParallelism: number;
+  maxParallelism: number;
   packetTrace: boolean;
 }
 
@@ -83,6 +87,10 @@ export const defaultScanOptions: ScanOptions = {
   hostTimeout: "",
   maxRttTimeout: "",
   statsEvery: "",
+  scanDelay: "",
+  maxScanDelay: "",
+  minParallelism: 0,
+  maxParallelism: 0,
   packetTrace: false,
 };
 

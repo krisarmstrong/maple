@@ -31,13 +31,17 @@ func TestBuildOptionArgsAddsStructuredNmapOptions(t *testing.T) {
 		HostTimeout:      "30m",
 		MaxRTTTimeout:    "2s",
 		StatsEvery:       "10s",
+		ScanDelay:        "50ms",
+		MaxScanDelay:     "1s",
+		MinParallelism:   4,
+		MaxParallelism:   64,
 		PacketTrace:      true,
 	})
 	if err != nil {
 		t.Fatalf("BuildOptionArgs returned error: %v", err)
 	}
 
-	want := []string{"-sU", "-PS22,80,443", "-PA80,443", "-PU53,161", "-PY80", "-PE", "-PP", "-PM", "-iL", "/Users/krisarmstrong/targets.txt", "--exclude", "192.168.1.10,scanme.nmap.org", "--excludefile", "/Users/krisarmstrong/exclude-targets.txt", "-T4", "-p", "22,80,443", "-sV", "--version-all", "-6", "-O", "--traceroute", "-n", "-vv", "--reason", "--open", "--min-rate", "500", "--max-retries", "2", "--host-timeout", "30m", "--max-rtt-timeout", "2s", "--stats-every", "10s", "--packet-trace"}
+	want := []string{"-sU", "-PS22,80,443", "-PA80,443", "-PU53,161", "-PY80", "-PE", "-PP", "-PM", "-iL", "/Users/krisarmstrong/targets.txt", "--exclude", "192.168.1.10,scanme.nmap.org", "--excludefile", "/Users/krisarmstrong/exclude-targets.txt", "-T4", "-p", "22,80,443", "-sV", "--version-all", "-6", "-O", "--traceroute", "-n", "-vv", "--reason", "--open", "--min-rate", "500", "--max-retries", "2", "--host-timeout", "30m", "--max-rtt-timeout", "2s", "--stats-every", "10s", "--scan-delay", "50ms", "--max-scan-delay", "1s", "--min-parallelism", "4", "--max-parallelism", "64", "--packet-trace"}
 	if !sameStrings(args, want) {
 		t.Fatalf("args = %#v, want %#v", args, want)
 	}
@@ -145,6 +149,15 @@ func TestBuildOptionArgsRejectsInvalidOptions(t *testing.T) {
 		{MaxRTTTimeout: "2s\n--script"},
 		{StatsEvery: "every 10s"},
 		{StatsEvery: "10s\n--packet-trace"},
+		{ScanDelay: "50 milliseconds"},
+		{ScanDelay: "50ms\n--script"},
+		{MaxScanDelay: "one-second"},
+		{ScanDelay: "2s", MaxScanDelay: "1s"},
+		{MinParallelism: -1},
+		{MaxParallelism: -1},
+		{MinParallelism: 1001},
+		{MaxParallelism: 1001},
+		{MinParallelism: 50, MaxParallelism: 10},
 		{TargetInputFile: "relative-targets.txt"},
 		{TargetInputFile: "/Users/krisarmstrong/targets\n--script.txt"},
 		{ExcludeFile: "relative-excludes.txt"},
@@ -198,6 +211,28 @@ func TestProfileArgsForOptionsPreservesPingSweepWhenProbesAreSelected(t *testing
 	args := ProfileArgsForOptions(profile, ScanOptions{TCPSYNProbes: "22,80"})
 
 	want := []string{"-sn"}
+	if !sameStrings(args, want) {
+		t.Fatalf("args = %#v, want %#v", args, want)
+	}
+}
+
+func TestProfileArgsForOptionsRemovesDetailedTimingDefaults(t *testing.T) {
+	profile := Profile{Args: []string{
+		"--scan-delay", "100ms",
+		"--max-scan-delay", "1s",
+		"--min-parallelism", "2",
+		"--max-parallelism", "32",
+		"-T3",
+	}}
+
+	args := ProfileArgsForOptions(profile, ScanOptions{
+		ScanDelay:      "50ms",
+		MaxScanDelay:   "500ms",
+		MinParallelism: 4,
+		MaxParallelism: 16,
+	})
+
+	want := []string{"-T3"}
 	if !sameStrings(args, want) {
 		t.Fatalf("args = %#v, want %#v", args, want)
 	}

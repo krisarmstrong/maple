@@ -788,6 +788,66 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                 value={scanOptions.statsEvery}
               />
             </label>
+            <label>
+              <span>Scan delay</span>
+              <input
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    scanDelay: event.target.value,
+                  }))
+                }
+                placeholder="50ms"
+                type="text"
+                value={scanOptions.scanDelay}
+              />
+            </label>
+            <label>
+              <span>Max scan delay</span>
+              <input
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    maxScanDelay: event.target.value,
+                  }))
+                }
+                placeholder="1s"
+                type="text"
+                value={scanOptions.maxScanDelay}
+              />
+            </label>
+            <label>
+              <span>Minimum parallelism</span>
+              <input
+                max="1000"
+                min="1"
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    minParallelism: event.target.value === "" ? 0 : Number(event.target.value),
+                  }))
+                }
+                placeholder="4"
+                type="number"
+                value={scanOptions.minParallelism === 0 ? "" : scanOptions.minParallelism}
+              />
+            </label>
+            <label>
+              <span>Maximum parallelism</span>
+              <input
+                max="1000"
+                min="1"
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    maxParallelism: event.target.value === "" ? 0 : Number(event.target.value),
+                  }))
+                }
+                placeholder="64"
+                type="number"
+                value={scanOptions.maxParallelism === 0 ? "" : scanOptions.maxParallelism}
+              />
+            </label>
           </div>
           <fieldset className="option-toggle-grid">
             <legend>Scan behavior</legend>
@@ -977,6 +1037,16 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
           {scanOptions.minRate > 0 ? (
             <p className="option-warning">
               Minimum packet rate can speed scans up, but aggressive values may reduce accuracy.
+            </p>
+          ) : null}
+          {scanOptions.scanDelay.trim() !== "" || scanOptions.maxScanDelay.trim() !== "" ? (
+            <p className="option-warning">
+              Scan delay settings slow probe cadence and can substantially extend scan time.
+            </p>
+          ) : null}
+          {scanOptions.minParallelism > 0 || scanOptions.maxParallelism > 0 ? (
+            <p className="option-warning">
+              Parallelism bounds can change scan speed and accuracy on lossy networks.
             </p>
           ) : null}
           {scanOptions.packetTrace ? (

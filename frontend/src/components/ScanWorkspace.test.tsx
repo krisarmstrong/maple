@@ -270,6 +270,14 @@ describe("ScanWorkspace", () => {
       "2s",
       "--stats-every",
       "10s",
+      "--scan-delay",
+      "50ms",
+      "--max-scan-delay",
+      "1s",
+      "--min-parallelism",
+      "4",
+      "--max-parallelism",
+      "64",
       "--packet-trace",
       "--",
       "scanme.nmap.org",
@@ -310,6 +318,10 @@ describe("ScanWorkspace", () => {
     fireEvent.change(screen.getByLabelText("Host timeout"), { target: { value: "30m" } });
     fireEvent.change(screen.getByLabelText("Max RTT timeout"), { target: { value: "2s" } });
     fireEvent.change(screen.getByLabelText("Stats interval"), { target: { value: "10s" } });
+    fireEvent.change(screen.getByLabelText("Scan delay"), { target: { value: "50ms" } });
+    fireEvent.change(screen.getByLabelText("Max scan delay"), { target: { value: "1s" } });
+    fireEvent.change(screen.getByLabelText("Minimum parallelism"), { target: { value: "4" } });
+    fireEvent.change(screen.getByLabelText("Maximum parallelism"), { target: { value: "64" } });
     fireEvent.click(screen.getByRole("checkbox", { name: "Packet trace" }));
     fireEvent.click(screen.getByRole("button", { name: "Preview" }));
 
@@ -349,12 +361,16 @@ describe("ScanWorkspace", () => {
         hostTimeout: "30m",
         maxRttTimeout: "2s",
         statsEvery: "10s",
+        scanDelay: "50ms",
+        maxScanDelay: "1s",
+        minParallelism: 4,
+        maxParallelism: 64,
         packetTrace: true,
       },
     });
     expect(
       await screen.findByText(
-        "nmap -oX <managed-xml-file> -sU -PS22,80,443 -PA80,443 -PU53,161 -PY3868 -PE -PP -PM -T4 -p 22,80,443 -sV --version-all -6 -O --traceroute -n -vv --reason --open --min-rate 500 --max-retries 2 --host-timeout 30m --max-rtt-timeout 2s --stats-every 10s --packet-trace -- scanme.nmap.org",
+        "nmap -oX <managed-xml-file> -sU -PS22,80,443 -PA80,443 -PU53,161 -PY3868 -PE -PP -PM -T4 -p 22,80,443 -sV --version-all -6 -O --traceroute -n -vv --reason --open --min-rate 500 --max-retries 2 --host-timeout 30m --max-rtt-timeout 2s --stats-every 10s --scan-delay 50ms --max-scan-delay 1s --min-parallelism 4 --max-parallelism 64 --packet-trace -- scanme.nmap.org",
       ),
     ).toBeInTheDocument();
   });

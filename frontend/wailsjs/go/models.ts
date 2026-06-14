@@ -299,6 +299,10 @@ export namespace scanner {
 	    hostTimeout?: string;
 	    maxRttTimeout?: string;
 	    statsEvery?: string;
+	    scanDelay?: string;
+	    maxScanDelay?: string;
+	    minParallelism?: number;
+	    maxParallelism?: number;
 	    packetTrace?: boolean;
 	
 	    static createFrom(source: any = {}) {
@@ -337,6 +341,10 @@ export namespace scanner {
 	        this.hostTimeout = source["hostTimeout"];
 	        this.maxRttTimeout = source["maxRttTimeout"];
 	        this.statsEvery = source["statsEvery"];
+	        this.scanDelay = source["scanDelay"];
+	        this.maxScanDelay = source["maxScanDelay"];
+	        this.minParallelism = source["minParallelism"];
+	        this.maxParallelism = source["maxParallelism"];
 	        this.packetTrace = source["packetTrace"];
 	    }
 	}

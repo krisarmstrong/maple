@@ -2,6 +2,7 @@ package scanner
 
 import (
 	"errors"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -77,6 +78,10 @@ type ScanOptions struct {
 	HostTimeout      string        `json:"hostTimeout,omitempty"`
 	MaxRTTTimeout    string        `json:"maxRttTimeout,omitempty"`
 	StatsEvery       string        `json:"statsEvery,omitempty"`
+	ScanDelay        string        `json:"scanDelay,omitempty"`
+	MaxScanDelay     string        `json:"maxScanDelay,omitempty"`
+	MinParallelism   int           `json:"minParallelism,omitempty"`
+	MaxParallelism   int           `json:"maxParallelism,omitempty"`
 	PacketTrace      bool          `json:"packetTrace,omitempty"`
 }
 
@@ -177,6 +182,18 @@ func BuildOptionArgs(options ScanOptions) ([]string, error) {
 	if strings.TrimSpace(options.StatsEvery) != "" {
 		args = append(args, "--stats-every", strings.TrimSpace(options.StatsEvery))
 	}
+	if strings.TrimSpace(options.ScanDelay) != "" {
+		args = append(args, "--scan-delay", strings.TrimSpace(options.ScanDelay))
+	}
+	if strings.TrimSpace(options.MaxScanDelay) != "" {
+		args = append(args, "--max-scan-delay", strings.TrimSpace(options.MaxScanDelay))
+	}
+	if options.MinParallelism != 0 {
+		args = append(args, "--min-parallelism", strconv.Itoa(options.MinParallelism))
+	}
+	if options.MaxParallelism != 0 {
+		args = append(args, "--max-parallelism", strconv.Itoa(options.MaxParallelism))
+	}
 	if options.PacketTrace {
 		args = append(args, "--packet-trace")
 	}
@@ -237,6 +254,22 @@ func ProfileArgsForOptions(profile Profile, options ScanOptions) []string {
 			continue
 		}
 		if strings.TrimSpace(options.StatsEvery) != "" && arg == "--stats-every" {
+			index++
+			continue
+		}
+		if strings.TrimSpace(options.ScanDelay) != "" && arg == "--scan-delay" {
+			index++
+			continue
+		}
+		if strings.TrimSpace(options.MaxScanDelay) != "" && arg == "--max-scan-delay" {
+			index++
+			continue
+		}
+		if options.MinParallelism != 0 && arg == "--min-parallelism" {
+			index++
+			continue
+		}
+		if options.MaxParallelism != 0 && arg == "--max-parallelism" {
 			index++
 			continue
 		}
@@ -370,7 +403,80 @@ func validatePerformanceOptions(options ScanOptions) error {
 	if _, err := validateDurationExpression(options.StatsEvery); err != nil {
 		return err
 	}
+	if _, err := validateDurationExpression(options.ScanDelay); err != nil {
+		return err
+	}
+	if _, err := validateDurationExpression(options.MaxScanDelay); err != nil {
+		return err
+	}
+	if err := validateScanDelayOptions(options); err != nil {
+		return err
+	}
+	if err := validateParallelismOptions(options); err != nil {
+		return err
+	}
 	return nil
+}
+
+func validateScanDelayOptions(options ScanOptions) error {
+	scanDelay, err := durationMillis(options.ScanDelay)
+	if err != nil {
+		return err
+	}
+	maxScanDelay, err := durationMillis(options.MaxScanDelay)
+	if err != nil {
+		return err
+	}
+	if scanDelay != 0 && maxScanDelay != 0 && scanDelay > maxScanDelay {
+		return ErrInvalidScanOption
+	}
+	return nil
+}
+
+func validateParallelismOptions(options ScanOptions) error {
+	if options.MinParallelism < 0 || options.MinParallelism > 1000 {
+		return ErrInvalidScanOption
+	}
+	if options.MaxParallelism < 0 || options.MaxParallelism > 1000 {
+		return ErrInvalidScanOption
+	}
+	if options.MinParallelism != 0 && options.MaxParallelism != 0 &&
+		options.MinParallelism > options.MaxParallelism {
+		return ErrInvalidScanOption
+	}
+	return nil
+}
+
+func durationMillis(value string) (int64, error) {
+	duration, err := validateDurationExpression(value)
+	if err != nil || duration == "" {
+		return 0, err
+	}
+	index := 0
+	for index < len(duration) && duration[index] >= '0' && duration[index] <= '9' {
+		index++
+	}
+	count, err := strconv.ParseInt(duration[:index], 10, 64)
+	if err != nil {
+		return 0, ErrInvalidScanOption
+	}
+	switch duration[index:] {
+	case "h":
+		return multiplyDuration(count, 60*60*1000)
+	case "m":
+		return multiplyDuration(count, 60*1000)
+	case "s":
+		return multiplyDuration(count, 1000)
+	default:
+		return count, nil
+	}
+}
+
+func multiplyDuration(count int64, multiplier int64) (int64, error) {
+	if count > math.MaxInt64/multiplier {
+		return 0, ErrInvalidScanOption
+	}
+	return count * multiplier, nil
 }
 
 func buildTargetScopeArgs(options ScanOptions) ([]string, error) {
