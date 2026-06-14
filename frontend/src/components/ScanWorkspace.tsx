@@ -298,6 +298,14 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
         </div>
       </div>
 
+      <section aria-label="Scan context" className="scan-context-strip">
+        <h3>Scan context</h3>
+        <ContextMetric label="Profile" value={selectedProfile.name} />
+        <ContextMetric label="Target type" value={targetModeContextLabel(targetModeId)} />
+        <ContextMetric label="Targets" value={parsedTargetSummary.parsedTargets} />
+        <ContextMetric label="Status" value={scanStatusLabel(status)} />
+      </section>
+
       <nav className="scan-panel-tabs" aria-label="Scan setup sections">
         <ScanPanelButton
           activePanel={activePanel}
@@ -1014,13 +1022,34 @@ function targetBuilderSummary(targets: string): {
 } {
   const result = parseTargets(targets);
   if (!result.ok) {
-    return { parsedTargets: "No valid targets yet", estimatedAddresses: "n/a" };
+    return { parsedTargets: "No target set", estimatedAddresses: "n/a" };
   }
   const scope = scanScope("connect", targets);
   return {
     parsedTargets: summarizeTargets(targets),
     estimatedAddresses: scope?.label ?? "n/a",
   };
+}
+
+function targetModeContextLabel(modeID: TargetModeID): string {
+  if (modeID === "single") {
+    return "Single host/IP";
+  }
+  if (modeID === "range") {
+    return "IPv4 range";
+  }
+  if (modeID === "subnet") {
+    return "Subnet";
+  }
+  return "Target list";
+}
+
+function ContextMetric({ label, value }: { label: string; value: string }): React.JSX.Element {
+  return (
+    <div>
+      <strong>{`${label}: ${value}`}</strong>
+    </div>
+  );
 }
 
 function commandTokens(argv: readonly string[]): Array<{ id: string; value: string }> {

@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -52,6 +52,21 @@ describe("ScanWorkspace", () => {
     expect(screen.getByRole("heading", { name: "Target Builder" })).toBeInTheDocument();
     expect(screen.getByLabelText("Targets")).toBeInTheDocument();
     expect(screen.queryByLabelText("Custom .nse script files")).not.toBeInTheDocument();
+  });
+
+  it("shows compact command center context above the scan panels", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+    const context = within(screen.getByLabelText("Scan context"));
+
+    expect(context.getByText("Scan context")).toBeInTheDocument();
+    expect(context.getByText(/TCP Connect/u)).toBeInTheDocument();
+    expect(context.getByText(/Single host\/IP/u)).toBeInTheDocument();
+    expect(context.getByText(/Ready to preview/u)).toBeInTheDocument();
+    expect(context.getByText(/No target set/u)).toBeInTheDocument();
+
+    await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
+
+    expect(context.getByText(/1 hostname/u)).toBeInTheDocument();
   });
 
   it("renders the scan subtitle once", () => {

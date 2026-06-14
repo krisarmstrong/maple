@@ -22,7 +22,8 @@ interface ScanHistoryDetailsProps {
 
 export function ScanHistoryDetails({ record }: ScanHistoryDetailsProps): React.JSX.Element {
   const [filter, setFilter] = useState<ResultFilter>("all");
-  const visibleHosts = filterHosts(record.hosts, filter);
+  const [query, setQuery] = useState("");
+  const visibleHosts = searchHosts(filterHosts(record.hosts, filter), query);
   if (record.hosts.length === 0) {
     return (
       <div className="history-details">
@@ -36,7 +37,10 @@ export function ScanHistoryDetails({ record }: ScanHistoryDetailsProps): React.J
   return (
     <div className="history-details">
       <ResultSummary record={record} />
-      <ResultFilters filter={filter} onChange={setFilter} />
+      <div className="history-workbench-controls">
+        <ResultSearch query={query} onChange={setQuery} />
+        <ResultFilters filter={filter} onChange={setFilter} />
+      </div>
       {hasError(record) ? <p className="error">{record.error}</p> : null}
       {hasDiagnostics(record) ? <Diagnostics text={record.diagnostics} /> : null}
       {visibleHosts.map((host) => (
@@ -46,6 +50,26 @@ export function ScanHistoryDetails({ record }: ScanHistoryDetailsProps): React.J
         <p className="muted">No hosts match this result filter.</p>
       ) : null}
     </div>
+  );
+}
+
+function ResultSearch({
+  query,
+  onChange,
+}: {
+  query: string;
+  onChange: (value: string) => void;
+}): React.JSX.Element {
+  return (
+    <label className="history-result-search">
+      <span>Search expanded result</span>
+      <input
+        onChange={(event) => onChange(event.target.value)}
+        placeholder="Host, service, product, reason"
+        type="search"
+        value={query}
+      />
+    </label>
   );
 }
 
@@ -208,6 +232,43 @@ function filterPorts(ports: readonly ScanHistoryPort[], filter: ResultFilter): S
     return ports.filter((port) => port.state === "open");
   }
   return [...ports];
+}
+
+function searchHosts(hosts: readonly ScanHistoryHost[], query: string): ScanHistoryHost[] {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (normalizedQuery === "") {
+    return [...hosts];
+  }
+  return hosts.flatMap((host) => searchHost(host, normalizedQuery));
+}
+
+function searchHost(host: ScanHistoryHost, query: string): ScanHistoryHost[] {
+  if (hostMatches(host, query)) {
+    return [host];
+  }
+  const ports = host.ports.filter((port) => portMatches(port, query));
+  return ports.length === 0 ? [] : [{ ...host, ports }];
+}
+
+function hostMatches(host: ScanHistoryHost, query: string): boolean {
+  return includesQuery(host.address, query) || includesQuery(host.hostname, query);
+}
+
+function portMatches(port: ScanHistoryPort, query: string): boolean {
+  return (
+    includesQuery(port.id, query) ||
+    includesQuery(port.protocol, query) ||
+    includesQuery(port.state, query) ||
+    includesQuery(port.service, query) ||
+    includesQuery(port.product, query) ||
+    includesQuery(port.version, query) ||
+    includesQuery(port.extraInfo, query) ||
+    includesQuery(port.reason, query)
+  );
+}
+
+function includesQuery(value: string | undefined, query: string): boolean {
+  return value?.toLowerCase().includes(query) ?? false;
 }
 
 function portGroups(

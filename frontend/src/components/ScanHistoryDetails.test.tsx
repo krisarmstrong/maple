@@ -78,6 +78,49 @@ describe("ScanHistoryDetails", () => {
     expect(screen.queryByText("192.0.2.11")).not.toBeInTheDocument();
   });
 
+  it("searches expanded results by host, service, product, and reason", async () => {
+    render(
+      <ScanHistoryDetails
+        record={scanRecord({
+          hosts: [
+            {
+              address: "192.0.2.10",
+              hostname: "web-1",
+              state: "up",
+              ports: [
+                {
+                  id: "443",
+                  protocol: "tcp",
+                  state: "open",
+                  service: "https",
+                  product: "nginx",
+                  reason: "syn-ack",
+                },
+              ],
+            },
+            {
+              address: "192.0.2.11",
+              hostname: "mail-1",
+              state: "up",
+              ports: [{ id: "25", protocol: "tcp", state: "open", service: "smtp" }],
+            },
+          ],
+        })}
+      />,
+    );
+
+    await userEvent.type(screen.getByLabelText("Search expanded result"), "nginx");
+
+    expect(screen.getByText("192.0.2.10")).toBeInTheDocument();
+    expect(screen.queryByText("192.0.2.11")).not.toBeInTheDocument();
+
+    await userEvent.clear(screen.getByLabelText("Search expanded result"));
+    await userEvent.type(screen.getByLabelText("Search expanded result"), "mail");
+
+    expect(screen.queryByText("192.0.2.10")).not.toBeInTheDocument();
+    expect(screen.getByText("192.0.2.11")).toBeInTheDocument();
+  });
+
   it("shows service product and version when available", () => {
     render(
       <ScanHistoryDetails
