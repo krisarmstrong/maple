@@ -3,6 +3,7 @@ package scanner
 import (
 	"errors"
 	"math"
+	"net/netip"
 	"strconv"
 	"strings"
 )
@@ -86,6 +87,10 @@ type ScanOptions struct {
 	MTU              int           `json:"mtu,omitempty"`
 	DataLength       int           `json:"dataLength,omitempty"`
 	SourcePort       string        `json:"sourcePort,omitempty"`
+	Decoys           string        `json:"decoys,omitempty"`
+	SourceAddress    string        `json:"sourceAddress,omitempty"`
+	NetworkInterface string        `json:"networkInterface,omitempty"`
+	SpoofMAC         string        `json:"spoofMac,omitempty"`
 	PacketTrace      bool          `json:"packetTrace,omitempty"`
 }
 
@@ -210,6 +215,18 @@ func BuildOptionArgs(options ScanOptions) ([]string, error) {
 	if strings.TrimSpace(options.SourcePort) != "" {
 		args = append(args, "--source-port", strings.TrimSpace(options.SourcePort))
 	}
+	if strings.TrimSpace(options.Decoys) != "" {
+		args = append(args, "-D", strings.TrimSpace(options.Decoys))
+	}
+	if strings.TrimSpace(options.SourceAddress) != "" {
+		args = append(args, "-S", strings.TrimSpace(options.SourceAddress))
+	}
+	if strings.TrimSpace(options.NetworkInterface) != "" {
+		args = append(args, "-e", strings.TrimSpace(options.NetworkInterface))
+	}
+	if strings.TrimSpace(options.SpoofMAC) != "" {
+		args = append(args, "--spoof-mac", strings.TrimSpace(options.SpoofMAC))
+	}
 	if options.PacketTrace {
 		args = append(args, "--packet-trace")
 	}
@@ -301,6 +318,22 @@ func ProfileArgsForOptions(profile Profile, options ScanOptions) []string {
 			continue
 		}
 		if strings.TrimSpace(options.SourcePort) != "" && arg == "--source-port" {
+			index++
+			continue
+		}
+		if strings.TrimSpace(options.Decoys) != "" && arg == "-D" {
+			index++
+			continue
+		}
+		if strings.TrimSpace(options.SourceAddress) != "" && arg == "-S" {
+			index++
+			continue
+		}
+		if strings.TrimSpace(options.NetworkInterface) != "" && arg == "-e" {
+			index++
+			continue
+		}
+		if strings.TrimSpace(options.SpoofMAC) != "" && arg == "--spoof-mac" {
 			index++
 			continue
 		}
@@ -449,6 +482,9 @@ func validatePerformanceOptions(options ScanOptions) error {
 	if err := validatePacketShapingOptions(options); err != nil {
 		return err
 	}
+	if err := validateIdentityOptions(options); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -498,6 +534,123 @@ func validatePacketShapingOptions(options ScanOptions) error {
 		}
 	}
 	return nil
+}
+
+func validateIdentityOptions(options ScanOptions) error {
+	if err := validateDecoys(options.Decoys); err != nil {
+		return err
+	}
+	if strings.TrimSpace(options.SourceAddress) != "" {
+		if _, err := netip.ParseAddr(strings.TrimSpace(options.SourceAddress)); err != nil {
+			return ErrInvalidScanOption
+		}
+	}
+	if err := validateInterfaceName(options.NetworkInterface); err != nil {
+		return err
+	}
+	return validateSpoofMAC(options.SpoofMAC)
+}
+
+func validateDecoys(value string) error {
+	const maxDecoyCount = 126
+
+	decoys := strings.TrimSpace(value)
+	if decoys == "" {
+		return nil
+	}
+	if strings.ContainsAny(decoys, "\x00\r\n\t ") || strings.HasPrefix(decoys, "-") {
+		return ErrInvalidScanOption
+	}
+	parts := strings.Split(decoys, ",")
+	if len(parts) > maxDecoyCount {
+		return ErrInvalidScanOption
+	}
+	totalDecoys := 0
+	for _, part := range parts {
+		count, err := validateDecoy(part, maxDecoyCount)
+		if err != nil {
+			return err
+		}
+		totalDecoys += count
+		if totalDecoys > maxDecoyCount {
+			return ErrInvalidScanOption
+		}
+	}
+	return nil
+}
+
+func validateDecoy(value string, maxDecoyCount int) (int, error) {
+	if value == "ME" {
+		return 1, nil
+	}
+	if strings.HasPrefix(value, "RND:") {
+		count, err := strconv.Atoi(strings.TrimPrefix(value, "RND:"))
+		if err != nil || count < 1 || count > maxDecoyCount {
+			return 0, ErrInvalidScanOption
+		}
+		return count, nil
+	}
+	if value == "RND" {
+		return 1, nil
+	}
+	if _, err := netip.ParseAddr(value); err != nil {
+		return 0, ErrInvalidScanOption
+	}
+	return 1, nil
+}
+
+func validateInterfaceName(value string) error {
+	name := strings.TrimSpace(value)
+	if name == "" {
+		return nil
+	}
+	if len(name) > 64 || strings.ContainsAny(name, "\x00\r\n\t ") || strings.HasPrefix(name, "-") {
+		return ErrInvalidScanOption
+	}
+	for _, char := range name {
+		if !isInterfaceNameRune(char) {
+			return ErrInvalidScanOption
+		}
+	}
+	return nil
+}
+
+func isInterfaceNameRune(char rune) bool {
+	return (char >= '0' && char <= '9') ||
+		(char >= 'A' && char <= 'Z') ||
+		(char >= 'a' && char <= 'z') ||
+		char == '.' ||
+		char == '_' ||
+		char == '-' ||
+		char == ':'
+}
+
+func validateSpoofMAC(value string) error {
+	mac := strings.TrimSpace(value)
+	if mac == "" || mac == "0" {
+		return nil
+	}
+	if len(mac) != 17 || strings.ContainsAny(mac, "\x00\r\n\t ") || strings.HasPrefix(mac, "-") {
+		return ErrInvalidScanOption
+	}
+	for index, char := range mac {
+		if index%3 == 2 {
+			if char != ':' {
+				return ErrInvalidScanOption
+			}
+			continue
+		}
+		if !isHexRune(char) {
+			return ErrInvalidScanOption
+		}
+	}
+	return nil
+}
+
+func isHexRune(char rune) bool {
+	return (char >= '0' && char <= '9') ||
+		(char >= 'A' && char <= 'F') ||
+		(char >= 'a' && char <= 'f')
 }
 
 func durationMillis(value string) (int64, error) {

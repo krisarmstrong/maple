@@ -228,8 +228,8 @@ export const nmapOptionCatalog: readonly NmapOptionCatalogEntry[] = [
     "evasion",
     "Decoys and spoofing",
     ["-D", "-S", "--spoof-mac", "-e"],
-    "planned",
-    "Needs explicit risk language and interface validation.",
+    "structured",
+    "Decoys, source address, interface, exact spoof MAC, and random MAC via 0 are strictly validated.",
   ),
   entry(
     "evasion",

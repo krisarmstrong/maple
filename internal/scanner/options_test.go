@@ -38,13 +38,17 @@ func TestBuildOptionArgsAddsStructuredNmapOptions(t *testing.T) {
 		FragmentPackets:  true,
 		DataLength:       24,
 		SourcePort:       "53",
+		Decoys:           "ME,198.51.100.10,RND:2",
+		SourceAddress:    "192.0.2.20",
+		NetworkInterface: "en0",
+		SpoofMAC:         "02:11:22:33:44:55",
 		PacketTrace:      true,
 	})
 	if err != nil {
 		t.Fatalf("BuildOptionArgs returned error: %v", err)
 	}
 
-	want := []string{"-sU", "-PS22,80,443", "-PA80,443", "-PU53,161", "-PY80", "-PE", "-PP", "-PM", "-iL", "/Users/krisarmstrong/targets.txt", "--exclude", "192.168.1.10,scanme.nmap.org", "--excludefile", "/Users/krisarmstrong/exclude-targets.txt", "-T4", "-p", "22,80,443", "-sV", "--version-all", "-6", "-O", "--traceroute", "-n", "-vv", "--reason", "--open", "--min-rate", "500", "--max-retries", "2", "--host-timeout", "30m", "--max-rtt-timeout", "2s", "--stats-every", "10s", "--scan-delay", "50ms", "--max-scan-delay", "1s", "--min-parallelism", "4", "--max-parallelism", "64", "-f", "--data-length", "24", "--source-port", "53", "--packet-trace"}
+	want := []string{"-sU", "-PS22,80,443", "-PA80,443", "-PU53,161", "-PY80", "-PE", "-PP", "-PM", "-iL", "/Users/krisarmstrong/targets.txt", "--exclude", "192.168.1.10,scanme.nmap.org", "--excludefile", "/Users/krisarmstrong/exclude-targets.txt", "-T4", "-p", "22,80,443", "-sV", "--version-all", "-6", "-O", "--traceroute", "-n", "-vv", "--reason", "--open", "--min-rate", "500", "--max-retries", "2", "--host-timeout", "30m", "--max-rtt-timeout", "2s", "--stats-every", "10s", "--scan-delay", "50ms", "--max-scan-delay", "1s", "--min-parallelism", "4", "--max-parallelism", "64", "-f", "--data-length", "24", "--source-port", "53", "-D", "ME,198.51.100.10,RND:2", "-S", "192.0.2.20", "-e", "en0", "--spoof-mac", "02:11:22:33:44:55", "--packet-trace"}
 	if !sameStrings(args, want) {
 		t.Fatalf("args = %#v, want %#v", args, want)
 	}
@@ -57,6 +61,22 @@ func TestBuildOptionArgsAddsCustomMTU(t *testing.T) {
 	}
 
 	want := []string{"--mtu", "24"}
+	if !sameStrings(args, want) {
+		t.Fatalf("args = %#v, want %#v", args, want)
+	}
+}
+
+func TestBuildOptionArgsAcceptsIdentityValues(t *testing.T) {
+	args, err := BuildOptionArgs(ScanOptions{
+		Decoys:        "ME,2001:db8::10,RND:17",
+		SourceAddress: "2001:db8::20",
+		SpoofMAC:      "0",
+	})
+	if err != nil {
+		t.Fatalf("BuildOptionArgs returned error: %v", err)
+	}
+
+	want := []string{"-D", "ME,2001:db8::10,RND:17", "-S", "2001:db8::20", "--spoof-mac", "0"}
 	if !sameStrings(args, want) {
 		t.Fatalf("args = %#v, want %#v", args, want)
 	}
@@ -183,6 +203,23 @@ func TestBuildOptionArgsRejectsInvalidOptions(t *testing.T) {
 		{SourcePort: "65536"},
 		{SourcePort: "domain"},
 		{SourcePort: "53\n--script"},
+		{Decoys: "ME,not-an-ip"},
+		{Decoys: "-D"},
+		{Decoys: "RND:0"},
+		{Decoys: "RND:127"},
+		{Decoys: "RND:126,ME"},
+		{Decoys: "ME RND"},
+		{Decoys: "ME\n--script"},
+		{SourceAddress: "scanme.nmap.org"},
+		{SourceAddress: "192.0.2.1\n--script"},
+		{NetworkInterface: "-en0"},
+		{NetworkInterface: "en 0"},
+		{NetworkInterface: "en0;rm"},
+		{SpoofMAC: "Apple"},
+		{SpoofMAC: "random"},
+		{SpoofMAC: "02:11:22:33:44"},
+		{SpoofMAC: "02:11:22:33:44:gg"},
+		{SpoofMAC: "02:11:22:33:44:55\n--script"},
 		{TargetInputFile: "relative-targets.txt"},
 		{TargetInputFile: "/Users/krisarmstrong/targets\n--script.txt"},
 		{ExcludeFile: "relative-excludes.txt"},
@@ -277,6 +314,28 @@ func TestProfileArgsForOptionsRemovesPacketShapingDefaults(t *testing.T) {
 		MTU:             32,
 		DataLength:      24,
 		SourcePort:      "80",
+	})
+
+	want := []string{"-T3"}
+	if !sameStrings(args, want) {
+		t.Fatalf("args = %#v, want %#v", args, want)
+	}
+}
+
+func TestProfileArgsForOptionsRemovesIdentityDefaults(t *testing.T) {
+	profile := Profile{Args: []string{
+		"-D", "ME,198.51.100.10",
+		"-S", "192.0.2.20",
+		"-e", "en0",
+		"--spoof-mac", "02:11:22:33:44:55",
+		"-T3",
+	}}
+
+	args := ProfileArgsForOptions(profile, ScanOptions{
+		Decoys:           "ME,RND:2",
+		SourceAddress:    "192.0.2.30",
+		NetworkInterface: "eth0",
+		SpoofMAC:         "0",
 	})
 
 	want := []string{"-T3"}

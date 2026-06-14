@@ -307,6 +307,10 @@ export namespace scanner {
 	    mtu?: number;
 	    dataLength?: number;
 	    sourcePort?: string;
+	    decoys?: string;
+	    sourceAddress?: string;
+	    networkInterface?: string;
+	    spoofMac?: string;
 	    packetTrace?: boolean;
 	
 	    static createFrom(source: any = {}) {
@@ -353,6 +357,10 @@ export namespace scanner {
 	        this.mtu = source["mtu"];
 	        this.dataLength = source["dataLength"];
 	        this.sourcePort = source["sourcePort"];
+	        this.decoys = source["decoys"];
+	        this.sourceAddress = source["sourceAddress"];
+	        this.networkInterface = source["networkInterface"];
+	        this.spoofMac = source["spoofMac"];
 	        this.packetTrace = source["packetTrace"];
 	    }
 	}

@@ -57,6 +57,10 @@ export interface ScanOptions {
   mtu: number;
   dataLength: number;
   sourcePort: string;
+  decoys: string;
+  sourceAddress: string;
+  networkInterface: string;
+  spoofMac: string;
   packetTrace: boolean;
 }
 
@@ -99,6 +103,10 @@ export const defaultScanOptions: ScanOptions = {
   mtu: 0,
   dataLength: 0,
   sourcePort: "",
+  decoys: "",
+  sourceAddress: "",
+  networkInterface: "",
+  spoofMac: "",
   packetTrace: false,
 };
 

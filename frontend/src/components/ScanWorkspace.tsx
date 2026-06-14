@@ -910,6 +910,63 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                 value={scanOptions.sourcePort}
               />
             </label>
+            <h4 className="option-section-heading">Identity and evasion</h4>
+            <label>
+              <span>Decoys</span>
+              <input
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    decoys: event.target.value,
+                  }))
+                }
+                placeholder="ME,198.51.100.10,RND:2"
+                type="text"
+                value={scanOptions.decoys}
+              />
+            </label>
+            <label>
+              <span>Source address</span>
+              <input
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    sourceAddress: event.target.value,
+                  }))
+                }
+                placeholder="192.0.2.20"
+                type="text"
+                value={scanOptions.sourceAddress}
+              />
+            </label>
+            <label>
+              <span>Network interface</span>
+              <input
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    networkInterface: event.target.value,
+                  }))
+                }
+                placeholder="en0"
+                type="text"
+                value={scanOptions.networkInterface}
+              />
+            </label>
+            <label>
+              <span>Spoof MAC</span>
+              <input
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    spoofMac: event.target.value,
+                  }))
+                }
+                placeholder="0 or 02:11:22:33:44:55"
+                type="text"
+                value={scanOptions.spoofMac}
+              />
+            </label>
           </div>
           <fieldset className="option-toggle-grid">
             <legend>Scan behavior</legend>
@@ -1129,6 +1186,12 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
             <p className="option-warning">
               Packet shaping can change scan accuracy and may violate network policy without
               authorization.
+            </p>
+          ) : null}
+          {hasIdentityOptions(scanOptions) ? (
+            <p className="option-warning">
+              Decoys, source address, interface, and MAC spoofing can impersonate traffic and
+              require explicit authorization.
             </p>
           ) : null}
           {scanOptions.packetTrace ? (
@@ -1441,6 +1504,15 @@ function hasPacketShapingOptions(options: ScanOptions): boolean {
     options.mtu > 0 ||
     options.dataLength > 0 ||
     options.sourcePort.trim() !== ""
+  );
+}
+
+function hasIdentityOptions(options: ScanOptions): boolean {
+  return (
+    options.decoys.trim() !== "" ||
+    options.sourceAddress.trim() !== "" ||
+    options.networkInterface.trim() !== "" ||
+    options.spoofMac.trim() !== ""
   );
 }
 
