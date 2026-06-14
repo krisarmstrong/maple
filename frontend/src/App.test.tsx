@@ -232,13 +232,41 @@ describe("App", () => {
         "All tracked Nmap option groups are either implemented or intentionally blocked.",
       ),
     ).toBeInTheDocument();
-    expect(screen.getByText("Structured controls")).toBeInTheDocument();
-    expect(screen.getByText("Advanced escape hatches")).toBeInTheDocument();
+    expect(screen.getAllByText("Structured controls").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Advanced escape hatches").length).toBeGreaterThan(0);
     expect(screen.getByText("Planned option gaps")).toBeInTheDocument();
     expect(screen.getByText("Raw shell command input")).toBeInTheDocument();
     expect(screen.getAllByText("Blocked by design").length).toBeGreaterThan(0);
     expect(screen.getByText("-sT -sS -sU -sA -sW -sM -sN -sF -sX -sY -sZ -sO")).toBeInTheDocument();
     expect(screen.getByText("--script-args --script-args-file")).toBeInTheDocument();
+  });
+
+  it("filters Nmap option coverage by switch text and status", async () => {
+    detectToolsMock.mockResolvedValue([]);
+
+    render(<App />);
+
+    await userEvent.click(screen.getByRole("button", { name: /Help/u }));
+    await userEvent.type(screen.getByRole("searchbox", { name: "Find option or switch" }), "spoof");
+
+    expect(screen.getByText("Decoys and spoofing")).toBeInTheDocument();
+    expect(screen.getByText("-D -S --spoof-mac -e")).toBeInTheDocument();
+    expect(screen.queryByText("Raw shell command input")).not.toBeInTheDocument();
+
+    await userEvent.clear(screen.getByRole("searchbox", { name: "Find option or switch" }));
+    await userEvent.selectOptions(
+      screen.getByRole("combobox", { name: "Coverage status" }),
+      "blocked",
+    );
+
+    expect(screen.getByText("Raw shell command input")).toBeInTheDocument();
+    expect(screen.queryByText("Scan technique")).not.toBeInTheDocument();
+
+    await userEvent.type(screen.getByRole("searchbox", { name: "Find option or switch" }), "xyz");
+
+    expect(
+      screen.getByText("No Nmap option coverage entries match those filters."),
+    ).toBeInTheDocument();
   });
 
   it("shows local Nmap help failures in the Help workspace", async () => {

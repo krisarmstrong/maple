@@ -14,6 +14,8 @@ type HelpState =
   | { status: "ready"; help: ToolHelp }
   | { status: "failed"; message: string };
 
+type OptionCoverageFilter = "all" | NmapOptionCatalogEntry["status"];
+
 export function HelpWorkspace(): React.JSX.Element {
   const [state, setState] = useState<HelpState>({ status: "idle" });
   const [linkError, setLinkError] = useState("");
@@ -116,6 +118,14 @@ export function HelpWorkspace(): React.JSX.Element {
 function OptionCoveragePanel(): React.JSX.Element {
   const counts = optionCoverageCounts();
   const isReady = counts.planned === 0;
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<OptionCoverageFilter>("all");
+  const filteredGroups = filterCatalogGroups(query, statusFilter);
+  const filteredEntryCount = filteredGroups.reduce(
+    (total, { entries }) => total + entries.length,
+    0,
+  );
+
   return (
     <article className="help-panel option-coverage-panel">
       <div>
@@ -142,8 +152,43 @@ function OptionCoveragePanel(): React.JSX.Element {
         <CoverageMetric label="Planned option gaps" value={counts.planned} />
         <CoverageMetric label="Blocked by design" value={counts.blocked} />
       </div>
+      <div className="option-coverage-controls">
+        <label>
+          <span>Find option or switch</span>
+          <input
+            aria-label="Find option or switch"
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Try --spoof-mac, -sV, output, scripts"
+            type="search"
+            value={query}
+          />
+        </label>
+        <label>
+          <span>Coverage status</span>
+          <select
+            aria-label="Coverage status"
+            onChange={(event) => {
+              const value = event.target.value;
+              if (isOptionCoverageFilter(value)) {
+                setStatusFilter(value);
+              }
+            }}
+            value={statusFilter}
+          >
+            <option value="all">All statuses</option>
+            <option value="structured">Structured controls</option>
+            <option value="escape-hatch">Advanced escape hatches</option>
+            <option value="blocked">Blocked by design</option>
+            <option value="planned">Planned gaps</option>
+          </select>
+        </label>
+        <p>{filteredEntryCount} matching entries</p>
+      </div>
+      {filteredEntryCount === 0 ? (
+        <p className="empty-state">No Nmap option coverage entries match those filters.</p>
+      ) : null}
       <div className="option-catalog-groups">
-        {catalogGroups().map(({ group, entries }) => (
+        {filteredGroups.map(({ group, entries }) => (
           <section className="option-catalog-group" key={group.id}>
             <h4>{group.name}</h4>
             <p>{group.description}</p>
@@ -156,6 +201,49 @@ function OptionCoveragePanel(): React.JSX.Element {
         ))}
       </div>
     </article>
+  );
+}
+
+function filterCatalogGroups(
+  query: string,
+  statusFilter: OptionCoverageFilter,
+): ReturnType<typeof catalogGroups> {
+  const normalizedQuery = query.trim().toLowerCase();
+  return catalogGroups()
+    .map(({ group, entries }) => ({
+      group,
+      entries: entries.filter((entry) =>
+        matchesCatalogFilter(group.name, entry, normalizedQuery, statusFilter),
+      ),
+    }))
+    .filter(({ entries }) => entries.length > 0);
+}
+
+function matchesCatalogFilter(
+  groupName: string,
+  entry: NmapOptionCatalogEntry,
+  query: string,
+  statusFilter: OptionCoverageFilter,
+): boolean {
+  if (statusFilter !== "all" && entry.status !== statusFilter) {
+    return false;
+  }
+  if (query === "") {
+    return true;
+  }
+  const searchable = [groupName, entry.name, entry.note, entry.status, ...entry.switches]
+    .join(" ")
+    .toLowerCase();
+  return searchable.includes(query);
+}
+
+function isOptionCoverageFilter(value: string): value is OptionCoverageFilter {
+  return (
+    value === "all" ||
+    value === "structured" ||
+    value === "escape-hatch" ||
+    value === "blocked" ||
+    value === "planned"
   );
 }
 

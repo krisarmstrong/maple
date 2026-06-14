@@ -361,6 +361,30 @@
   font-weight: var(--font-weight-heading);
 }
 
+.option-coverage-controls {
+  align-items: end;
+  display: grid;
+  gap: var(--space-8);
+  grid-template-columns: minmax(0, 1.4fr) minmax(var(--size-preset-select-min), 0.8fr) auto;
+}
+
+.option-coverage-controls label {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.option-coverage-controls span {
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-heading);
+}
+
+.option-coverage-controls p {
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-4);
+}
+
 .option-catalog-groups {
   display: grid;
   gap: var(--space-9);
@@ -1176,6 +1200,11 @@ textarea {
   }
 
   .history-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .option-coverage-controls {
+    align-items: stretch;
     grid-template-columns: 1fr;
   }
 
