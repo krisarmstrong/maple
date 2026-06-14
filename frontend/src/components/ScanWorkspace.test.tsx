@@ -887,12 +887,18 @@ describe("ScanWorkspace", () => {
     await userEvent.click(screen.getByRole("radio", { name: "Subnet" }));
     await userEvent.clear(screen.getByLabelText("Targets"));
     await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
+
+    expect(screen.getByText("Target validation")).toBeInTheDocument();
+    expect(
+      screen.getByText("Subnet mode expects one CIDR target like 192.168.1.0/24."),
+    ).toBeInTheDocument();
+
     await userEvent.click(screen.getByRole("button", { name: "Run Scan" }));
 
     expect(startScanMock).not.toHaveBeenCalled();
     expect(
-      screen.getByText("Subnet mode expects one CIDR target like 192.168.1.0/24."),
-    ).toBeInTheDocument();
+      screen.getAllByText("Subnet mode expects one CIDR target like 192.168.1.0/24.").length,
+    ).toBeGreaterThan(0);
   });
 
   it("preserves typed targets when changing target intent", async () => {
@@ -940,10 +946,10 @@ describe("ScanWorkspace", () => {
 
     expect(startScanMock).not.toHaveBeenCalled();
     expect(
-      screen.getByText(
+      screen.getAllByText(
         "Enter hostnames, IPs, CIDR subnets, or IPv4 ranges separated by commas or new lines.",
-      ),
-    ).toBeInTheDocument();
+      ).length,
+    ).toBeGreaterThan(0);
   });
 
   it("keeps XML stdout out of the live scan log", () => {

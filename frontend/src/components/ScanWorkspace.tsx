@@ -48,6 +48,7 @@ import {
   splitSelectedScriptID,
   targetBuilderSummary,
   targetModeContextLabel,
+  targetModeValidationSummary,
 } from "./scan-workspace-display";
 import {
   handleScanEvent,
@@ -93,6 +94,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
   const selectedProfile = findProfile(profileId);
   const scope = scanScope(profileId, targets);
   const parsedTargetSummary = targetBuilderSummary(targets);
+  const targetValidation = targetModeValidationSummary(targetModeId, targets);
   const scripts = buildScanScripts(
     scriptCategories,
     scriptNames,
@@ -467,6 +469,16 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                 <div>
                   <strong>Estimated addresses</strong>
                   <span>{parsedTargetSummary.estimatedAddresses}</span>
+                </div>
+                <div>
+                  <strong>Target validation</strong>
+                  <span
+                    className={
+                      targetValidation.valid ? "target-validation-ok" : "target-validation-warn"
+                    }
+                  >
+                    {targetValidation.message}
+                  </span>
                 </div>
               </div>
             </div>

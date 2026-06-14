@@ -2,7 +2,7 @@ import { type NSECategory, nseCategories } from "../core/nse-scripts";
 import type { ScanOptions } from "../core/scan-options";
 import { scanScope } from "../core/scan-scope";
 import { parseTargets } from "../core/scan-targets";
-import type { TargetModeID } from "../core/target-modes";
+import { type TargetModeID, validateTargetsForMode } from "../core/target-modes";
 import { summarizeTargets } from "../core/target-summary";
 
 export function targetBuilderSummary(targets: string): {
@@ -18,6 +18,19 @@ export function targetBuilderSummary(targets: string): {
     parsedTargets: summarizeTargets(targets),
     estimatedAddresses: scope?.label ?? "n/a",
   };
+}
+
+export function targetModeValidationSummary(
+  modeID: TargetModeID,
+  targets: string,
+): { message: string; valid: boolean } {
+  if (targets.trim() === "") {
+    return { message: "Waiting for target input.", valid: false };
+  }
+  const result = validateTargetsForMode(modeID, targets);
+  return result.ok
+    ? { message: "Matches selected target type.", valid: true }
+    : { message: result.message, valid: false };
 }
 
 export function targetModeContextLabel(modeID: TargetModeID): string {

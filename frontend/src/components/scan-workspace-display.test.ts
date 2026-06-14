@@ -8,6 +8,7 @@ import {
   splitSelectedScriptID,
   targetBuilderSummary,
   targetModeContextLabel,
+  targetModeValidationSummary,
 } from "./scan-workspace-display";
 
 describe("scan workspace display helpers", () => {
@@ -39,6 +40,21 @@ describe("scan workspace display helpers", () => {
     expect(targetModeContextLabel("list")).toBe("Target list");
     expect(isRiskyNSECategory("vuln")).toBe(true);
     expect(isRiskyNSECategory("safe")).toBe(false);
+  });
+
+  it("summarizes target mode validation without requiring a preview", () => {
+    expect(targetModeValidationSummary("subnet", "")).toEqual({
+      message: "Waiting for target input.",
+      valid: false,
+    });
+    expect(targetModeValidationSummary("subnet", "192.168.1.0/24")).toEqual({
+      message: "Matches selected target type.",
+      valid: true,
+    });
+    expect(targetModeValidationSummary("subnet", "scanme.nmap.org")).toEqual({
+      message: "Subnet mode expects one CIDR target like 192.168.1.0/24.",
+      valid: false,
+    });
   });
 
   it("flags specialized scan techniques", () => {

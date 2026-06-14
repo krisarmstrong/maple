@@ -921,6 +921,16 @@ textarea {
   margin: var(--space-10) var(--space-0) var(--space-0);
 }
 
+.target-validation-ok {
+  color: var(--accent-strong);
+  font-weight: var(--font-weight-strong);
+}
+
+.target-validation-warn {
+  color: var(--warn-text);
+  font-weight: var(--font-weight-strong);
+}
+
 .scan-scope {
   color: var(--warning);
   font-size: var(--font-size-base);
