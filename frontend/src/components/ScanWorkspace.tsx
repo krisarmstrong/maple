@@ -21,6 +21,7 @@ import {
   verbosityModes,
   versionModes,
 } from "../core/scan-options";
+import { summarizePreset } from "../core/scan-preset-summary";
 import { loadSavedPresets, makePresetID, type ScanPreset, savePreset } from "../core/scan-presets";
 import { findProfile, type ScanProfileID, scanProfiles } from "../core/scan-profiles";
 import { scanScope } from "../core/scan-scope";
@@ -408,6 +409,21 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
               Save Preset
             </button>
           </div>
+          {savedPresets.length === 0 ? null : (
+            <section className="preset-library" aria-label="Saved workflow presets">
+              <div>
+                <h3>Saved workflow presets</h3>
+                <p className="target-mode-help">
+                  Presets save scan shape, options, and scripts only.
+                </p>
+              </div>
+              <div className="preset-card-grid">
+                {savedPresets.map((preset) => (
+                  <PresetCard key={preset.id} onApply={applyPreset} preset={preset} />
+                ))}
+              </div>
+            </section>
+          )}
           <div className="scan-grid">
             <label>
               <span>Profile</span>
@@ -1578,6 +1594,32 @@ function clearDiscoveryProbes(options: ScanOptions): ScanOptions {
     icmpTimestamp: false,
     icmpNetmask: false,
   };
+}
+
+function PresetCard({
+  onApply,
+  preset,
+}: {
+  onApply: (presetID: string) => void;
+  preset: ScanPreset;
+}): React.JSX.Element {
+  const summary = summarizePreset(preset);
+  return (
+    <article className="preset-card">
+      <div>
+        <h4>{preset.name}</h4>
+        <p>{summary.profileLabel}</p>
+      </div>
+      <ul>
+        <li>{summary.optionsLabel}</li>
+        <li>{summary.scriptsLabel}</li>
+        <li>{summary.targetPolicyLabel}</li>
+      </ul>
+      <button type="button" onClick={() => onApply(preset.id)}>
+        Apply
+      </button>
+    </article>
+  );
 }
 
 function errorMessage(caught: unknown): string {

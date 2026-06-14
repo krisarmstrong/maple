@@ -157,9 +157,14 @@ function HostDetail({
             <span>{host.hostname}</span>
           )}
         </div>
-        {host.state === undefined || host.state === "" ? null : (
-          <span className={stateClassName(host.state)}>{hostStateLabel(host.state)}</span>
-        )}
+        <div className="history-host-badges">
+          <span className={stateClassName(hostHasOpenPorts(host) ? "open" : undefined)}>
+            {hostFindingLabel(host)}
+          </span>
+          {host.state === undefined || host.state === "" ? null : (
+            <span className={stateClassName(host.state)}>{hostStateLabel(host.state)}</span>
+          )}
+        </div>
       </div>
       {visiblePorts.length === 0 ? (
         <p className="muted">No ports reported for this host.</p>
@@ -194,6 +199,18 @@ function PortDetail({ port }: { port: ScanHistoryPort }): React.JSX.Element {
 
 function hasDiagnostics(record: ScanHistoryRecord): boolean {
   return record.diagnostics !== undefined && record.diagnostics !== "";
+}
+
+function hostFindingLabel(host: ScanHistoryHost): string {
+  const openPorts = host.ports.filter((port) => port.state === "open").length;
+  if (openPorts === 0) {
+    return "No open ports";
+  }
+  return `${openPorts} open ${openPorts === 1 ? "port" : "ports"}`;
+}
+
+function hostHasOpenPorts(host: ScanHistoryHost): boolean {
+  return host.ports.some((port) => port.state === "open");
 }
 
 function hasError(record: ScanHistoryRecord): boolean {

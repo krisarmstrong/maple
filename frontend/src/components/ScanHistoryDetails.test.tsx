@@ -24,6 +24,7 @@ describe("ScanHistoryDetails", () => {
     expect(screen.getByText("127.0.0.1")).toBeInTheDocument();
     expect(screen.getByText("localhost")).toBeInTheDocument();
     expect(screen.getByText("Host up")).toBeInTheDocument();
+    expect(screen.getByText("1 open port")).toBeInTheDocument();
     expect(screen.getByText("22/tcp")).toBeInTheDocument();
     expect(screen.getByText("Open")).toBeInTheDocument();
     expect(screen.getByText("ssh")).toBeInTheDocument();

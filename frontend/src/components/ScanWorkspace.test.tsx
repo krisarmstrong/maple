@@ -109,10 +109,18 @@ describe("ScanWorkspace", () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
     await userEvent.selectOptions(screen.getByLabelText("Profile"), "service");
+    await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "safe" }));
+    await userEvent.click(screen.getByRole("button", { name: "Configure" }));
     await userEvent.type(screen.getByLabelText("Preset name"), "Web TLS check");
     await userEvent.click(screen.getByRole("button", { name: "Save Preset" }));
 
     expect(screen.getByRole("option", { name: "Web TLS check" })).toBeInTheDocument();
+    expect(screen.getByText("Saved workflow presets")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Web TLS check" })).toBeInTheDocument();
+    expect(screen.getAllByText("Service Scan").length).toBeGreaterThan(0);
+    expect(screen.getByText("1 script selection")).toBeInTheDocument();
+    expect(screen.getByText("No target saved")).toBeInTheDocument();
   });
 
   it("previews a safe argv command for valid targets", async () => {
