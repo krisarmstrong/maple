@@ -58,7 +58,7 @@ function hostSearchText(recordHost: ScanHistoryRecord["hosts"][number]): string 
     recordHost.trace
       ?.map((hop) => [hop.ttl, hop.address, hop.hostname, hop.rtt].join(" "))
       .join(" "),
-    recordHost.scripts?.map((script) => [script.id, script.output].join(" ")).join(" "),
+    recordHost.scripts?.map(scriptSearchText).join(" "),
     recordHost.ports.map(portSearchText).join(" "),
   ]
     .filter(Boolean)
@@ -76,7 +76,30 @@ function portSearchText(port: ScanHistoryRecord["hosts"][number]["ports"][number
     port.extraInfo,
     port.reason,
     port.cpes?.join(" "),
-    port.scripts?.map((script) => [script.id, script.output].join(" ")).join(" "),
+    port.scripts?.map(scriptSearchText).join(" "),
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function scriptSearchText(
+  script: NonNullable<ScanHistoryRecord["hosts"][number]["scripts"]>[number],
+): string {
+  return [script.id, script.output, script.details?.map(scriptElementSearchText).join(" ")]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function scriptElementSearchText(
+  element: NonNullable<
+    NonNullable<ScanHistoryRecord["hosts"][number]["scripts"]>[number]["details"]
+  >[number],
+): string {
+  return [
+    element.kind,
+    element.key,
+    element.value,
+    element.children?.map(scriptElementSearchText).join(" "),
   ]
     .filter(Boolean)
     .join(" ");

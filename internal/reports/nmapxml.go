@@ -2,6 +2,7 @@ package reports
 
 import (
 	"encoding/xml"
+	"io"
 	"strings"
 )
 
@@ -41,8 +42,16 @@ type Port struct {
 }
 
 type ScriptOutput struct {
-	ID     string `json:"id,omitempty"`
-	Output string `json:"output,omitempty"`
+	ID      string          `json:"id,omitempty"`
+	Output  string          `json:"output,omitempty"`
+	Details []ScriptElement `json:"details,omitempty"`
+}
+
+type ScriptElement struct {
+	Kind     string          `json:"kind,omitempty"`
+	Key      string          `json:"key,omitempty"`
+	Value    string          `json:"value,omitempty"`
+	Children []ScriptElement `json:"children,omitempty"`
 }
 
 type OSMatch struct {
@@ -296,14 +305,117 @@ func (s nmapScripts) scripts() []ScriptOutput {
 func scriptOutputs(scripts []nmapScript) []ScriptOutput {
 	outputs := make([]ScriptOutput, 0, len(scripts))
 	for _, script := range scripts {
-		outputs = append(outputs, ScriptOutput{ID: script.ID, Output: script.Output})
+		outputs = append(outputs, ScriptOutput{
+			ID:      script.ID,
+			Output:  script.Output,
+			Details: script.details(),
+		})
 	}
 	return outputs
 }
 
 type nmapScript struct {
-	ID     string `xml:"id,attr"`
-	Output string `xml:"output,attr"`
+	ID      string
+	Output  string
+	Details []ScriptElement
+}
+
+func (s *nmapScript) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	s.ID = attrValue(start, "id")
+	s.Output = attrValue(start, "output")
+	details, err := decodeScriptChildren(decoder, start)
+	if err != nil {
+		return err
+	}
+	s.Details = details
+	return nil
+}
+
+func (s nmapScript) details() []ScriptElement {
+	return s.Details
+}
+
+type nmapScriptElement struct {
+	Key   string `xml:"key,attr"`
+	Value string `xml:",chardata"`
+}
+
+func (e nmapScriptElement) detail() ScriptElement {
+	return ScriptElement{
+		Kind:  "elem",
+		Key:   e.Key,
+		Value: strings.TrimSpace(e.Value),
+	}
+}
+
+type nmapScriptTable struct {
+	Key      string
+	Children []ScriptElement
+}
+
+func (t *nmapScriptTable) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	t.Key = attrValue(start, "key")
+	children, err := decodeScriptChildren(decoder, start)
+	if err != nil {
+		return err
+	}
+	t.Children = children
+	return nil
+}
+
+func (t nmapScriptTable) detail() ScriptElement {
+	return ScriptElement{
+		Kind:     "table",
+		Key:      t.Key,
+		Children: t.Children,
+	}
+}
+
+func decodeScriptChildren(decoder *xml.Decoder, start xml.StartElement) ([]ScriptElement, error) {
+	var details []ScriptElement
+	for {
+		token, err := decoder.Token()
+		if err != nil {
+			if err == io.EOF {
+				return nil, io.ErrUnexpectedEOF
+			}
+			return nil, err
+		}
+		switch value := token.(type) {
+		case xml.StartElement:
+			switch value.Name.Local {
+			case "elem":
+				var element nmapScriptElement
+				if err := decoder.DecodeElement(&element, &value); err != nil {
+					return nil, err
+				}
+				details = append(details, element.detail())
+			case "table":
+				var table nmapScriptTable
+				if err := decoder.DecodeElement(&table, &value); err != nil {
+					return nil, err
+				}
+				details = append(details, table.detail())
+			default:
+				if err := decoder.Skip(); err != nil {
+					return nil, err
+				}
+			}
+		case xml.EndElement:
+			if value.Name == start.Name {
+				return details, nil
+			}
+		}
+	}
+}
+
+func attrValue(start xml.StartElement, name string) string {
+	for _, attr := range start.Attr {
+		if attr.Name.Local == name {
+			return attr.Value
+		}
+	}
+	return ""
 }
 
 type runStats struct {

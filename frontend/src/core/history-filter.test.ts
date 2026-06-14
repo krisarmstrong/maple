@@ -31,6 +31,19 @@ describe("history filters", () => {
                 extraInfo: "ALPN h2",
                 reason: "syn-ack",
                 cpes: ["cpe:/a:nginx:nginx:1.25"],
+                scripts: [
+                  {
+                    id: "ssl-cert",
+                    output: "Subject: commonName=router.example",
+                    details: [
+                      {
+                        kind: "table",
+                        key: "subject",
+                        children: [{ kind: "elem", key: "commonName", value: "router.example" }],
+                      },
+                    ],
+                  },
+                ],
               },
             ],
           },
@@ -68,6 +81,9 @@ describe("history filters", () => {
     ]);
     expect(
       filterHistoryRecords(records, "cpe:/a:nginx", "all").map((record) => record.runId),
+    ).toEqual(["scan-2"]);
+    expect(
+      filterHistoryRecords(records, "commonName", "all").map((record) => record.runId),
     ).toEqual(["scan-2"]);
     expect(
       filterHistoryRecords(records, "unexpected", "all").map((record) => record.runId),

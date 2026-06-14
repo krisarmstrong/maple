@@ -38,8 +38,27 @@ export function productLabel(port: ScanHistoryPort): string {
 
 export function scriptKey(scripts: ScanHistoryPort["scripts"]): string {
   return (
-    scripts?.map((script) => [script.id, script.output].filter(isPresent).join(":")).join("|") ?? ""
+    scripts
+      ?.map((script) =>
+        [script.id, script.output, script.details?.map(scriptElementKey).join("|")]
+          .filter(isPresent)
+          .join(":"),
+      )
+      .join("|") ?? ""
   );
+}
+
+function scriptElementKey(
+  element: NonNullable<NonNullable<ScanHistoryPort["scripts"]>[number]["details"]>[number],
+): string {
+  return [
+    element.kind,
+    element.key,
+    element.value,
+    element.children?.map(scriptElementKey).join("|"),
+  ]
+    .filter(isPresent)
+    .join(":");
 }
 
 function isPresent(value: string | undefined): value is string {

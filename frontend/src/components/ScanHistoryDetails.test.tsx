@@ -162,7 +162,13 @@ describe("ScanHistoryDetails", () => {
             {
               address: "192.0.2.10",
               state: "up",
-              scripts: [{ id: "nbstat", output: "NetBIOS name: ROUTER" }],
+              scripts: [
+                {
+                  id: "nbstat",
+                  output: "NetBIOS name: ROUTER",
+                  details: [{ kind: "elem", key: "name", value: "ROUTER" }],
+                },
+              ],
               ports: [
                 {
                   id: "22",
@@ -170,7 +176,17 @@ describe("ScanHistoryDetails", () => {
                   state: "closed",
                   service: "ssh",
                   scripts: [
-                    { id: "ssh-hostkey", output: "2048 SHA256:abc (RSA)\n256 SHA256:def (ECDSA)" },
+                    {
+                      id: "ssh-hostkey",
+                      output: "2048 SHA256:abc (RSA)\n256 SHA256:def (ECDSA)",
+                      details: [
+                        {
+                          kind: "table",
+                          key: "rsa",
+                          children: [{ kind: "elem", key: "bits", value: "2048" }],
+                        },
+                      ],
+                    },
                   ],
                 },
               ],
@@ -183,8 +199,11 @@ describe("ScanHistoryDetails", () => {
     expect(screen.getByText("Host scripts")).toBeInTheDocument();
     expect(screen.getByText("nbstat")).toBeInTheDocument();
     expect(screen.getByText("NetBIOS name: ROUTER")).toBeInTheDocument();
+    expect(screen.getByText("name: ROUTER")).toBeInTheDocument();
     expect(screen.getByText("Port scripts")).toBeInTheDocument();
     expect(screen.getByText("ssh-hostkey")).toBeInTheDocument();
+    expect(screen.getByText("rsa")).toBeInTheDocument();
+    expect(screen.getByText("bits: 2048")).toBeInTheDocument();
     const multilineScriptOutput = screen.getByText((_content, element) => {
       return (
         element?.tagName === "PRE" &&
@@ -199,7 +218,7 @@ describe("ScanHistoryDetails", () => {
 
     expect(screen.getByText("192.0.2.10")).toBeInTheDocument();
 
-    await userEvent.type(screen.getByLabelText("Search expanded result"), "hostkey");
+    await userEvent.type(screen.getByLabelText("Search expanded result"), "bits");
 
     expect(screen.getByText("22/tcp")).toBeInTheDocument();
   });

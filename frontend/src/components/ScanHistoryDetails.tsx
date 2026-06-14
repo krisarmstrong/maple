@@ -14,6 +14,7 @@ import type {
   ScanHistoryOSMatch,
   ScanHistoryPort,
   ScanHistoryRecord,
+  ScanHistoryScriptElement,
   ScanHistoryScriptOutput,
   ScanHistoryTraceHop,
 } from "../services/history-service";
@@ -336,10 +337,52 @@ function ScriptOutputList({
         <div key={`${script.id ?? "script"}:${script.output ?? ""}`}>
           <span>{script.id ?? "script"}</span>
           {script.output === undefined || script.output === "" ? null : <pre>{script.output}</pre>}
+          <ScriptDetailList details={script.details ?? []} />
         </div>
       ))}
     </div>
   );
+}
+
+function ScriptDetailList({
+  details,
+}: {
+  details: readonly ScanHistoryScriptElement[];
+}): React.JSX.Element | null {
+  if (details.length === 0) {
+    return null;
+  }
+  return (
+    <ul className="history-script-details">
+      {details.map((detail) => (
+        <li key={scriptDetailKey(detail)}>
+          <span>{scriptDetailLabel(detail)}</span>
+          <ScriptDetailList details={detail.children ?? []} />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function scriptDetailLabel(detail: ScanHistoryScriptElement): string {
+  const key = detail.key ?? "";
+  const value = detail.value ?? "";
+  if (key !== "" && value !== "") {
+    return `${key}: ${value}`;
+  }
+  if (key !== "") {
+    return key;
+  }
+  if (value !== "") {
+    return value;
+  }
+  return detail.kind ?? "detail";
+}
+
+function scriptDetailKey(detail: ScanHistoryScriptElement): string {
+  return [detail.kind, detail.key, detail.value, detail.children?.map(scriptDetailKey).join("|")]
+    .filter((value) => value !== undefined && value !== "")
+    .join(":");
 }
 
 function hasDiagnostics(record: ScanHistoryRecord): boolean {
@@ -513,7 +556,25 @@ function scriptsMatch(
 ): boolean {
   return (
     scripts?.some(
-      (script) => includesQuery(script.id, query) || includesQuery(script.output, query),
+      (script) =>
+        includesQuery(script.id, query) ||
+        includesQuery(script.output, query) ||
+        scriptDetailsMatch(script.details, query),
+    ) ?? false
+  );
+}
+
+function scriptDetailsMatch(
+  details: readonly ScanHistoryScriptElement[] | undefined,
+  query: string,
+): boolean {
+  return (
+    details?.some(
+      (detail) =>
+        includesQuery(detail.kind, query) ||
+        includesQuery(detail.key, query) ||
+        includesQuery(detail.value, query) ||
+        scriptDetailsMatch(detail.children, query),
     ) ?? false
   );
 }

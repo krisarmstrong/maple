@@ -14,7 +14,15 @@ func TestSummarizeNmapXMLCountsHostStatuses(t *testing.T) {
         <service name="ssh" product="OpenSSH" version="9.6" extrainfo="protocol 2.0">
           <cpe>cpe:/a:openbsd:openssh:9.6</cpe>
         </service>
-        <script id="ssh-hostkey" output="2048 SHA256:abc (RSA)"/>
+        <script id="ssh-hostkey" output="2048 SHA256:abc (RSA)">
+          <table key="rsa">
+            <elem key="bits">2048</elem>
+            <elem key="fingerprint">SHA256:abc</elem>
+            <table key="pubkey">
+              <elem key="type">ssh-rsa</elem>
+            </table>
+          </table>
+        </script>
       </port>
       <port protocol="tcp" portid="80">
         <state state="closed" reason="conn-refused"/>
@@ -32,7 +40,13 @@ func TestSummarizeNmapXMLCountsHostStatuses(t *testing.T) {
       <hop ttl="2" ipaddr="192.0.2.1" rtt="5.67"/>
     </trace>
     <hostscript>
-      <script id="nbstat" output="NetBIOS name: ROUTER"/>
+      <script id="nbstat" output="NetBIOS name: ROUTER">
+        <elem key="name">ROUTER</elem>
+        <table key="statistics">
+          <elem key="users">3</elem>
+        </table>
+        <elem key="workgroup">LAB</elem>
+      </script>
     </hostscript>
   </host>
   <host>
@@ -120,11 +134,32 @@ func TestSummarizeNmapXMLCountsHostStatuses(t *testing.T) {
 	if summary.Hosts[0].Scripts[0].Output != "NetBIOS name: ROUTER" {
 		t.Fatalf("first host script output = %q", summary.Hosts[0].Scripts[0].Output)
 	}
+	if len(summary.Hosts[0].Scripts[0].Details) != 3 {
+		t.Fatalf("len(first host script details) = %d, want 3", len(summary.Hosts[0].Scripts[0].Details))
+	}
+	if summary.Hosts[0].Scripts[0].Details[0].Key != "name" ||
+		summary.Hosts[0].Scripts[0].Details[0].Value != "ROUTER" {
+		t.Fatalf("first host script detail = %#v", summary.Hosts[0].Scripts[0].Details[0])
+	}
+	if summary.Hosts[0].Scripts[0].Details[1].Key != "statistics" ||
+		summary.Hosts[0].Scripts[0].Details[2].Key != "workgroup" {
+		t.Fatalf("host script details were reordered: %#v", summary.Hosts[0].Scripts[0].Details)
+	}
 	if len(summary.Hosts[0].Ports[0].Scripts) != 1 {
 		t.Fatalf("len(first port scripts) = %d, want 1", len(summary.Hosts[0].Ports[0].Scripts))
 	}
 	if summary.Hosts[0].Ports[0].Scripts[0].ID != "ssh-hostkey" {
 		t.Fatalf("first port script ID = %q", summary.Hosts[0].Ports[0].Scripts[0].ID)
+	}
+	if len(summary.Hosts[0].Ports[0].Scripts[0].Details) != 1 {
+		t.Fatalf("len(first port script details) = %d, want 1", len(summary.Hosts[0].Ports[0].Scripts[0].Details))
+	}
+	keyTable := summary.Hosts[0].Ports[0].Scripts[0].Details[0]
+	if keyTable.Kind != "table" || keyTable.Key != "rsa" || len(keyTable.Children) != 3 {
+		t.Fatalf("first port script table = %#v", keyTable)
+	}
+	if keyTable.Children[2].Key != "pubkey" || keyTable.Children[2].Children[0].Value != "ssh-rsa" {
+		t.Fatalf("nested port script table = %#v", keyTable.Children[2])
 	}
 	if summary.Hosts[0].Ports[1].Reason != "conn-refused" {
 		t.Fatalf("second port reason = %q", summary.Hosts[0].Ports[1].Reason)

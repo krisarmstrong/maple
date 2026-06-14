@@ -230,6 +230,29 @@ func writeScripts(builder *strings.Builder, heading string, scripts []ScriptOutp
 		} else {
 			builder.WriteString("\n")
 		}
+		writeScriptDetails(builder, script.Details, 1)
+	}
+}
+
+func writeScriptDetails(builder *strings.Builder, details []ScriptElement, depth int) {
+	for _, detail := range details {
+		indent := strings.Repeat("  ", depth)
+		builder.WriteString(indent)
+		builder.WriteString("- ")
+		if detail.Key != "" {
+			builder.WriteString(markdownCell(detail.Key))
+			if detail.Value != "" {
+				builder.WriteString(": ")
+			}
+		}
+		if detail.Value != "" {
+			builder.WriteString(markdownCell(detail.Value))
+		}
+		if detail.Key == "" && detail.Value == "" {
+			builder.WriteString(markdownCell(detail.Kind))
+		}
+		builder.WriteString("\n")
+		writeScriptDetails(builder, detail.Children, depth+1)
 	}
 }
 

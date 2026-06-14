@@ -39,7 +39,13 @@ func TestMarkdownIncludesCommandAndSummary(t *testing.T) {
 						{TTL: "1", Address: "192.0.2.254", Hostname: "gateway.example", RTT: "1.23"},
 					},
 					Scripts: []ScriptOutput{
-						{ID: "nbstat", Output: "NetBIOS name: ROUTER"},
+						{
+							ID:     "nbstat",
+							Output: "NetBIOS name: ROUTER",
+							Details: []ScriptElement{
+								{Kind: "elem", Key: "name", Value: "ROUTER"},
+							},
+						},
 					},
 					Ports: []Port{
 						{
@@ -53,7 +59,20 @@ func TestMarkdownIncludesCommandAndSummary(t *testing.T) {
 							ExtraInfo: "protocol 2.0",
 							CPEs:      []string{"cpe:/a:openbsd:openssh:9.6"},
 							Scripts: []ScriptOutput{
-								{ID: "ssh-hostkey", Output: "2048 SHA256:abc (RSA)\n```"},
+								{
+									ID:     "ssh-hostkey",
+									Output: "2048 SHA256:abc (RSA)\n```",
+									Details: []ScriptElement{
+										{
+											Kind: "table",
+											Key:  "rsa",
+											Children: []ScriptElement{
+												{Kind: "elem", Key: "bits", Value: "2048"},
+												{Kind: "elem", Key: "fingerprint", Value: "SHA256:abc"},
+											},
+										},
+									},
+								},
 							},
 						},
 						{
@@ -94,6 +113,7 @@ func TestMarkdownIncludesCommandAndSummary(t *testing.T) {
 		"#### Host scripts for router.example",
 		"- nbstat",
 		"```text\nNetBIOS name: ROUTER\n```",
+		"  - name: ROUTER",
 		"### Ports for router.example",
 		"| tcp/22 | open | syn-ack | ssh | OpenSSH 9.6 | protocol 2.0 |",
 		"| tcp/80 | closed | reset | http | - | - |",
@@ -102,6 +122,9 @@ func TestMarkdownIncludesCommandAndSummary(t *testing.T) {
 		"#### Scripts for tcp/22",
 		"- ssh-hostkey",
 		"````text\n2048 SHA256:abc (RSA)\n```\n````",
+		"  - rsa",
+		"    - bits: 2048",
+		"    - fingerprint: SHA256:abc",
 	})
 	secondHostIndex := strings.Index(report, "| 192.0.2.2 | - | down |")
 	hostScriptsIndex := strings.Index(report, "#### Host scripts for router.example")

@@ -58,6 +58,14 @@ export interface ScanHistoryHost {
 export interface ScanHistoryScriptOutput {
   id?: string;
   output?: string;
+  details?: ScanHistoryScriptElement[];
+}
+
+export interface ScanHistoryScriptElement {
+  kind?: string;
+  key?: string;
+  value?: string;
+  children?: ScanHistoryScriptElement[];
 }
 
 export interface ScanHistoryOSMatch {
@@ -164,12 +172,26 @@ function normalizeHosts(hosts: ScanHistoryHost[]): ScanHistoryHost[] {
     osMatches: host.osMatches ?? [],
     extraPorts: host.extraPorts ?? [],
     trace: host.trace ?? [],
-    scripts: host.scripts ?? [],
+    scripts: normalizeScripts(host.scripts ?? []),
     ports: (host.ports ?? []).map((port) => ({
       ...port,
       cpes: port.cpes ?? [],
-      scripts: port.scripts ?? [],
+      scripts: normalizeScripts(port.scripts ?? []),
     })),
+  }));
+}
+
+function normalizeScripts(scripts: ScanHistoryScriptOutput[]): ScanHistoryScriptOutput[] {
+  return scripts.map((script) => ({
+    ...script,
+    details: normalizeScriptElements(script.details ?? []),
+  }));
+}
+
+function normalizeScriptElements(details: ScanHistoryScriptElement[]): ScanHistoryScriptElement[] {
+  return details.map((detail) => ({
+    ...detail,
+    children: normalizeScriptElements(detail.children ?? []),
   }));
 }
 
