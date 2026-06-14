@@ -1,19 +1,5 @@
 export namespace platform {
-	
-	export class ToolHelp {
-	    path: string;
-	    output: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new ToolHelp(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.path = source["path"];
-	        this.output = source["output"];
-	    }
-	}
+
 	export class ToolDetection {
 	    name: string;
 	    displayName: string;
@@ -23,11 +9,11 @@ export namespace platform {
 	    version?: string;
 	    error?: string;
 	    installHint?: string;
-	
+
 	    static createFrom(source: any = {}) {
 	        return new ToolDetection(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.name = source["name"];
@@ -40,11 +26,25 @@ export namespace platform {
 	        this.installHint = source["installHint"];
 	    }
 	}
+	export class ToolHelp {
+	    path: string;
+	    output: string;
+
+	    static createFrom(source: any = {}) {
+	        return new ToolHelp(source);
+	    }
+
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.path = source["path"];
+	        this.output = source["output"];
+	    }
+	}
 
 }
 
 export namespace reports {
-	
+
 	export class Port {
 	    protocol?: string;
 	    id?: string;
@@ -54,11 +54,12 @@ export namespace reports {
 	    product?: string;
 	    version?: string;
 	    extraInfo?: string;
-	
+	    scripts?: ScriptOutput[];
+
 	    static createFrom(source: any = {}) {
 	        return new Port(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.protocol = source["protocol"];
@@ -69,26 +70,9 @@ export namespace reports {
 	        this.product = source["product"];
 	        this.version = source["version"];
 	        this.extraInfo = source["extraInfo"];
+	        this.scripts = this.convertValues(source["scripts"], ScriptOutput);
 	    }
-	}
-	export class Host {
-	    address?: string;
-	    hostname?: string;
-	    state?: string;
-	    ports?: Port[];
-	
-	    static createFrom(source: any = {}) {
-	        return new Host(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.address = source["address"];
-	        this.hostname = source["hostname"];
-	        this.state = source["state"];
-	        this.ports = this.convertValues(source["ports"], Port);
-	    }
-	
+
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
 		    if (!a) {
 		        return a;
@@ -107,7 +91,60 @@ export namespace reports {
 		    return a;
 		}
 	}
-	
+	export class ScriptOutput {
+	    id?: string;
+	    output?: string;
+
+	    static createFrom(source: any = {}) {
+	        return new ScriptOutput(source);
+	    }
+
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.output = source["output"];
+	    }
+	}
+	export class Host {
+	    address?: string;
+	    hostname?: string;
+	    state?: string;
+	    scripts?: ScriptOutput[];
+	    ports?: Port[];
+
+	    static createFrom(source: any = {}) {
+	        return new Host(source);
+	    }
+
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.address = source["address"];
+	        this.hostname = source["hostname"];
+	        this.state = source["state"];
+	        this.scripts = this.convertValues(source["scripts"], ScriptOutput);
+	        this.ports = this.convertValues(source["ports"], Port);
+	    }
+
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+
+
 	export class Summary {
 	    args?: string;
 	    startedAt?: string;
@@ -117,11 +154,11 @@ export namespace reports {
 	    hostsUp: number;
 	    hostsDown: number;
 	    hosts?: Host[];
-	
+
 	    static createFrom(source: any = {}) {
 	        return new Summary(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.args = source["args"];
@@ -133,7 +170,7 @@ export namespace reports {
 	        this.hostsDown = source["hostsDown"];
 	        this.hosts = this.convertValues(source["hosts"], Host);
 	    }
-	
+
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
 		    if (!a) {
 		        return a;
@@ -156,17 +193,17 @@ export namespace reports {
 }
 
 export namespace scanner {
-	
+
 	export class Profile {
 	    id: string;
 	    name: string;
 	    description: string;
 	    args: string[];
-	
+
 	    static createFrom(source: any = {}) {
 	        return new Profile(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.id = source["id"];
@@ -178,11 +215,11 @@ export namespace scanner {
 	export class Target {
 	    value: string;
 	    kind: string;
-	
+
 	    static createFrom(source: any = {}) {
 	        return new Target(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.value = source["value"];
@@ -194,11 +231,11 @@ export namespace scanner {
 	    args: string[];
 	    targets: Target[];
 	    profile: Profile;
-	
+
 	    static createFrom(source: any = {}) {
 	        return new CommandPreview(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.executable = source["executable"];
@@ -206,7 +243,7 @@ export namespace scanner {
 	        this.targets = this.convertValues(source["targets"], Target);
 	        this.profile = this.convertValues(source["profile"], Profile);
 	    }
-	
+
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
 		    if (!a) {
 		        return a;
@@ -225,49 +262,7 @@ export namespace scanner {
 		    return a;
 		}
 	}
-	
-	export class ScanRequest {
-	    profileId: string;
-	    targets: string;
-	    nmapPath: string;
-	    options?: ScanOptions;
-	    scripts?: Script[];
-	    scriptArgs?: string;
-	    scriptArgsFile?: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new ScanRequest(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.profileId = source["profileId"];
-	        this.targets = source["targets"];
-	        this.nmapPath = source["nmapPath"];
-	        this.options = this.convertValues(source["options"], ScanOptions);
-	        this.scripts = this.convertValues(source["scripts"], Script);
-	        this.scriptArgs = source["scriptArgs"];
-	        this.scriptArgsFile = source["scriptArgsFile"];
-	    }
-	
-		convertValues(a: any, classs: any, asMap: boolean = false): any {
-		    if (!a) {
-		        return a;
-		    }
-		    if (a.slice && a.map) {
-		        return (a as any[]).map(elem => this.convertValues(elem, classs));
-		    } else if ("object" === typeof a) {
-		        if (asMap) {
-		            for (const key of Object.keys(a)) {
-		                a[key] = new classs(a[key]);
-		            }
-		            return a;
-		        }
-		        return new classs(a);
-		    }
-		    return a;
-		}
-	}
+
 	export class ScanOptions {
 	    scanTechnique?: string;
 	    discoveryMode?: string;
@@ -317,11 +312,11 @@ export namespace scanner {
 	    networkInterface?: string;
 	    spoofMac?: string;
 	    packetTrace?: boolean;
-	
+
 	    static createFrom(source: any = {}) {
 	        return new ScanOptions(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.scanTechnique = source["scanTechnique"];
@@ -377,31 +372,73 @@ export namespace scanner {
 	export class Script {
 	    kind: string;
 	    value: string;
-	
+
 	    static createFrom(source: any = {}) {
 	        return new Script(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.kind = source["kind"];
 	        this.value = source["value"];
 	    }
 	}
+	export class ScanRequest {
+	    profileId: string;
+	    targets: string;
+	    nmapPath: string;
+	    options?: ScanOptions;
+	    scripts?: Script[];
+	    scriptArgs?: string;
+	    scriptArgsFile?: string;
+
+	    static createFrom(source: any = {}) {
+	        return new ScanRequest(source);
+	    }
+
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.profileId = source["profileId"];
+	        this.targets = source["targets"];
+	        this.nmapPath = source["nmapPath"];
+	        this.options = this.convertValues(source["options"], ScanOptions);
+	        this.scripts = this.convertValues(source["scripts"], Script);
+	        this.scriptArgs = source["scriptArgs"];
+	        this.scriptArgsFile = source["scriptArgsFile"];
+	    }
+
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
 	export class ScanStarted {
 	    runId: string;
 	    preview: CommandPreview;
-	
+
 	    static createFrom(source: any = {}) {
 	        return new ScanStarted(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.runId = source["runId"];
 	        this.preview = this.convertValues(source["preview"], CommandPreview);
 	    }
-	
+
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
 		    if (!a) {
 		        return a;
@@ -421,10 +458,11 @@ export namespace scanner {
 		}
 	}
 
+
 }
 
 export namespace store {
-	
+
 	export class ScanRecord {
 	    runId: string;
 	    // Go type: time
@@ -437,11 +475,11 @@ export namespace store {
 	    xml: string;
 	    diagnostics?: string;
 	    error?: string;
-	
+
 	    static createFrom(source: any = {}) {
 	        return new ScanRecord(source);
 	    }
-	
+
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.runId = source["runId"];
@@ -454,7 +492,7 @@ export namespace store {
 	        this.diagnostics = source["diagnostics"];
 	        this.error = source["error"];
 	    }
-	
+
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
 		    if (!a) {
 		        return a;

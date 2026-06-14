@@ -94,6 +94,9 @@ func writeHosts(builder *strings.Builder, hosts []Host) {
 		builder.WriteString(" | ")
 		builder.WriteString(markdownCell(host.State))
 		builder.WriteString(" |\n")
+	}
+	for _, host := range hosts {
+		writeScripts(builder, "Host scripts for "+hostLabel(host), host.Scripts)
 		writePorts(builder, host)
 	}
 }
@@ -129,6 +132,53 @@ func writePorts(builder *strings.Builder, host Host) {
 		builder.WriteString(markdownCell(port.ExtraInfo))
 		builder.WriteString(" |\n")
 	}
+	for _, port := range host.Ports {
+		writeScripts(builder, "Scripts for "+port.Protocol+"/"+port.ID, port.Scripts)
+	}
+}
+
+func writeScripts(builder *strings.Builder, heading string, scripts []ScriptOutput) {
+	if len(scripts) == 0 {
+		return
+	}
+	builder.WriteString("\n#### ")
+	builder.WriteString(heading)
+	builder.WriteString("\n\n")
+	for _, script := range scripts {
+		builder.WriteString("- ")
+		builder.WriteString(markdownCell(script.ID))
+		if script.Output != "" {
+			fence := markdownFence(script.Output)
+			builder.WriteString("\n\n")
+			builder.WriteString(fence)
+			builder.WriteString("text\n")
+			builder.WriteString(script.Output)
+			builder.WriteString("\n")
+			builder.WriteString(fence)
+			builder.WriteString("\n")
+		} else {
+			builder.WriteString("\n")
+		}
+	}
+}
+
+func markdownFence(value string) string {
+	longestRun := 0
+	currentRun := 0
+	for _, char := range value {
+		if char == '`' {
+			currentRun++
+			if currentRun > longestRun {
+				longestRun = currentRun
+			}
+			continue
+		}
+		currentRun = 0
+	}
+	if longestRun < 3 {
+		return "```"
+	}
+	return strings.Repeat("`", longestRun+1)
 }
 
 func hostLabel(host Host) string {

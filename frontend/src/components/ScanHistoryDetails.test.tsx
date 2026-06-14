@@ -154,6 +154,56 @@ describe("ScanHistoryDetails", () => {
     expect(screen.getByText("syn-ack")).toBeInTheDocument();
   });
 
+  it("shows host and port NSE script output", async () => {
+    render(
+      <ScanHistoryDetails
+        record={scanRecord({
+          hosts: [
+            {
+              address: "192.0.2.10",
+              state: "up",
+              scripts: [{ id: "nbstat", output: "NetBIOS name: ROUTER" }],
+              ports: [
+                {
+                  id: "22",
+                  protocol: "tcp",
+                  state: "closed",
+                  service: "ssh",
+                  scripts: [
+                    { id: "ssh-hostkey", output: "2048 SHA256:abc (RSA)\n256 SHA256:def (ECDSA)" },
+                  ],
+                },
+              ],
+            },
+          ],
+        })}
+      />,
+    );
+
+    expect(screen.getByText("Host scripts")).toBeInTheDocument();
+    expect(screen.getByText("nbstat")).toBeInTheDocument();
+    expect(screen.getByText("NetBIOS name: ROUTER")).toBeInTheDocument();
+    expect(screen.getByText("Port scripts")).toBeInTheDocument();
+    expect(screen.getByText("ssh-hostkey")).toBeInTheDocument();
+    const multilineScriptOutput = screen.getByText((_content, element) => {
+      return (
+        element?.tagName === "PRE" &&
+        element.textContent === "2048 SHA256:abc (RSA)\n256 SHA256:def (ECDSA)"
+      );
+    });
+    expect(multilineScriptOutput).toBeInTheDocument();
+    expect(multilineScriptOutput.tagName).toBe("PRE");
+    expect(screen.getByText("2 script results")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Hosts with findings" }));
+
+    expect(screen.getByText("192.0.2.10")).toBeInTheDocument();
+
+    await userEvent.type(screen.getByLabelText("Search expanded result"), "hostkey");
+
+    expect(screen.getByText("22/tcp")).toBeInTheDocument();
+  });
+
   it("shows scan result summary metrics", () => {
     render(
       <ScanHistoryDetails

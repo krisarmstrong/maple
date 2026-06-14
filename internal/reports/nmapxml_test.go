@@ -12,12 +12,16 @@ func TestSummarizeNmapXMLCountsHostStatuses(t *testing.T) {
       <port protocol="tcp" portid="22">
         <state state="open"/>
         <service name="ssh" product="OpenSSH" version="9.6" extrainfo="protocol 2.0"/>
+        <script id="ssh-hostkey" output="2048 SHA256:abc (RSA)"/>
       </port>
       <port protocol="tcp" portid="80">
         <state state="closed" reason="conn-refused"/>
         <service name="http"/>
       </port>
     </ports>
+    <hostscript>
+      <script id="nbstat" output="NetBIOS name: ROUTER"/>
+    </hostscript>
   </host>
   <host>
     <status state="down" reason="no-response"/>
@@ -70,6 +74,21 @@ func TestSummarizeNmapXMLCountsHostStatuses(t *testing.T) {
 	}
 	if summary.Hosts[0].Ports[0].ExtraInfo != "protocol 2.0" {
 		t.Fatalf("first port extra info = %q", summary.Hosts[0].Ports[0].ExtraInfo)
+	}
+	if len(summary.Hosts[0].Scripts) != 1 {
+		t.Fatalf("len(first host scripts) = %d, want 1", len(summary.Hosts[0].Scripts))
+	}
+	if summary.Hosts[0].Scripts[0].ID != "nbstat" {
+		t.Fatalf("first host script ID = %q", summary.Hosts[0].Scripts[0].ID)
+	}
+	if summary.Hosts[0].Scripts[0].Output != "NetBIOS name: ROUTER" {
+		t.Fatalf("first host script output = %q", summary.Hosts[0].Scripts[0].Output)
+	}
+	if len(summary.Hosts[0].Ports[0].Scripts) != 1 {
+		t.Fatalf("len(first port scripts) = %d, want 1", len(summary.Hosts[0].Ports[0].Scripts))
+	}
+	if summary.Hosts[0].Ports[0].Scripts[0].ID != "ssh-hostkey" {
+		t.Fatalf("first port script ID = %q", summary.Hosts[0].Ports[0].Scripts[0].ID)
 	}
 	if summary.Hosts[0].Ports[1].Reason != "conn-refused" {
 		t.Fatalf("second port reason = %q", summary.Hosts[0].Ports[1].Reason)

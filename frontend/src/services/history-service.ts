@@ -40,13 +40,20 @@ export interface ScanHistoryPort {
   product?: string;
   version?: string;
   extraInfo?: string;
+  scripts?: ScanHistoryScriptOutput[];
 }
 
 export interface ScanHistoryHost {
   address?: string;
   hostname?: string;
   state?: string;
+  scripts?: ScanHistoryScriptOutput[];
   ports: ScanHistoryPort[];
+}
+
+export interface ScanHistoryScriptOutput {
+  id?: string;
+  output?: string;
 }
 
 interface BackendSummary {
@@ -130,7 +137,11 @@ export function clearScanHistory(): Promise<void> {
 }
 
 function normalizeHosts(hosts: ScanHistoryHost[]): ScanHistoryHost[] {
-  return hosts.map((host) => ({ ...host, ports: host.ports ?? [] }));
+  return hosts.map((host) => ({
+    ...host,
+    scripts: host.scripts ?? [],
+    ports: (host.ports ?? []).map((port) => ({ ...port, scripts: port.scripts ?? [] })),
+  }));
 }
 
 function countOpenPorts(hosts: ScanHistoryHost[]): number {

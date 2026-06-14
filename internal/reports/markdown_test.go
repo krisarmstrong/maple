@@ -29,6 +29,9 @@ func TestMarkdownIncludesCommandAndSummary(t *testing.T) {
 					Address:  "192.0.2.1",
 					Hostname: "router.example",
 					State:    "up",
+					Scripts: []ScriptOutput{
+						{ID: "nbstat", Output: "NetBIOS name: ROUTER"},
+					},
 					Ports: []Port{
 						{
 							Protocol:  "tcp",
@@ -39,6 +42,16 @@ func TestMarkdownIncludesCommandAndSummary(t *testing.T) {
 							Product:   "OpenSSH",
 							Version:   "9.6",
 							ExtraInfo: "protocol 2.0",
+							Scripts: []ScriptOutput{
+								{ID: "ssh-hostkey", Output: "2048 SHA256:abc (RSA)\n```"},
+							},
+						},
+						{
+							Protocol: "tcp",
+							ID:       "80",
+							State:    "closed",
+							Reason:   "reset",
+							Service:  "http",
 						},
 					},
 				},
@@ -63,9 +76,26 @@ func TestMarkdownIncludesCommandAndSummary(t *testing.T) {
 		"## Hosts",
 		"| 192.0.2.1 | router.example | up |",
 		"| 192.0.2.2 | - | down |",
+		"#### Host scripts for router.example",
+		"- nbstat",
+		"```text\nNetBIOS name: ROUTER\n```",
 		"### Ports for router.example",
 		"| tcp/22 | open | syn-ack | ssh | OpenSSH 9.6 | protocol 2.0 |",
+		"| tcp/80 | closed | reset | http | - | - |",
+		"#### Scripts for tcp/22",
+		"- ssh-hostkey",
+		"````text\n2048 SHA256:abc (RSA)\n```\n````",
 	})
+	secondHostIndex := strings.Index(report, "| 192.0.2.2 | - | down |")
+	hostScriptsIndex := strings.Index(report, "#### Host scripts for router.example")
+	if secondHostIndex == -1 || hostScriptsIndex == -1 || hostScriptsIndex < secondHostIndex {
+		t.Fatalf("host scripts must be emitted after the complete host table:\n%s", report)
+	}
+	portsTableIndex := strings.Index(report, "| tcp/80 | closed | reset | http | - | - |")
+	portScriptsIndex := strings.Index(report, "#### Scripts for tcp/22")
+	if portsTableIndex == -1 || portScriptsIndex == -1 || portScriptsIndex < portsTableIndex {
+		t.Fatalf("port scripts must be emitted after the complete port table:\n%s", report)
+	}
 }
 
 func TestMarkdownIncludesErrorAndEmptyResults(t *testing.T) {

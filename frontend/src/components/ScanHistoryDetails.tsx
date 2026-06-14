@@ -12,6 +12,7 @@ import type {
   ScanHistoryHost,
   ScanHistoryPort,
   ScanHistoryRecord,
+  ScanHistoryScriptOutput,
 } from "../services/history-service";
 
 type ResultFilter = "all" | "open" | "hosts-up" | "findings";
@@ -65,7 +66,7 @@ function ResultSearch({
       <span>Search expanded result</span>
       <input
         onChange={(event) => onChange(event.target.value)}
-        placeholder="Host, service, product, reason"
+        placeholder="Host, service, product, reason, script"
         type="search"
         value={query}
       />
@@ -166,6 +167,7 @@ function HostDetail({
           )}
         </div>
       </div>
+      <ScriptOutputList scripts={host.scripts ?? []} title="Host scripts" />
       {visiblePorts.length === 0 ? (
         <p className="muted">No ports reported for this host.</p>
       ) : (
@@ -187,12 +189,40 @@ function HostDetail({
 function PortDetail({ port }: { port: ScanHistoryPort }): React.JSX.Element {
   return (
     <div className="history-port">
-      <span className={stateClassName(port.state)}>{portStateLabel(port.state)}</span>
-      <strong>{portName(port)}</strong>
-      {port.service === undefined || port.service === "" ? null : <span>{port.service}</span>}
-      {productLabel(port) === "" ? null : <span>{productLabel(port)}</span>}
-      {port.extraInfo === undefined || port.extraInfo === "" ? null : <span>{port.extraInfo}</span>}
-      {port.reason === undefined || port.reason === "" ? null : <span>{port.reason}</span>}
+      <div className="history-port-main">
+        <span className={stateClassName(port.state)}>{portStateLabel(port.state)}</span>
+        <strong>{portName(port)}</strong>
+        {port.service === undefined || port.service === "" ? null : <span>{port.service}</span>}
+        {productLabel(port) === "" ? null : <span>{productLabel(port)}</span>}
+        {port.extraInfo === undefined || port.extraInfo === "" ? null : (
+          <span>{port.extraInfo}</span>
+        )}
+        {port.reason === undefined || port.reason === "" ? null : <span>{port.reason}</span>}
+      </div>
+      <ScriptOutputList scripts={port.scripts ?? []} title="Port scripts" />
+    </div>
+  );
+}
+
+function ScriptOutputList({
+  scripts,
+  title,
+}: {
+  scripts: readonly ScanHistoryScriptOutput[];
+  title: string;
+}): React.JSX.Element | null {
+  if (scripts.length === 0) {
+    return null;
+  }
+  return (
+    <div className="history-script-output">
+      <strong>{title}</strong>
+      {scripts.map((script) => (
+        <div key={`${script.id ?? "script"}:${script.output ?? ""}`}>
+          <span>{script.id ?? "script"}</span>
+          {script.output === undefined || script.output === "" ? null : <pre>{script.output}</pre>}
+        </div>
+      ))}
     </div>
   );
 }
@@ -203,7 +233,11 @@ function hasDiagnostics(record: ScanHistoryRecord): boolean {
 
 function hostFindingLabel(host: ScanHistoryHost): string {
   const openPorts = host.ports.filter((port) => port.state === "open").length;
+  const scriptCount = hostScriptCount(host);
   if (openPorts === 0) {
+    if (scriptCount > 0) {
+      return `${scriptCount} script ${scriptCount === 1 ? "result" : "results"}`;
+    }
     return "No open ports";
   }
   return `${openPorts} open ${openPorts === 1 ? "port" : "ports"}`;
@@ -211,6 +245,17 @@ function hostFindingLabel(host: ScanHistoryHost): string {
 
 function hostHasOpenPorts(host: ScanHistoryHost): boolean {
   return host.ports.some((port) => port.state === "open");
+}
+
+function hostHasFindings(host: ScanHistoryHost): boolean {
+  return hostHasOpenPorts(host) || hostScriptCount(host) > 0;
+}
+
+function hostScriptCount(host: ScanHistoryHost): number {
+  return (
+    (host.scripts ?? []).length +
+    host.ports.reduce((total, port) => total + (port.scripts ?? []).length, 0)
+  );
 }
 
 function hasError(record: ScanHistoryRecord): boolean {
@@ -236,7 +281,7 @@ function filterHosts(hosts: readonly ScanHistoryHost[], filter: ResultFilter): S
     return hosts.filter((host) => host.state === "up");
   }
   if (filter === "findings") {
-    return hosts.filter((host) => host.ports.some((port) => port.state === "open"));
+    return hosts.filter(hostHasFindings);
   }
   if (filter === "open") {
     return hosts.filter((host) => host.ports.some((port) => port.state === "open"));
@@ -268,7 +313,11 @@ function searchHost(host: ScanHistoryHost, query: string): ScanHistoryHost[] {
 }
 
 function hostMatches(host: ScanHistoryHost, query: string): boolean {
-  return includesQuery(host.address, query) || includesQuery(host.hostname, query);
+  return (
+    includesQuery(host.address, query) ||
+    includesQuery(host.hostname, query) ||
+    scriptsMatch(host.scripts, query)
+  );
 }
 
 function portMatches(port: ScanHistoryPort, query: string): boolean {
@@ -280,7 +329,19 @@ function portMatches(port: ScanHistoryPort, query: string): boolean {
     includesQuery(port.product, query) ||
     includesQuery(port.version, query) ||
     includesQuery(port.extraInfo, query) ||
-    includesQuery(port.reason, query)
+    includesQuery(port.reason, query) ||
+    scriptsMatch(port.scripts, query)
+  );
+}
+
+function scriptsMatch(
+  scripts: readonly ScanHistoryScriptOutput[] | undefined,
+  query: string,
+): boolean {
+  return (
+    scripts?.some(
+      (script) => includesQuery(script.id, query) || includesQuery(script.output, query),
+    ) ?? false
   );
 }
 

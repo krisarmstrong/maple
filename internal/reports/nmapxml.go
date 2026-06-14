@@ -17,21 +17,28 @@ type Summary struct {
 }
 
 type Host struct {
-	Address  string `json:"address,omitempty"`
-	Hostname string `json:"hostname,omitempty"`
-	State    string `json:"state,omitempty"`
-	Ports    []Port `json:"ports,omitempty"`
+	Address  string         `json:"address,omitempty"`
+	Hostname string         `json:"hostname,omitempty"`
+	State    string         `json:"state,omitempty"`
+	Scripts  []ScriptOutput `json:"scripts,omitempty"`
+	Ports    []Port         `json:"ports,omitempty"`
 }
 
 type Port struct {
-	Protocol  string `json:"protocol,omitempty"`
-	ID        string `json:"id,omitempty"`
-	State     string `json:"state,omitempty"`
-	Reason    string `json:"reason,omitempty"`
-	Service   string `json:"service,omitempty"`
-	Product   string `json:"product,omitempty"`
-	Version   string `json:"version,omitempty"`
-	ExtraInfo string `json:"extraInfo,omitempty"`
+	Protocol  string         `json:"protocol,omitempty"`
+	ID        string         `json:"id,omitempty"`
+	State     string         `json:"state,omitempty"`
+	Reason    string         `json:"reason,omitempty"`
+	Service   string         `json:"service,omitempty"`
+	Product   string         `json:"product,omitempty"`
+	Version   string         `json:"version,omitempty"`
+	ExtraInfo string         `json:"extraInfo,omitempty"`
+	Scripts   []ScriptOutput `json:"scripts,omitempty"`
+}
+
+type ScriptOutput struct {
+	ID     string `json:"id,omitempty"`
+	Output string `json:"output,omitempty"`
 }
 
 func SummarizeNmapXML(input string) (Summary, error) {
@@ -61,6 +68,7 @@ func SummarizeNmapXML(input string) (Summary, error) {
 			Address:  host.primaryAddress(),
 			Hostname: host.primaryHostname(),
 			State:    host.Status.State,
+			Scripts:  host.HostScripts.scripts(),
 			Ports:    host.ports(),
 		})
 	}
@@ -92,10 +100,11 @@ func (n nmapRun) hostCount() int {
 }
 
 type nmapHost struct {
-	Status    nmapStatus    `xml:"status"`
-	Addresses []nmapAddress `xml:"address"`
-	Hostnames nmapHostnames `xml:"hostnames"`
-	Ports     nmapPorts     `xml:"ports"`
+	Status      nmapStatus    `xml:"status"`
+	Addresses   []nmapAddress `xml:"address"`
+	Hostnames   nmapHostnames `xml:"hostnames"`
+	Ports       nmapPorts     `xml:"ports"`
+	HostScripts nmapScripts   `xml:"hostscript"`
 }
 
 func (h nmapHost) primaryAddress() string {
@@ -128,6 +137,7 @@ func (h nmapHost) ports() []Port {
 			Product:   port.Service.Product,
 			Version:   port.Service.Version,
 			ExtraInfo: port.Service.ExtraInfo,
+			Scripts:   scriptOutputs(port.Scripts),
 		})
 	}
 	return ports
@@ -154,10 +164,11 @@ type nmapPorts struct {
 }
 
 type nmapPort struct {
-	Protocol string      `xml:"protocol,attr"`
-	ID       string      `xml:"portid,attr"`
-	State    nmapState   `xml:"state"`
-	Service  nmapService `xml:"service"`
+	Protocol string       `xml:"protocol,attr"`
+	ID       string       `xml:"portid,attr"`
+	State    nmapState    `xml:"state"`
+	Service  nmapService  `xml:"service"`
+	Scripts  []nmapScript `xml:"script"`
 }
 
 type nmapState struct {
@@ -170,6 +181,27 @@ type nmapService struct {
 	Product   string `xml:"product,attr"`
 	Version   string `xml:"version,attr"`
 	ExtraInfo string `xml:"extrainfo,attr"`
+}
+
+type nmapScripts struct {
+	Scripts []nmapScript `xml:"script"`
+}
+
+func (s nmapScripts) scripts() []ScriptOutput {
+	return scriptOutputs(s.Scripts)
+}
+
+func scriptOutputs(scripts []nmapScript) []ScriptOutput {
+	outputs := make([]ScriptOutput, 0, len(scripts))
+	for _, script := range scripts {
+		outputs = append(outputs, ScriptOutput{ID: script.ID, Output: script.Output})
+	}
+	return outputs
+}
+
+type nmapScript struct {
+	ID     string `xml:"id,attr"`
+	Output string `xml:"output,attr"`
 }
 
 type runStats struct {

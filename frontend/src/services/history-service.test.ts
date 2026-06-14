@@ -39,7 +39,16 @@ describe("history-service", () => {
               address: "127.0.0.1",
               hostname: "localhost",
               state: "up",
-              ports: [{ id: "22", protocol: "tcp", state: "open", service: "ssh" }],
+              scripts: [{ id: "nbstat", output: "NetBIOS name: LOCALHOST" }],
+              ports: [
+                {
+                  id: "22",
+                  protocol: "tcp",
+                  state: "open",
+                  service: "ssh",
+                  scripts: [{ id: "ssh-hostkey", output: "2048 SHA256:abc (RSA)" }],
+                },
+              ],
             },
           ],
         },
@@ -55,11 +64,15 @@ describe("history-service", () => {
     expect(records[0]?.elapsedTime).toBe("0.05");
     expect(records[0]?.diagnostics).toBe("Strange read error from 127.0.0.1");
     expect(records[0]?.targets).toEqual([{ value: "127.0.0.1", kind: "ip" }]);
+    expect(records[0]?.hosts[0]?.scripts).toEqual([
+      { id: "nbstat", output: "NetBIOS name: LOCALHOST" },
+    ]);
     expect(records[0]?.hosts[0]?.ports[0]).toEqual({
       id: "22",
       protocol: "tcp",
       state: "open",
       service: "ssh",
+      scripts: [{ id: "ssh-hostkey", output: "2048 SHA256:abc (RSA)" }],
     });
   });
 });

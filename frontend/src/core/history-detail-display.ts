@@ -5,7 +5,9 @@ export function hostKey(host: ScanHistoryHost): string {
 }
 
 export function portKey(port: ScanHistoryPort): string {
-  return [port.protocol, port.id, port.state, port.service].filter(isPresent).join("-");
+  return [port.protocol, port.id, port.state, port.service, scriptKey(port.scripts)]
+    .filter(isPresent)
+    .join("-");
 }
 
 export function hostStateLabel(state: string): string {
@@ -32,6 +34,12 @@ export function portName(port: ScanHistoryPort): string {
 
 export function productLabel(port: ScanHistoryPort): string {
   return [port.product, port.version].filter(isPresent).join(" ");
+}
+
+export function scriptKey(scripts: ScanHistoryPort["scripts"]): string {
+  return (
+    scripts?.map((script) => [script.id, script.output].filter(isPresent).join(":")).join("|") ?? ""
+  );
 }
 
 function isPresent(value: string | undefined): value is string {
