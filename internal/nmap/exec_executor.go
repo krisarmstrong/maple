@@ -24,7 +24,11 @@ func (ExecExecutor) Execute(
 			_ = os.Remove(command.XMLPath)
 		}()
 	}
-	cmd := exec.CommandContext(ctx, command.Path, command.Args...)
+	// command.Path resolves to a user-detected nmap binary and command.Args is
+	// an argv slice assembled solely by the internal/scanner builders, which
+	// validate every token (shell metacharacters and leading dashes rejected)
+	// and never interpolate a shell. No untrusted string reaches a shell here.
+	cmd := exec.CommandContext(ctx, command.Path, command.Args...) // #nosec G204 -- argv built and validated by internal/scanner; no shell
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return Result{}, err
@@ -259,7 +263,9 @@ func readXMLFile(path string) (string, error) {
 	if path == "" {
 		return "", nil
 	}
-	content, err := os.ReadFile(path)
+	// path is the manager-owned temp file created by os.CreateTemp in runner.go
+	// (createXMLOutputPath); it is never derived from user input.
+	content, err := os.ReadFile(path) // #nosec G304 -- internal os.CreateTemp path, not user-controlled
 	if err != nil {
 		return "", err
 	}

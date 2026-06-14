@@ -29,6 +29,10 @@ type Manager struct {
 	runner ScanRunner
 	mu     sync.Mutex
 	cancel context.CancelFunc
+	// generation identifies the currently claimed scan. context.CancelFunc
+	// values are not comparable in Go, so a monotonic token is used to verify
+	// that a releasing scan still owns the manager before clearing it.
+	generation uint64
 }
 
 func NewManager(runner ScanRunner) *Manager {
@@ -40,17 +44,18 @@ func (m *Manager) Start(
 	request scanner.ScanRequest,
 	emit EventEmitter,
 ) (scanner.ScanStarted, error) {
-	runCtx, cancel, err := m.claim(ctx)
+	runCtx, cancel, token, err := m.claim(ctx)
 	if err != nil {
 		return scanner.ScanStarted{}, err
 	}
 	started, err := m.started(request)
 	if err != nil {
-		m.release(cancel)
+		m.release(token)
+		cancel()
 		return scanner.ScanStarted{}, err
 	}
 	emit(EventScanStarted, started)
-	go m.run(runCtx, cancel, started.RunID, request, emit)
+	go m.run(runCtx, cancel, token, started.RunID, request, emit)
 	return started, nil
 }
 
@@ -70,15 +75,16 @@ func RuntimeEmitter(ctx context.Context) EventEmitter {
 	}
 }
 
-func (m *Manager) claim(ctx context.Context) (context.Context, context.CancelFunc, error) {
+func (m *Manager) claim(ctx context.Context) (context.Context, context.CancelFunc, uint64, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if m.cancel != nil {
-		return nil, nil, ErrScanRunning
+		return nil, nil, 0, ErrScanRunning
 	}
 	runCtx, cancel := context.WithCancel(ctx)
 	m.cancel = cancel
-	return runCtx, cancel, nil
+	m.generation++
+	return runCtx, cancel, m.generation, nil
 }
 
 func (m *Manager) started(request scanner.ScanRequest) (scanner.ScanStarted, error) {
@@ -89,26 +95,24 @@ func (m *Manager) started(request scanner.ScanRequest) (scanner.ScanStarted, err
 	return scanner.ScanStarted{RunID: fmt.Sprintf("scan-%d", time.Now().UTC().UnixNano()), Preview: preview}, nil
 }
 
-func (m *Manager) release(cancel context.CancelFunc) {
+func (m *Manager) release(token uint64) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if sameCancel(m.cancel, cancel) {
+	if m.cancel != nil && m.generation == token {
 		m.cancel = nil
 	}
-}
-
-func sameCancel(current context.CancelFunc, next context.CancelFunc) bool {
-	return current != nil && next != nil
 }
 
 func (m *Manager) run(
 	ctx context.Context,
 	cancel context.CancelFunc,
+	token uint64,
 	runID string,
 	request scanner.ScanRequest,
 	emit EventEmitter,
 ) {
-	defer m.release(cancel)
+	defer cancel()
+	defer m.release(token)
 	result, err := m.runner.Run(ctx, request, func(output scanner.ScanOutput) {
 		emit(EventScanOutput, scanner.ScanChunk{
 			RunID:  runID,

@@ -121,7 +121,7 @@ func writeHostDetails(builder *strings.Builder, host Host) {
 	}
 	for _, extra := range host.ExtraPorts {
 		builder.WriteString("- Other ports: ")
-		builder.WriteString(fmt.Sprintf("%d", extra.Count))
+		fmt.Fprintf(builder, "%d", extra.Count)
 		builder.WriteString(" ")
 		builder.WriteString(markdownCell(extra.State))
 		if extra.Reason != "" {
@@ -134,11 +134,16 @@ func writeHostDetails(builder *strings.Builder, host Host) {
 	writeTrace(builder, host)
 }
 
+// markdownCellReplacer escapes the GFM table delimiter and collapses any line
+// breaks (which would otherwise split a single cell across table rows) into
+// spaces. Scan field values such as service banners are untrusted target output.
+var markdownCellReplacer = strings.NewReplacer("|", "\\|", "\r\n", " ", "\n", " ", "\r", " ")
+
 func markdownCell(value string) string {
 	if value == "" {
 		return "-"
 	}
-	return strings.ReplaceAll(value, "|", "\\|")
+	return markdownCellReplacer.Replace(value)
 }
 
 func writePorts(builder *strings.Builder, host Host) {

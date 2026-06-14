@@ -125,7 +125,37 @@ func (s *HistoryStore) writeLocked(records []ScanRecord) error {
 		return err
 	}
 	data = append(data, '\n')
-	return os.WriteFile(s.path, data, historyFileMode)
+	return writeFileAtomic(s.path, data, historyFileMode)
+}
+
+// writeFileAtomic writes data to a sibling temp file and renames it into place
+// so a crash mid-write cannot truncate or corrupt the existing history file.
+func writeFileAtomic(path string, data []byte, mode os.FileMode) error {
+	dir := filepath.Dir(path)
+	temp, err := os.CreateTemp(dir, ".history-*.tmp")
+	if err != nil {
+		return err
+	}
+	tempPath := temp.Name()
+	defer func() {
+		_ = os.Remove(tempPath)
+	}()
+	if err := temp.Chmod(mode); err != nil {
+		_ = temp.Close()
+		return err
+	}
+	if _, err := temp.Write(data); err != nil {
+		_ = temp.Close()
+		return err
+	}
+	if err := temp.Sync(); err != nil {
+		_ = temp.Close()
+		return err
+	}
+	if err := temp.Close(); err != nil {
+		return err
+	}
+	return os.Rename(tempPath, path)
 }
 
 func (s *HistoryStore) readLocked() ([]ScanRecord, error) {

@@ -260,7 +260,7 @@ type nmapOS struct {
 func (o nmapOS) matches() []OSMatch {
 	matches := make([]OSMatch, 0, len(o.Matches))
 	for _, match := range o.Matches {
-		matches = append(matches, OSMatch{Name: match.Name, Accuracy: match.Accuracy})
+		matches = append(matches, OSMatch(match))
 	}
 	return matches
 }
@@ -277,12 +277,7 @@ type nmapTrace struct {
 func (t nmapTrace) hops() []TraceHop {
 	hops := make([]TraceHop, 0, len(t.Hops))
 	for _, hop := range t.Hops {
-		hops = append(hops, TraceHop{
-			TTL:      hop.TTL,
-			Address:  hop.Address,
-			Hostname: hop.Hostname,
-			RTT:      hop.RTT,
-		})
+		hops = append(hops, TraceHop(hop))
 	}
 	return hops
 }
