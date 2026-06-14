@@ -53,6 +53,7 @@ interface ScanWorkspaceProps {
 }
 
 type ScanPanel = "configure" | "options" | "scripts" | "output";
+type OptionGroup = "shape" | "ports" | "timing" | "evasion" | "behavior";
 
 export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps): React.JSX.Element {
   const [targets, setTargets] = useState("");
@@ -69,6 +70,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
   const [savedPresets, setSavedPresets] = useState<ScanPreset[]>(() => loadPresetsFromStorage());
   const [presetName, setPresetName] = useState("");
   const [activePanel, setActivePanel] = useState<ScanPanel>("configure");
+  const [activeOptionGroup, setActiveOptionGroup] = useState<OptionGroup>("shape");
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<string[]>([]);
   const [log, setLog] = useState<LogEntry[]>([]);
@@ -456,681 +458,733 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
               Add common Nmap switches as structured choices. Maple still builds argv directly.
             </p>
           </div>
+          <fieldset className="option-group-tabs">
+            <legend>Option groups</legend>
+            <OptionGroupTab
+              activeGroup={activeOptionGroup}
+              group="shape"
+              label="Scan shape"
+              onSelect={setActiveOptionGroup}
+            />
+            <OptionGroupTab
+              activeGroup={activeOptionGroup}
+              group="ports"
+              label="Ports"
+              onSelect={setActiveOptionGroup}
+            />
+            <OptionGroupTab
+              activeGroup={activeOptionGroup}
+              group="timing"
+              label="Timing"
+              onSelect={setActiveOptionGroup}
+            />
+            <OptionGroupTab
+              activeGroup={activeOptionGroup}
+              group="evasion"
+              label="Evasion"
+              onSelect={setActiveOptionGroup}
+            />
+            <OptionGroupTab
+              activeGroup={activeOptionGroup}
+              group="behavior"
+              label="Behavior"
+              onSelect={setActiveOptionGroup}
+            />
+          </fieldset>
           <div className="options-grid">
-            <h4 className="option-section-heading">Scan shape</h4>
-            <label>
-              <span>Scan technique</span>
-              <select
-                aria-label="Scan technique"
-                value={scanOptions.scanTechnique}
-                onChange={(event) => {
-                  const value = event.target.value;
-                  if (isScanTechnique(value)) {
-                    updateScanOptions((current) => ({ ...current, scanTechnique: value }));
-                  }
-                }}
-              >
-                {scanTechniques.map((technique) => (
-                  <option key={technique.value || "default"} value={technique.value}>
-                    {technique.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>Host discovery</span>
-              <select
-                aria-label="Host discovery"
-                value={scanOptions.discoveryMode}
-                onChange={(event) => {
-                  const value = event.target.value;
-                  if (isDiscoveryMode(value)) {
-                    updateScanOptions((current) => {
-                      const next = { ...current, discoveryMode: value };
-                      return value === "skip" ? clearDiscoveryProbes(next) : next;
-                    });
-                  }
-                }}
-              >
-                {discoveryModes.map((mode) => (
-                  <option key={mode.value || "default"} value={mode.value}>
-                    {mode.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>Timing</span>
-              <select
-                aria-label="Timing"
-                value={scanOptions.timingTemplate}
-                onChange={(event) => {
-                  const value = event.target.value;
-                  if (isTimingTemplate(value)) {
-                    updateScanOptions((current) => ({ ...current, timingTemplate: value }));
-                  }
-                }}
-              >
-                {timingTemplates.map((template) => (
-                  <option key={template.value || "default"} value={template.value}>
-                    {template.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>DNS</span>
-              <select
-                aria-label="DNS"
-                value={scanOptions.dnsMode}
-                onChange={(event) => {
-                  const value = event.target.value;
-                  if (isDNSMode(value)) {
-                    updateScanOptions((current) => ({ ...current, dnsMode: value }));
-                  }
-                }}
-              >
-                {dnsModes.map((mode) => (
-                  <option key={mode.value || "default"} value={mode.value}>
-                    {mode.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <h4 className="option-section-heading">Discovery probes</h4>
-            <label>
-              <span>TCP SYN probe ports</span>
-              <input
-                aria-label="TCP SYN probe ports"
-                disabled={scanOptions.discoveryMode === "skip"}
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    tcpSynProbes: event.target.value,
-                  }))
-                }
-                placeholder="22,80,443"
-                type="text"
-                value={scanOptions.tcpSynProbes}
-              />
-            </label>
-            <label>
-              <span>TCP ACK probe ports</span>
-              <input
-                aria-label="TCP ACK probe ports"
-                disabled={scanOptions.discoveryMode === "skip"}
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    tcpAckProbes: event.target.value,
-                  }))
-                }
-                placeholder="80,443"
-                type="text"
-                value={scanOptions.tcpAckProbes}
-              />
-            </label>
-            <label>
-              <span>UDP probe ports</span>
-              <input
-                aria-label="UDP probe ports"
-                disabled={scanOptions.discoveryMode === "skip"}
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    udpProbes: event.target.value,
-                  }))
-                }
-                placeholder="53,161"
-                type="text"
-                value={scanOptions.udpProbes}
-              />
-            </label>
-            <label>
-              <span>SCTP INIT probe ports</span>
-              <input
-                aria-label="SCTP INIT probe ports"
-                disabled={scanOptions.discoveryMode === "skip"}
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    sctpInitProbes: event.target.value,
-                  }))
-                }
-                placeholder="3868"
-                type="text"
-                value={scanOptions.sctpInitProbes}
-              />
-            </label>
-            <h4 className="option-section-heading">Target scope</h4>
-            <label>
-              <span>Target input file</span>
-              <input
-                aria-label="Target input file"
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    targetInputFile: event.target.value,
-                  }))
-                }
-                placeholder="/Users/krisarmstrong/targets.txt"
-                type="text"
-                value={scanOptions.targetInputFile}
-              />
-            </label>
-            <label>
-              <span>Exclude targets</span>
-              <input
-                aria-label="Exclude targets"
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    excludeTargets: event.target.value,
-                  }))
-                }
-                placeholder="192.168.1.10, scanme.nmap.org"
-                type="text"
-                value={scanOptions.excludeTargets}
-              />
-            </label>
-            <label>
-              <span>Exclude file</span>
-              <input
-                aria-label="Exclude file"
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    excludeFile: event.target.value,
-                  }))
-                }
-                placeholder="/Users/krisarmstrong/excludes.txt"
-                type="text"
-                value={scanOptions.excludeFile}
-              />
-            </label>
-            <label>
-              <span>Version detail</span>
-              <select
-                aria-label="Version detail"
-                value={scanOptions.versionMode}
-                onChange={(event) => {
-                  const value = event.target.value;
-                  if (isVersionMode(value)) {
+            {activeOptionGroup === "shape" ? (
+              <>
+                <h4 className="option-section-heading">Scan shape</h4>
+                <label>
+                  <span>Scan technique</span>
+                  <select
+                    aria-label="Scan technique"
+                    value={scanOptions.scanTechnique}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      if (isScanTechnique(value)) {
+                        updateScanOptions((current) => ({ ...current, scanTechnique: value }));
+                      }
+                    }}
+                  >
+                    {scanTechniques.map((technique) => (
+                      <option key={technique.value || "default"} value={technique.value}>
+                        {technique.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>Host discovery</span>
+                  <select
+                    aria-label="Host discovery"
+                    value={scanOptions.discoveryMode}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      if (isDiscoveryMode(value)) {
+                        updateScanOptions((current) => {
+                          const next = { ...current, discoveryMode: value };
+                          return value === "skip" ? clearDiscoveryProbes(next) : next;
+                        });
+                      }
+                    }}
+                  >
+                    {discoveryModes.map((mode) => (
+                      <option key={mode.value || "default"} value={mode.value}>
+                        {mode.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>Timing</span>
+                  <select
+                    aria-label="Timing"
+                    value={scanOptions.timingTemplate}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      if (isTimingTemplate(value)) {
+                        updateScanOptions((current) => ({ ...current, timingTemplate: value }));
+                      }
+                    }}
+                  >
+                    {timingTemplates.map((template) => (
+                      <option key={template.value || "default"} value={template.value}>
+                        {template.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>DNS</span>
+                  <select
+                    aria-label="DNS"
+                    value={scanOptions.dnsMode}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      if (isDNSMode(value)) {
+                        updateScanOptions((current) => ({ ...current, dnsMode: value }));
+                      }
+                    }}
+                  >
+                    {dnsModes.map((mode) => (
+                      <option key={mode.value || "default"} value={mode.value}>
+                        {mode.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <h4 className="option-section-heading">Discovery probes</h4>
+                <label>
+                  <span>TCP SYN probe ports</span>
+                  <input
+                    aria-label="TCP SYN probe ports"
+                    disabled={scanOptions.discoveryMode === "skip"}
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        tcpSynProbes: event.target.value,
+                      }))
+                    }
+                    placeholder="22,80,443"
+                    type="text"
+                    value={scanOptions.tcpSynProbes}
+                  />
+                </label>
+                <label>
+                  <span>TCP ACK probe ports</span>
+                  <input
+                    aria-label="TCP ACK probe ports"
+                    disabled={scanOptions.discoveryMode === "skip"}
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        tcpAckProbes: event.target.value,
+                      }))
+                    }
+                    placeholder="80,443"
+                    type="text"
+                    value={scanOptions.tcpAckProbes}
+                  />
+                </label>
+                <label>
+                  <span>UDP probe ports</span>
+                  <input
+                    aria-label="UDP probe ports"
+                    disabled={scanOptions.discoveryMode === "skip"}
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        udpProbes: event.target.value,
+                      }))
+                    }
+                    placeholder="53,161"
+                    type="text"
+                    value={scanOptions.udpProbes}
+                  />
+                </label>
+                <label>
+                  <span>SCTP INIT probe ports</span>
+                  <input
+                    aria-label="SCTP INIT probe ports"
+                    disabled={scanOptions.discoveryMode === "skip"}
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        sctpInitProbes: event.target.value,
+                      }))
+                    }
+                    placeholder="3868"
+                    type="text"
+                    value={scanOptions.sctpInitProbes}
+                  />
+                </label>
+                <h4 className="option-section-heading">Target scope</h4>
+                <label>
+                  <span>Target input file</span>
+                  <input
+                    aria-label="Target input file"
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        targetInputFile: event.target.value,
+                      }))
+                    }
+                    placeholder="/Users/krisarmstrong/targets.txt"
+                    type="text"
+                    value={scanOptions.targetInputFile}
+                  />
+                </label>
+                <label>
+                  <span>Exclude targets</span>
+                  <input
+                    aria-label="Exclude targets"
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        excludeTargets: event.target.value,
+                      }))
+                    }
+                    placeholder="192.168.1.10, scanme.nmap.org"
+                    type="text"
+                    value={scanOptions.excludeTargets}
+                  />
+                </label>
+                <label>
+                  <span>Exclude file</span>
+                  <input
+                    aria-label="Exclude file"
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        excludeFile: event.target.value,
+                      }))
+                    }
+                    placeholder="/Users/krisarmstrong/excludes.txt"
+                    type="text"
+                    value={scanOptions.excludeFile}
+                  />
+                </label>
+              </>
+            ) : null}
+            {activeOptionGroup === "ports" ? (
+              <>
+                <h4 className="option-section-heading">Ports and detail</h4>
+                <label>
+                  <span>Version detail</span>
+                  <select
+                    aria-label="Version detail"
+                    value={scanOptions.versionMode}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      if (isVersionMode(value)) {
+                        updateScanOptions((current) => ({
+                          ...current,
+                          serviceDetection: value === "" ? current.serviceDetection : true,
+                          versionMode: value,
+                        }));
+                      }
+                    }}
+                  >
+                    {versionModes.map((mode) => (
+                      <option key={mode.value || "default"} value={mode.value}>
+                        {mode.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>Output detail</span>
+                  <select
+                    aria-label="Output detail"
+                    value={scanOptions.verbosityMode}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      if (isVerbosityMode(value)) {
+                        updateScanOptions((current) => ({ ...current, verbosityMode: value }));
+                      }
+                    }}
+                  >
+                    {verbosityModes.map((mode) => (
+                      <option key={mode.value || "default"} value={mode.value}>
+                        {mode.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>Ports</span>
+                  <input
+                    disabled={scanOptions.allPorts}
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        ports: event.target.value,
+                        topPorts: 0,
+                      }))
+                    }
+                    placeholder="22,80,443 or T:80,U:53"
+                    type="text"
+                    value={scanOptions.ports}
+                  />
+                </label>
+                <label>
+                  <span>Top ports</span>
+                  <input
+                    disabled={scanOptions.allPorts || scanOptions.ports.trim() !== ""}
+                    min={1}
+                    max={1000}
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        topPorts: Number(event.target.value),
+                        ports: "",
+                      }))
+                    }
+                    placeholder="100"
+                    type="number"
+                    value={scanOptions.topPorts === 0 ? "" : scanOptions.topPorts}
+                  />
+                </label>
+                <label>
+                  <input
+                    checked={scanOptions.allPorts}
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        allPorts: event.target.checked,
+                        ports: "",
+                        topPorts: 0,
+                      }))
+                    }
+                    type="checkbox"
+                  />
+                  <span>All ports</span>
+                </label>
+              </>
+            ) : null}
+            {activeOptionGroup === "timing" ? (
+              <>
+                <h4 className="option-section-heading">Timing and performance</h4>
+                <label>
+                  <span>Minimum packet rate</span>
+                  <input
+                    min={1}
+                    max={1000000}
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        minRate: event.target.value === "" ? 0 : Number(event.target.value),
+                      }))
+                    }
+                    placeholder="500"
+                    type="number"
+                    value={scanOptions.minRate === 0 ? "" : scanOptions.minRate}
+                  />
+                </label>
+                <label>
+                  <span>Maximum retries</span>
+                  <input
+                    min={0}
+                    max={10}
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        maxRetries: event.target.value,
+                      }))
+                    }
+                    placeholder="2"
+                    type="number"
+                    value={scanOptions.maxRetries}
+                  />
+                </label>
+                <label>
+                  <span>Host timeout</span>
+                  <input
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        hostTimeout: event.target.value,
+                      }))
+                    }
+                    placeholder="30m"
+                    type="text"
+                    value={scanOptions.hostTimeout}
+                  />
+                </label>
+                <label>
+                  <span>Max RTT timeout</span>
+                  <input
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        maxRttTimeout: event.target.value,
+                      }))
+                    }
+                    placeholder="2s"
+                    type="text"
+                    value={scanOptions.maxRttTimeout}
+                  />
+                </label>
+                <label>
+                  <span>Stats interval</span>
+                  <input
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        statsEvery: event.target.value,
+                      }))
+                    }
+                    placeholder="10s"
+                    type="text"
+                    value={scanOptions.statsEvery}
+                  />
+                </label>
+                <label>
+                  <span>Scan delay</span>
+                  <input
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        scanDelay: event.target.value,
+                      }))
+                    }
+                    placeholder="50ms"
+                    type="text"
+                    value={scanOptions.scanDelay}
+                  />
+                </label>
+                <label>
+                  <span>Max scan delay</span>
+                  <input
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        maxScanDelay: event.target.value,
+                      }))
+                    }
+                    placeholder="1s"
+                    type="text"
+                    value={scanOptions.maxScanDelay}
+                  />
+                </label>
+                <label>
+                  <span>Minimum parallelism</span>
+                  <input
+                    max="1000"
+                    min="1"
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        minParallelism: event.target.value === "" ? 0 : Number(event.target.value),
+                      }))
+                    }
+                    placeholder="4"
+                    type="number"
+                    value={scanOptions.minParallelism === 0 ? "" : scanOptions.minParallelism}
+                  />
+                </label>
+                <label>
+                  <span>Maximum parallelism</span>
+                  <input
+                    max="1000"
+                    min="1"
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        maxParallelism: event.target.value === "" ? 0 : Number(event.target.value),
+                      }))
+                    }
+                    placeholder="64"
+                    type="number"
+                    value={scanOptions.maxParallelism === 0 ? "" : scanOptions.maxParallelism}
+                  />
+                </label>
+              </>
+            ) : null}
+            {activeOptionGroup === "evasion" ? (
+              <>
+                <h4 className="option-section-heading">Packet shaping</h4>
+                <label>
+                  <span>Custom MTU</span>
+                  <input
+                    disabled={scanOptions.fragmentPackets}
+                    max="1500"
+                    min="8"
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        mtu: event.target.value === "" ? 0 : Number(event.target.value),
+                      }))
+                    }
+                    placeholder="24"
+                    step="8"
+                    type="number"
+                    value={scanOptions.mtu === 0 ? "" : scanOptions.mtu}
+                  />
+                </label>
+                <label>
+                  <input
+                    checked={scanOptions.fragmentPackets}
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        fragmentPackets: event.target.checked,
+                        mtu: event.target.checked ? 0 : current.mtu,
+                      }))
+                    }
+                    type="checkbox"
+                  />
+                  <span>Fragment packets</span>
+                </label>
+                <label>
+                  <span>Data length</span>
+                  <input
+                    max="4096"
+                    min="1"
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        dataLength: event.target.value === "" ? 0 : Number(event.target.value),
+                      }))
+                    }
+                    placeholder="24"
+                    type="number"
+                    value={scanOptions.dataLength === 0 ? "" : scanOptions.dataLength}
+                  />
+                </label>
+                <label>
+                  <span>Source port</span>
+                  <input
+                    max="65535"
+                    min="1"
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        sourcePort: event.target.value,
+                      }))
+                    }
+                    placeholder="53"
+                    type="number"
+                    value={scanOptions.sourcePort}
+                  />
+                </label>
+                <h4 className="option-section-heading">Identity and evasion</h4>
+                <label>
+                  <span>Decoys</span>
+                  <input
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        decoys: event.target.value,
+                      }))
+                    }
+                    placeholder="ME,198.51.100.10,RND:2"
+                    type="text"
+                    value={scanOptions.decoys}
+                  />
+                </label>
+                <label>
+                  <span>Source address</span>
+                  <input
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        sourceAddress: event.target.value,
+                      }))
+                    }
+                    placeholder="192.0.2.20"
+                    type="text"
+                    value={scanOptions.sourceAddress}
+                  />
+                </label>
+                <label>
+                  <span>Network interface</span>
+                  <input
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        networkInterface: event.target.value,
+                      }))
+                    }
+                    placeholder="en0"
+                    type="text"
+                    value={scanOptions.networkInterface}
+                  />
+                </label>
+                <label>
+                  <span>Spoof MAC</span>
+                  <input
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        spoofMac: event.target.value,
+                      }))
+                    }
+                    placeholder="0 or 02:11:22:33:44:55"
+                    type="text"
+                    value={scanOptions.spoofMac}
+                  />
+                </label>
+              </>
+            ) : null}
+          </div>
+          {activeOptionGroup === "behavior" ? (
+            <fieldset className="option-toggle-grid">
+              <legend>Scan behavior</legend>
+              <label>
+                <input
+                  checked={scanOptions.icmpEchoProbe}
+                  disabled={scanOptions.discoveryMode === "skip"}
+                  onChange={(event) =>
                     updateScanOptions((current) => ({
                       ...current,
-                      serviceDetection: value === "" ? current.serviceDetection : true,
-                      versionMode: value,
-                    }));
+                      icmpEchoProbe: event.target.checked,
+                    }))
                   }
-                }}
-              >
-                {versionModes.map((mode) => (
-                  <option key={mode.value || "default"} value={mode.value}>
-                    {mode.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>Output detail</span>
-              <select
-                aria-label="Output detail"
-                value={scanOptions.verbosityMode}
-                onChange={(event) => {
-                  const value = event.target.value;
-                  if (isVerbosityMode(value)) {
-                    updateScanOptions((current) => ({ ...current, verbosityMode: value }));
+                  type="checkbox"
+                />
+                <span>ICMP echo probe</span>
+              </label>
+              <label>
+                <input
+                  checked={scanOptions.icmpTimestamp}
+                  disabled={scanOptions.discoveryMode === "skip"}
+                  onChange={(event) =>
+                    updateScanOptions((current) => ({
+                      ...current,
+                      icmpTimestamp: event.target.checked,
+                    }))
                   }
-                }}
-              >
-                {verbosityModes.map((mode) => (
-                  <option key={mode.value || "default"} value={mode.value}>
-                    {mode.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <h4 className="option-section-heading">Ports</h4>
-            <label>
-              <span>Ports</span>
-              <input
-                disabled={scanOptions.allPorts}
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    ports: event.target.value,
-                    topPorts: 0,
-                  }))
-                }
-                placeholder="22,80,443 or T:80,U:53"
-                type="text"
-                value={scanOptions.ports}
-              />
-            </label>
-            <label>
-              <span>Top ports</span>
-              <input
-                disabled={scanOptions.allPorts || scanOptions.ports.trim() !== ""}
-                min={1}
-                max={1000}
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    topPorts: Number(event.target.value),
-                    ports: "",
-                  }))
-                }
-                placeholder="100"
-                type="number"
-                value={scanOptions.topPorts === 0 ? "" : scanOptions.topPorts}
-              />
-            </label>
-            <h4 className="option-section-heading">Performance</h4>
-            <label>
-              <span>Minimum packet rate</span>
-              <input
-                min={1}
-                max={1000000}
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    minRate: event.target.value === "" ? 0 : Number(event.target.value),
-                  }))
-                }
-                placeholder="500"
-                type="number"
-                value={scanOptions.minRate === 0 ? "" : scanOptions.minRate}
-              />
-            </label>
-            <label>
-              <span>Maximum retries</span>
-              <input
-                min={0}
-                max={10}
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    maxRetries: event.target.value,
-                  }))
-                }
-                placeholder="2"
-                type="number"
-                value={scanOptions.maxRetries}
-              />
-            </label>
-            <label>
-              <span>Host timeout</span>
-              <input
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    hostTimeout: event.target.value,
-                  }))
-                }
-                placeholder="30m"
-                type="text"
-                value={scanOptions.hostTimeout}
-              />
-            </label>
-            <label>
-              <span>Max RTT timeout</span>
-              <input
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    maxRttTimeout: event.target.value,
-                  }))
-                }
-                placeholder="2s"
-                type="text"
-                value={scanOptions.maxRttTimeout}
-              />
-            </label>
-            <label>
-              <span>Stats interval</span>
-              <input
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    statsEvery: event.target.value,
-                  }))
-                }
-                placeholder="10s"
-                type="text"
-                value={scanOptions.statsEvery}
-              />
-            </label>
-            <label>
-              <span>Scan delay</span>
-              <input
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    scanDelay: event.target.value,
-                  }))
-                }
-                placeholder="50ms"
-                type="text"
-                value={scanOptions.scanDelay}
-              />
-            </label>
-            <label>
-              <span>Max scan delay</span>
-              <input
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    maxScanDelay: event.target.value,
-                  }))
-                }
-                placeholder="1s"
-                type="text"
-                value={scanOptions.maxScanDelay}
-              />
-            </label>
-            <label>
-              <span>Minimum parallelism</span>
-              <input
-                max="1000"
-                min="1"
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    minParallelism: event.target.value === "" ? 0 : Number(event.target.value),
-                  }))
-                }
-                placeholder="4"
-                type="number"
-                value={scanOptions.minParallelism === 0 ? "" : scanOptions.minParallelism}
-              />
-            </label>
-            <label>
-              <span>Maximum parallelism</span>
-              <input
-                max="1000"
-                min="1"
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    maxParallelism: event.target.value === "" ? 0 : Number(event.target.value),
-                  }))
-                }
-                placeholder="64"
-                type="number"
-                value={scanOptions.maxParallelism === 0 ? "" : scanOptions.maxParallelism}
-              />
-            </label>
-            <label>
-              <span>Custom MTU</span>
-              <input
-                disabled={scanOptions.fragmentPackets}
-                max="1500"
-                min="8"
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    mtu: event.target.value === "" ? 0 : Number(event.target.value),
-                  }))
-                }
-                placeholder="24"
-                step="8"
-                type="number"
-                value={scanOptions.mtu === 0 ? "" : scanOptions.mtu}
-              />
-            </label>
-            <label>
-              <span>Data length</span>
-              <input
-                max="4096"
-                min="1"
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    dataLength: event.target.value === "" ? 0 : Number(event.target.value),
-                  }))
-                }
-                placeholder="24"
-                type="number"
-                value={scanOptions.dataLength === 0 ? "" : scanOptions.dataLength}
-              />
-            </label>
-            <label>
-              <span>Source port</span>
-              <input
-                max="65535"
-                min="1"
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    sourcePort: event.target.value,
-                  }))
-                }
-                placeholder="53"
-                type="number"
-                value={scanOptions.sourcePort}
-              />
-            </label>
-            <h4 className="option-section-heading">Identity and evasion</h4>
-            <label>
-              <span>Decoys</span>
-              <input
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    decoys: event.target.value,
-                  }))
-                }
-                placeholder="ME,198.51.100.10,RND:2"
-                type="text"
-                value={scanOptions.decoys}
-              />
-            </label>
-            <label>
-              <span>Source address</span>
-              <input
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    sourceAddress: event.target.value,
-                  }))
-                }
-                placeholder="192.0.2.20"
-                type="text"
-                value={scanOptions.sourceAddress}
-              />
-            </label>
-            <label>
-              <span>Network interface</span>
-              <input
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    networkInterface: event.target.value,
-                  }))
-                }
-                placeholder="en0"
-                type="text"
-                value={scanOptions.networkInterface}
-              />
-            </label>
-            <label>
-              <span>Spoof MAC</span>
-              <input
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    spoofMac: event.target.value,
-                  }))
-                }
-                placeholder="0 or 02:11:22:33:44:55"
-                type="text"
-                value={scanOptions.spoofMac}
-              />
-            </label>
-          </div>
-          <fieldset className="option-toggle-grid">
-            <legend>Scan behavior</legend>
-            <label>
-              <input
-                checked={scanOptions.icmpEchoProbe}
-                disabled={scanOptions.discoveryMode === "skip"}
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    icmpEchoProbe: event.target.checked,
-                  }))
-                }
-                type="checkbox"
-              />
-              <span>ICMP echo probe</span>
-            </label>
-            <label>
-              <input
-                checked={scanOptions.icmpTimestamp}
-                disabled={scanOptions.discoveryMode === "skip"}
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    icmpTimestamp: event.target.checked,
-                  }))
-                }
-                type="checkbox"
-              />
-              <span>ICMP timestamp probe</span>
-            </label>
-            <label>
-              <input
-                checked={scanOptions.icmpNetmask}
-                disabled={scanOptions.discoveryMode === "skip"}
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    icmpNetmask: event.target.checked,
-                  }))
-                }
-                type="checkbox"
-              />
-              <span>ICMP netmask probe</span>
-            </label>
-            <label>
-              <input
-                checked={scanOptions.allPorts}
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    allPorts: event.target.checked,
-                    ports: "",
-                    topPorts: 0,
-                  }))
-                }
-                type="checkbox"
-              />
-              <span>All ports</span>
-            </label>
-            <label>
-              <input
-                checked={scanOptions.serviceDetection}
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    serviceDetection: event.target.checked,
-                    versionMode: event.target.checked ? current.versionMode : "",
-                  }))
-                }
-                type="checkbox"
-              />
-              <span>Service detection</span>
-            </label>
-            <label>
-              <input
-                checked={scanOptions.ipv6}
-                onChange={(event) =>
-                  updateScanOptions((current) => ({ ...current, ipv6: event.target.checked }))
-                }
-                type="checkbox"
-              />
-              <span>IPv6</span>
-            </label>
-            <label>
-              <input
-                checked={scanOptions.osDetection}
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    osDetection: event.target.checked,
-                  }))
-                }
-                type="checkbox"
-              />
-              <span>OS detection</span>
-            </label>
-            <label>
-              <input
-                checked={scanOptions.traceroute}
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    traceroute: event.target.checked,
-                  }))
-                }
-                type="checkbox"
-              />
-              <span>Traceroute</span>
-            </label>
-            <label>
-              <input
-                checked={scanOptions.reason}
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    reason: event.target.checked,
-                  }))
-                }
-                type="checkbox"
-              />
-              <span>Show reasons</span>
-            </label>
-            <label>
-              <input
-                checked={scanOptions.openOnly}
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    openOnly: event.target.checked,
-                  }))
-                }
-                type="checkbox"
-              />
-              <span>Only open ports</span>
-            </label>
-            <label>
-              <input
-                checked={scanOptions.fragmentPackets}
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    fragmentPackets: event.target.checked,
-                    mtu: event.target.checked ? 0 : current.mtu,
-                  }))
-                }
-                type="checkbox"
-              />
-              <span>Fragment packets</span>
-            </label>
-            <label>
-              <input
-                checked={scanOptions.packetTrace}
-                onChange={(event) =>
-                  updateScanOptions((current) => ({
-                    ...current,
-                    packetTrace: event.target.checked,
-                  }))
-                }
-                type="checkbox"
-              />
-              <span>Packet trace</span>
-            </label>
-          </fieldset>
+                  type="checkbox"
+                />
+                <span>ICMP timestamp probe</span>
+              </label>
+              <label>
+                <input
+                  checked={scanOptions.icmpNetmask}
+                  disabled={scanOptions.discoveryMode === "skip"}
+                  onChange={(event) =>
+                    updateScanOptions((current) => ({
+                      ...current,
+                      icmpNetmask: event.target.checked,
+                    }))
+                  }
+                  type="checkbox"
+                />
+                <span>ICMP netmask probe</span>
+              </label>
+              <label>
+                <input
+                  checked={scanOptions.serviceDetection}
+                  onChange={(event) =>
+                    updateScanOptions((current) => ({
+                      ...current,
+                      serviceDetection: event.target.checked,
+                      versionMode: event.target.checked ? current.versionMode : "",
+                    }))
+                  }
+                  type="checkbox"
+                />
+                <span>Service detection</span>
+              </label>
+              <label>
+                <input
+                  checked={scanOptions.ipv6}
+                  onChange={(event) =>
+                    updateScanOptions((current) => ({ ...current, ipv6: event.target.checked }))
+                  }
+                  type="checkbox"
+                />
+                <span>IPv6</span>
+              </label>
+              <label>
+                <input
+                  checked={scanOptions.osDetection}
+                  onChange={(event) =>
+                    updateScanOptions((current) => ({
+                      ...current,
+                      osDetection: event.target.checked,
+                    }))
+                  }
+                  type="checkbox"
+                />
+                <span>OS detection</span>
+              </label>
+              <label>
+                <input
+                  checked={scanOptions.traceroute}
+                  onChange={(event) =>
+                    updateScanOptions((current) => ({
+                      ...current,
+                      traceroute: event.target.checked,
+                    }))
+                  }
+                  type="checkbox"
+                />
+                <span>Traceroute</span>
+              </label>
+              <label>
+                <input
+                  checked={scanOptions.reason}
+                  onChange={(event) =>
+                    updateScanOptions((current) => ({
+                      ...current,
+                      reason: event.target.checked,
+                    }))
+                  }
+                  type="checkbox"
+                />
+                <span>Show reasons</span>
+              </label>
+              <label>
+                <input
+                  checked={scanOptions.openOnly}
+                  onChange={(event) =>
+                    updateScanOptions((current) => ({
+                      ...current,
+                      openOnly: event.target.checked,
+                    }))
+                  }
+                  type="checkbox"
+                />
+                <span>Only open ports</span>
+              </label>
+              <label>
+                <input
+                  checked={scanOptions.packetTrace}
+                  onChange={(event) =>
+                    updateScanOptions((current) => ({
+                      ...current,
+                      packetTrace: event.target.checked,
+                    }))
+                  }
+                  type="checkbox"
+                />
+                <span>Packet trace</span>
+              </label>
+            </fieldset>
+          ) : null}
           {scanOptions.osDetection ? (
             <p className="option-warning">
               OS detection often requires elevated privileges on macOS, Linux, and Windows.
@@ -1562,6 +1616,31 @@ function ScanPanelButton({
       className="scan-panel-tab"
       type="button"
       onClick={() => onSelect(id)}
+    >
+      {label}
+    </button>
+  );
+}
+
+interface OptionGroupTabProps {
+  activeGroup: OptionGroup;
+  group: OptionGroup;
+  label: string;
+  onSelect: (group: OptionGroup) => void;
+}
+
+function OptionGroupTab({
+  activeGroup,
+  group,
+  label,
+  onSelect,
+}: OptionGroupTabProps): React.JSX.Element {
+  return (
+    <button
+      aria-pressed={activeGroup === group}
+      className="option-group-tab"
+      type="button"
+      onClick={() => onSelect(group)}
     >
       {label}
     </button>

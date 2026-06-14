@@ -624,6 +624,25 @@ textarea {
   color: var(--text);
 }
 
+.option-group-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+}
+
+.option-group-tab {
+  background: var(--panel-subtle);
+  border-color: var(--border);
+  min-height: var(--size-chip-min);
+  padding: var(--space-5) var(--space-8);
+}
+
+.option-group-tab[aria-pressed="true"] {
+  background: var(--panel);
+  border-color: var(--accent);
+  color: var(--text);
+}
+
 .scan-panel {
   display: grid;
   gap: var(--space-10);

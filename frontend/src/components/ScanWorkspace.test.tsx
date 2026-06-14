@@ -312,20 +312,17 @@ describe("ScanWorkspace", () => {
     fireEvent.change(screen.getByLabelText("SCTP INIT probe ports"), {
       target: { value: "3868" },
     });
-    fireEvent.click(screen.getByRole("checkbox", { name: "ICMP echo probe" }));
-    fireEvent.click(screen.getByRole("checkbox", { name: "ICMP timestamp probe" }));
-    fireEvent.click(screen.getByRole("checkbox", { name: "ICMP netmask probe" }));
     fireEvent.change(screen.getByLabelText("Timing"), { target: { value: "T4" } });
-    fireEvent.click(screen.getByRole("checkbox", { name: "Service detection" }));
-    fireEvent.change(screen.getByLabelText("Version detail"), { target: { value: "all" } });
-    fireEvent.change(screen.getByLabelText("Ports"), { target: { value: "22,80,443" } });
-    fireEvent.click(screen.getByRole("checkbox", { name: "IPv6" }));
-    fireEvent.click(screen.getByRole("checkbox", { name: "OS detection" }));
-    fireEvent.click(screen.getByRole("checkbox", { name: "Traceroute" }));
     fireEvent.change(screen.getByLabelText("DNS"), { target: { value: "skip" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "Ports" }));
+    fireEvent.change(screen.getByLabelText("Version detail"), { target: { value: "all" } });
+    fireEvent.change(screen.getByRole("textbox", { name: "Ports" }), {
+      target: { value: "22,80,443" },
+    });
     fireEvent.change(screen.getByLabelText("Output detail"), { target: { value: "debug" } });
-    fireEvent.click(screen.getByRole("checkbox", { name: "Show reasons" }));
-    fireEvent.click(screen.getByRole("checkbox", { name: "Only open ports" }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Timing" }));
     fireEvent.change(screen.getByLabelText("Minimum packet rate"), { target: { value: "500" } });
     fireEvent.change(screen.getByLabelText("Maximum retries"), { target: { value: "2" } });
     fireEvent.change(screen.getByLabelText("Host timeout"), { target: { value: "30m" } });
@@ -335,7 +332,8 @@ describe("ScanWorkspace", () => {
     fireEvent.change(screen.getByLabelText("Max scan delay"), { target: { value: "1s" } });
     fireEvent.change(screen.getByLabelText("Minimum parallelism"), { target: { value: "4" } });
     fireEvent.change(screen.getByLabelText("Maximum parallelism"), { target: { value: "64" } });
-    fireEvent.click(screen.getByRole("checkbox", { name: "Fragment packets" }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Evasion" }));
     fireEvent.change(screen.getByLabelText("Data length"), { target: { value: "24" } });
     fireEvent.change(screen.getByLabelText("Source port"), { target: { value: "53" } });
     fireEvent.change(screen.getByLabelText("Decoys"), {
@@ -346,6 +344,18 @@ describe("ScanWorkspace", () => {
     fireEvent.change(screen.getByLabelText("Spoof MAC"), {
       target: { value: "02:11:22:33:44:55" },
     });
+
+    fireEvent.click(screen.getByRole("checkbox", { name: "Fragment packets" }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Behavior" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "ICMP echo probe" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "ICMP timestamp probe" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "ICMP netmask probe" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "IPv6" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "OS detection" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Traceroute" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Show reasons" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Only open ports" }));
     fireEvent.click(screen.getByRole("checkbox", { name: "Packet trace" }));
     fireEvent.click(screen.getByRole("button", { name: "Preview" }));
 
@@ -406,6 +416,30 @@ describe("ScanWorkspace", () => {
     ).toBeInTheDocument();
   }, 30_000);
 
+  it("preserves option values when switching option groups", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Options" }));
+    await userEvent.selectOptions(screen.getByLabelText("Scan technique"), "udp");
+
+    await userEvent.click(screen.getByRole("button", { name: "Ports" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Ports" }), {
+      target: { value: "22,443" },
+    });
+
+    await userEvent.click(screen.getByRole("button", { name: "Timing" }));
+    fireEvent.change(screen.getByLabelText("Minimum packet rate"), { target: { value: "250" } });
+
+    await userEvent.click(screen.getByRole("button", { name: "Scan shape" }));
+    expect(screen.getByLabelText("Scan technique")).toHaveValue("udp");
+
+    await userEvent.click(screen.getByRole("button", { name: "Ports" }));
+    expect(screen.getByRole("textbox", { name: "Ports" })).toHaveValue("22,443");
+
+    await userEvent.click(screen.getByRole("button", { name: "Timing" }));
+    expect(screen.getByLabelText("Minimum packet rate")).toHaveValue(250);
+  });
+
   it("validates custom MTU and clears it when packet fragmentation is selected", async () => {
     previewScanCommandMock.mockResolvedValue([
       "nmap",
@@ -420,6 +454,7 @@ describe("ScanWorkspace", () => {
 
     fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
     await userEvent.click(screen.getByRole("button", { name: "Options" }));
+    await userEvent.click(screen.getByRole("button", { name: "Evasion" }));
     const mtuInput = screen.getByLabelText("Custom MTU");
     await userEvent.type(mtuInput, "9");
     await userEvent.click(screen.getByRole("button", { name: "Preview" }));
@@ -586,6 +621,7 @@ describe("ScanWorkspace", () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
     await userEvent.click(screen.getByRole("button", { name: "Options" }));
+    await userEvent.click(screen.getByRole("button", { name: "Behavior" }));
     expect(
       screen.queryByText(
         "OS detection often requires elevated privileges on macOS, Linux, and Windows.",
