@@ -49,6 +49,18 @@ Required smoke coverage:
 - Raw XML, Full JSON, and Markdown Report exports.
 - Environment and Help guidance that Maple does not bundle Nmap, Npcap, Ncat, Ndiff, or Nping.
 
+## CI Release Gate
+
+The GitHub release workflow builds unsigned artifacts for:
+
+- macOS ARM: Wails `darwin/arm64`.
+- Linux x86: Wails `linux/amd64`, `.deb`, and `.rpm`.
+- Linux ARM: Wails `linux/arm64`, `.deb`, and `.rpm`.
+- Windows x86: Wails `windows/amd64` with NSIS enabled.
+- Windows ARM: Wails `windows/arm64` with NSIS enabled.
+
+Manual workflow runs keep artifacts on the run. Tag builds publish the artifacts to a GitHub Release. Signing and notarization are intentionally not part of this gate until the required platform credentials are available.
+
 ## Release Constraints
 
 - Keep Wails v2.12.0.

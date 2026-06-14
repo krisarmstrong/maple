@@ -65,7 +65,7 @@ Recommended scan:
 
 Prerequisites:
 
-- Install Maple.
+- Install Maple from the Windows CI artifact for the host architecture.
 - Install Nmap separately from the Nmap Project.
 - Install Npcap separately if the selected Nmap scan mode requires it.
 
@@ -75,13 +75,13 @@ Expected:
 - Tool detection finds user-installed `nmap.exe` when it is on `PATH`.
 - Missing Nmap is reported cleanly.
 - Target Builder, DNS resolver validation, version intensity, preview argv tokens, scan/history/details, and all three export formats pass against a safe local target such as `127.0.0.1`.
-- The macOS `make package-windows-dryrun` command is documented as the local package command-generation gate; final smoke happens on Windows.
+- The Windows CI artifact is unsigned unless a signing certificate has been configured.
 
 ## Linux Smoke
 
 Prerequisites:
 
-- Install Maple.
+- Install Maple from the Linux `.deb`, `.rpm`, or compressed Wails CI artifact for the host architecture.
 - Install Nmap separately through the distribution package manager or the Nmap Project packages.
 
 Expected:
@@ -90,7 +90,7 @@ Expected:
 - Tool detection finds user-installed `nmap` when it is on `PATH`.
 - Missing Nmap is reported cleanly.
 - Target Builder, DNS resolver validation, version intensity, preview argv tokens, scan/history/details, and all three export formats pass against a safe local target such as `127.0.0.1`.
-- The macOS `make package-linux-dryrun` command records Wails' cross-compilation limitation; final smoke happens on Linux.
+- The Linux `.deb` and `.rpm` packages recommend Nmap but do not bundle it.
 
 ## Invariants
 

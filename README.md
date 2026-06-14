@@ -56,13 +56,14 @@ Platform package targets:
 make package-macos
 make package-windows
 make package-linux
+make package-linux-installers
 make package-dryrun
 ```
 
 Run the smoke checklist in `docs/SMOKE_TEST.md` on each target operating system before publishing an artifact.
-Use `make package-dryrun` locally to validate macOS and Windows package command generation; Linux packaging must be verified on a Linux host because Wails does not cross-compile Linux packages from macOS.
+Use `make package-dryrun` locally to validate package command generation. Linux packaging must be verified on a Linux host because Wails does not cross-compile Linux packages from macOS.
 
-See `docs/RELEASE_CANDIDATE.md` and `docs/CROSS_PLATFORM.md` for current release and packaging notes. The validated local macOS path today is `make build`; Wails package mode needs target-host verification before release.
+The GitHub release workflow builds unsigned artifacts for macOS ARM, Linux ARM/x86, and Windows ARM/x86. See `docs/RELEASE_CANDIDATE.md` and `docs/CROSS_PLATFORM.md` for current release and packaging notes.
 
 ## Platform Notes
 

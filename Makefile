@@ -2,11 +2,18 @@ GOCACHE ?= $(CURDIR)/.cache/go-build
 GO_PACKAGES := $(shell GOCACHE=$(GOCACHE) go list ./... | grep -v '/frontend/node_modules/')
 GO_BUILD_TAGS ?= desktop,wv2runtime.download,production
 GO_LDFLAGS ?= -w -s -extldflags '-framework UniformTypeIdentifiers'
-WAILS ?= /Users/krisarmstrong/go/bin/wails
+WAILS ?= wails
 WAILS_LDFLAGS ?= -w -s
 WAILS_BUILD_FLAGS ?= -clean -trimpath -tags "$(GO_BUILD_TAGS)"
+PACKAGE_PLATFORM ?= darwin/arm64
+PACKAGE_LDFLAGS ?= $(WAILS_LDFLAGS)
+WAILS_PLATFORM_FLAGS ?=
+PACKAGE_VERSION ?= 0.1.0
+PACKAGE_RELEASE ?= 1
+PACKAGE_ARCH ?= amd64
+LINUX_PACKAGE_PLATFORM ?= linux/$(PACKAGE_ARCH)
 
-.PHONY: build dev fmt fmt-check lint package-all package-dryrun package-linux package-linux-dryrun package-macos package-macos-dryrun package-windows package-windows-dryrun rc-check security test test-e2e test-go test-ui tidy
+.PHONY: build dev fmt fmt-check lint package-all package-dryrun package-linux package-linux-deb package-linux-dryrun package-linux-installers package-linux-rpm package-macos package-macos-dryrun package-platform package-windows package-windows-dryrun rc-check security test test-e2e test-go test-ui tidy
 
 build:
 	npm --prefix frontend run build
@@ -45,6 +52,9 @@ test-e2e:
 tidy:
 	GOCACHE=$(GOCACHE) go mod tidy
 
+package-platform:
+	GOCACHE=$(GOCACHE) $(WAILS) build $(WAILS_BUILD_FLAGS) -ldflags "$(PACKAGE_LDFLAGS)" -platform $(PACKAGE_PLATFORM) $(WAILS_PLATFORM_FLAGS)
+
 package-macos:
 	GOCACHE=$(GOCACHE) $(WAILS) build $(WAILS_BUILD_FLAGS) -ldflags "$(GO_LDFLAGS)" -platform darwin/arm64
 
@@ -58,7 +68,17 @@ package-windows-dryrun:
 	GOCACHE=$(GOCACHE) $(WAILS) build -dryrun $(WAILS_BUILD_FLAGS) -ldflags "$(WAILS_LDFLAGS)" -platform windows/amd64 -webview2 download
 
 package-linux:
-	GOCACHE=$(GOCACHE) $(WAILS) build $(WAILS_BUILD_FLAGS) -ldflags "$(WAILS_LDFLAGS)" -platform linux/amd64
+	GOCACHE=$(GOCACHE) $(WAILS) build $(WAILS_BUILD_FLAGS) -ldflags "$(WAILS_LDFLAGS)" -platform $(LINUX_PACKAGE_PLATFORM)
+
+package-linux-deb:
+	mkdir -p dist
+	MAPLE_PACKAGE_ARCH=$(PACKAGE_ARCH) MAPLE_PACKAGE_VERSION=$(PACKAGE_VERSION) MAPLE_PACKAGE_RELEASE=$(PACKAGE_RELEASE) nfpm package --config packaging/linux/nfpm.yaml --packager deb --target dist
+
+package-linux-rpm:
+	mkdir -p dist
+	MAPLE_PACKAGE_ARCH=$(PACKAGE_ARCH) MAPLE_PACKAGE_VERSION=$(PACKAGE_VERSION) MAPLE_PACKAGE_RELEASE=$(PACKAGE_RELEASE) nfpm package --config packaging/linux/nfpm.yaml --packager rpm --target dist
+
+package-linux-installers: package-linux package-linux-deb package-linux-rpm
 
 package-linux-dryrun:
 	GOCACHE=$(GOCACHE) $(WAILS) build -dryrun $(WAILS_BUILD_FLAGS) -ldflags "$(WAILS_LDFLAGS)" -platform linux/amd64

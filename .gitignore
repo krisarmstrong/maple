@@ -1,6 +1,7 @@
 .DS_Store
 .cache/
 build/bin/
+dist/
 frontend/node_modules/
 frontend/dist/
 frontend/package.json.md5

@@ -8,10 +8,12 @@ Maple is a Wails desktop app. The frontend is React, but the deliverable is a na
 make package-macos
 make package-windows
 make package-linux
+make package-linux-installers
 make package-all
 ```
 
 The targets use Wails v2.12 and pinned frontend tooling from `frontend/package-lock.json`.
+Linux `.deb` and `.rpm` artifacts are built with nFPM from the Wails Linux binary; Nmap remains a separately installed user dependency.
 
 Command-generation checks that do not require the target OS packaging toolchain:
 
@@ -29,22 +31,41 @@ make package-linux-dryrun
 - Target: `darwin/arm64`
 - Runtime: Wails WebKit wrapper.
 - Nmap must be installed separately, for example through Homebrew or the Nmap Project package.
+- CI artifact: compressed Wails `.app` output from the `macos-15` runner.
+- Signing and notarization require Apple credentials and are tracked separately from unsigned release-candidate artifacts.
 
 ### Windows
 
-- Target: `windows/amd64`
+- Targets: `windows/amd64`, `windows/arm64`
 - Runtime: Wails WebView2.
 - Nmap must be installed separately.
 - Npcap must be installed separately by the user if the chosen Nmap scan requires it.
 - Maple must not ship Nmap, Npcap, Ndiff, Ncat, or Nping binaries.
+- CI artifact: compressed Wails output with NSIS installer generation enabled.
+- Authenticode signing requires certificate credentials and is tracked separately from unsigned release-candidate artifacts.
 
 ### Linux
 
-- Target: `linux/amd64`
+- Targets: `linux/amd64`, `linux/arm64`
 - Runtime: Wails WebKitGTK stack.
 - Nmap must be installed separately through the distribution package manager or the Nmap Project packages.
 - Maple must not ship Nmap, Ndiff, Ncat, or Nping binaries.
 - Wails v2.12 reports that cross-compiling to Linux is not supported from macOS; run `make package-linux` on a Linux packaging host.
+- CI artifacts: compressed Wails output plus `.deb` and `.rpm` packages built by nFPM on native Linux runners.
+
+## GitHub Release Workflow
+
+The `.github/workflows/release.yml` workflow builds the release matrix in CI:
+
+| Artifact | Runner | Platform |
+|---|---|---|
+| `maple-macos-arm64` | `macos-15` | `darwin/arm64` |
+| `maple-linux-amd64` | `ubuntu-22.04` | `linux/amd64` |
+| `maple-linux-arm64` | `ubuntu-22.04-arm` | `linux/arm64` |
+| `maple-windows-amd64` | `windows-2025` | `windows/amd64` |
+| `maple-windows-arm64` | `windows-11-arm` | `windows/arm64` |
+
+The workflow runs on version tags and can also be started manually. Tag builds publish the generated artifacts to a GitHub Release. Manual runs keep artifacts attached to the workflow run for inspection.
 
 ## Release Gate
 
@@ -63,11 +84,11 @@ and Markdown Report exports.
 
 The release candidate platform bar is:
 
-- macOS: `make build` produces a runnable desktop binary and the macOS smoke checklist passes.
-- Windows: package command generation is validated locally; final package smoke runs on a Windows host with user-installed Nmap and, when needed, user-installed Npcap.
-- Linux: package command generation records Wails' macOS cross-compilation limitation; final package smoke runs on a Linux host with user-installed Nmap and WebKitGTK dependencies.
+- macOS: `make build` produces a runnable desktop binary, CI builds the `darwin/arm64` Wails artifact, and the macOS smoke checklist passes.
+- Windows: CI builds `windows/amd64` and `windows/arm64` Wails artifacts with NSIS enabled; final smoke runs on a Windows host with user-installed Nmap and, when needed, user-installed Npcap.
+- Linux: CI builds `linux/amd64` and `linux/arm64` Wails artifacts plus `.deb` and `.rpm` packages; final smoke runs on a Linux host with user-installed Nmap and WebKitGTK dependencies.
 
-Real signed installers are release work after this RC bar, not a prerequisite for the release candidate.
+Signed and notarized installers require platform signing credentials. Unsigned CI artifacts are the release-candidate packaging gate until those credentials exist.
 
 ## Current Packaging Note
 

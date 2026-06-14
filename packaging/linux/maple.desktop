@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Maple
+Comment=Desktop workbench for user-installed Nmap scans
+Exec=maple
+Icon=maple
+Terminal=false
+Categories=Network;Security;
