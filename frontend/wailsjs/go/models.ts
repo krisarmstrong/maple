@@ -45,6 +45,22 @@ export namespace platform {
 
 export namespace reports {
 
+	export class ExtraPorts {
+	    state?: string;
+	    count?: number;
+	    reason?: string;
+
+	    static createFrom(source: any = {}) {
+	        return new ExtraPorts(source);
+	    }
+
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.state = source["state"];
+	        this.count = source["count"];
+	        this.reason = source["reason"];
+	    }
+	}
 	export class Port {
 	    protocol?: string;
 	    id?: string;
@@ -54,6 +70,7 @@ export namespace reports {
 	    product?: string;
 	    version?: string;
 	    extraInfo?: string;
+	    cpes?: string[];
 	    scripts?: ScriptOutput[];
 
 	    static createFrom(source: any = {}) {
@@ -70,6 +87,7 @@ export namespace reports {
 	        this.product = source["product"];
 	        this.version = source["version"];
 	        this.extraInfo = source["extraInfo"];
+	        this.cpes = source["cpes"];
 	        this.scripts = this.convertValues(source["scripts"], ScriptOutput);
 	    }
 
@@ -105,10 +123,45 @@ export namespace reports {
 	        this.output = source["output"];
 	    }
 	}
+	export class TraceHop {
+	    ttl?: string;
+	    address?: string;
+	    hostname?: string;
+	    rtt?: string;
+
+	    static createFrom(source: any = {}) {
+	        return new TraceHop(source);
+	    }
+
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.ttl = source["ttl"];
+	        this.address = source["address"];
+	        this.hostname = source["hostname"];
+	        this.rtt = source["rtt"];
+	    }
+	}
+	export class OSMatch {
+	    name?: string;
+	    accuracy?: string;
+
+	    static createFrom(source: any = {}) {
+	        return new OSMatch(source);
+	    }
+
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.name = source["name"];
+	        this.accuracy = source["accuracy"];
+	    }
+	}
 	export class Host {
 	    address?: string;
 	    hostname?: string;
 	    state?: string;
+	    osMatches?: OSMatch[];
+	    extraPorts?: ExtraPorts[];
+	    trace?: TraceHop[];
 	    scripts?: ScriptOutput[];
 	    ports?: Port[];
 
@@ -121,6 +174,9 @@ export namespace reports {
 	        this.address = source["address"];
 	        this.hostname = source["hostname"];
 	        this.state = source["state"];
+	        this.osMatches = this.convertValues(source["osMatches"], OSMatch);
+	        this.extraPorts = this.convertValues(source["extraPorts"], ExtraPorts);
+	        this.trace = this.convertValues(source["trace"], TraceHop);
 	        this.scripts = this.convertValues(source["scripts"], ScriptOutput);
 	        this.ports = this.convertValues(source["ports"], Port);
 	    }
@@ -143,6 +199,7 @@ export namespace reports {
 		    return a;
 		}
 	}
+
 
 
 	export class Summary {

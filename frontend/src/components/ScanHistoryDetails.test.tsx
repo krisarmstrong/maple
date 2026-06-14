@@ -204,6 +204,57 @@ describe("ScanHistoryDetails", () => {
     expect(screen.getByText("22/tcp")).toBeInTheDocument();
   });
 
+  it("shows OS matches, CPEs, extraports, and trace hops", async () => {
+    render(
+      <ScanHistoryDetails
+        record={scanRecord({
+          hosts: [
+            {
+              address: "192.0.2.10",
+              state: "up",
+              osMatches: [{ name: "Linux 5.x", accuracy: "98" }],
+              extraPorts: [{ state: "filtered", count: 998, reason: "no-responses" }],
+              trace: [
+                { ttl: "1", address: "192.0.2.254", hostname: "gateway.example", rtt: "1.23" },
+              ],
+              ports: [
+                {
+                  id: "22",
+                  protocol: "tcp",
+                  state: "closed",
+                  service: "ssh",
+                  cpes: ["cpe:/a:openbsd:openssh:9.6"],
+                },
+              ],
+            },
+          ],
+        })}
+      />,
+    );
+
+    expect(screen.getByText("OS matches")).toBeInTheDocument();
+    expect(screen.getByText("Linux 5.x")).toBeInTheDocument();
+    expect(screen.getByText("98%")).toBeInTheDocument();
+    expect(screen.getByText("Other ports")).toBeInTheDocument();
+    expect(screen.getByText("998 filtered")).toBeInTheDocument();
+    expect(screen.getByText("no-responses")).toBeInTheDocument();
+    expect(screen.getByText("Trace")).toBeInTheDocument();
+    expect(screen.getByText("192.0.2.254")).toBeInTheDocument();
+    expect(screen.getByText("gateway.example")).toBeInTheDocument();
+    expect(screen.getByText("1.23 ms")).toBeInTheDocument();
+    expect(screen.getByText("CPEs")).toBeInTheDocument();
+    expect(screen.getByText("cpe:/a:openbsd:openssh:9.6")).toBeInTheDocument();
+    expect(screen.getByText("3 host details")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Hosts with findings" }));
+
+    expect(screen.getByText("192.0.2.10")).toBeInTheDocument();
+
+    await userEvent.type(screen.getByLabelText("Search expanded result"), "openssh");
+
+    expect(screen.getByText("22/tcp")).toBeInTheDocument();
+  });
+
   it("shows scan result summary metrics", () => {
     render(
       <ScanHistoryDetails

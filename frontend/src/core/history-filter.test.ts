@@ -17,6 +17,9 @@ describe("history filters", () => {
             address: "192.0.2.10",
             hostname: "router.example",
             state: "up",
+            osMatches: [{ name: "Linux 5.x", accuracy: "98" }],
+            extraPorts: [{ state: "filtered", count: 998, reason: "no-responses" }],
+            trace: [{ ttl: "1", address: "192.0.2.254", hostname: "gateway.example", rtt: "1.23" }],
             ports: [
               {
                 id: "443",
@@ -27,6 +30,7 @@ describe("history filters", () => {
                 version: "1.25",
                 extraInfo: "ALPN h2",
                 reason: "syn-ack",
+                cpes: ["cpe:/a:nginx:nginx:1.25"],
               },
             ],
           },
@@ -53,6 +57,18 @@ describe("history filters", () => {
     expect(filterHistoryRecords(records, "syn-ack", "all").map((record) => record.runId)).toEqual([
       "scan-2",
     ]);
+    expect(filterHistoryRecords(records, "linux", "all").map((record) => record.runId)).toEqual([
+      "scan-2",
+    ]);
+    expect(
+      filterHistoryRecords(records, "no-responses", "all").map((record) => record.runId),
+    ).toEqual(["scan-2"]);
+    expect(filterHistoryRecords(records, "gateway", "all").map((record) => record.runId)).toEqual([
+      "scan-2",
+    ]);
+    expect(
+      filterHistoryRecords(records, "cpe:/a:nginx", "all").map((record) => record.runId),
+    ).toEqual(["scan-2"]);
     expect(
       filterHistoryRecords(records, "unexpected", "all").map((record) => record.runId),
     ).toEqual(["scan-3"]);

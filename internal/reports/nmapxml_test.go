@@ -11,14 +11,26 @@ func TestSummarizeNmapXMLCountsHostStatuses(t *testing.T) {
     <ports>
       <port protocol="tcp" portid="22">
         <state state="open"/>
-        <service name="ssh" product="OpenSSH" version="9.6" extrainfo="protocol 2.0"/>
+        <service name="ssh" product="OpenSSH" version="9.6" extrainfo="protocol 2.0">
+          <cpe>cpe:/a:openbsd:openssh:9.6</cpe>
+        </service>
         <script id="ssh-hostkey" output="2048 SHA256:abc (RSA)"/>
       </port>
       <port protocol="tcp" portid="80">
         <state state="closed" reason="conn-refused"/>
         <service name="http"/>
       </port>
+      <extraports state="filtered" count="998">
+        <extrareasons reason="no-responses" count="998"/>
+      </extraports>
     </ports>
+    <os>
+      <osmatch name="Linux 5.x" accuracy="98" line="1"/>
+    </os>
+    <trace proto="tcp" port="80">
+      <hop ttl="1" ipaddr="192.0.2.254" host="gateway.example" rtt="1.23"/>
+      <hop ttl="2" ipaddr="192.0.2.1" rtt="5.67"/>
+    </trace>
     <hostscript>
       <script id="nbstat" output="NetBIOS name: ROUTER"/>
     </hostscript>
@@ -74,6 +86,30 @@ func TestSummarizeNmapXMLCountsHostStatuses(t *testing.T) {
 	}
 	if summary.Hosts[0].Ports[0].ExtraInfo != "protocol 2.0" {
 		t.Fatalf("first port extra info = %q", summary.Hosts[0].Ports[0].ExtraInfo)
+	}
+	if len(summary.Hosts[0].Ports[0].CPEs) != 1 {
+		t.Fatalf("len(first port CPEs) = %d, want 1", len(summary.Hosts[0].Ports[0].CPEs))
+	}
+	if summary.Hosts[0].Ports[0].CPEs[0] != "cpe:/a:openbsd:openssh:9.6" {
+		t.Fatalf("first port CPE = %q", summary.Hosts[0].Ports[0].CPEs[0])
+	}
+	if len(summary.Hosts[0].ExtraPorts) != 1 {
+		t.Fatalf("len(first host extra ports) = %d, want 1", len(summary.Hosts[0].ExtraPorts))
+	}
+	if summary.Hosts[0].ExtraPorts[0].State != "filtered" || summary.Hosts[0].ExtraPorts[0].Count != 998 {
+		t.Fatalf("first host extra ports = %#v", summary.Hosts[0].ExtraPorts[0])
+	}
+	if len(summary.Hosts[0].OSMatches) != 1 {
+		t.Fatalf("len(first host OS matches) = %d, want 1", len(summary.Hosts[0].OSMatches))
+	}
+	if summary.Hosts[0].OSMatches[0].Name != "Linux 5.x" || summary.Hosts[0].OSMatches[0].Accuracy != "98" {
+		t.Fatalf("first host OS match = %#v", summary.Hosts[0].OSMatches[0])
+	}
+	if len(summary.Hosts[0].Trace) != 2 {
+		t.Fatalf("len(first host trace) = %d, want 2", len(summary.Hosts[0].Trace))
+	}
+	if summary.Hosts[0].Trace[0].TTL != "1" || summary.Hosts[0].Trace[0].Address != "192.0.2.254" {
+		t.Fatalf("first trace hop = %#v", summary.Hosts[0].Trace[0])
 	}
 	if len(summary.Hosts[0].Scripts) != 1 {
 		t.Fatalf("len(first host scripts) = %d, want 1", len(summary.Hosts[0].Scripts))

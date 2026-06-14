@@ -17,11 +17,14 @@ type Summary struct {
 }
 
 type Host struct {
-	Address  string         `json:"address,omitempty"`
-	Hostname string         `json:"hostname,omitempty"`
-	State    string         `json:"state,omitempty"`
-	Scripts  []ScriptOutput `json:"scripts,omitempty"`
-	Ports    []Port         `json:"ports,omitempty"`
+	Address    string         `json:"address,omitempty"`
+	Hostname   string         `json:"hostname,omitempty"`
+	State      string         `json:"state,omitempty"`
+	OSMatches  []OSMatch      `json:"osMatches,omitempty"`
+	ExtraPorts []ExtraPorts   `json:"extraPorts,omitempty"`
+	Trace      []TraceHop     `json:"trace,omitempty"`
+	Scripts    []ScriptOutput `json:"scripts,omitempty"`
+	Ports      []Port         `json:"ports,omitempty"`
 }
 
 type Port struct {
@@ -33,12 +36,31 @@ type Port struct {
 	Product   string         `json:"product,omitempty"`
 	Version   string         `json:"version,omitempty"`
 	ExtraInfo string         `json:"extraInfo,omitempty"`
+	CPEs      []string       `json:"cpes,omitempty"`
 	Scripts   []ScriptOutput `json:"scripts,omitempty"`
 }
 
 type ScriptOutput struct {
 	ID     string `json:"id,omitempty"`
 	Output string `json:"output,omitempty"`
+}
+
+type OSMatch struct {
+	Name     string `json:"name,omitempty"`
+	Accuracy string `json:"accuracy,omitempty"`
+}
+
+type ExtraPorts struct {
+	State  string `json:"state,omitempty"`
+	Count  int    `json:"count,omitempty"`
+	Reason string `json:"reason,omitempty"`
+}
+
+type TraceHop struct {
+	TTL      string `json:"ttl,omitempty"`
+	Address  string `json:"address,omitempty"`
+	Hostname string `json:"hostname,omitempty"`
+	RTT      string `json:"rtt,omitempty"`
 }
 
 func SummarizeNmapXML(input string) (Summary, error) {
@@ -65,11 +87,14 @@ func SummarizeNmapXML(input string) (Summary, error) {
 			countHostState(host.Status.State, &summary)
 		}
 		summary.Hosts = append(summary.Hosts, Host{
-			Address:  host.primaryAddress(),
-			Hostname: host.primaryHostname(),
-			State:    host.Status.State,
-			Scripts:  host.HostScripts.scripts(),
-			Ports:    host.ports(),
+			Address:    host.primaryAddress(),
+			Hostname:   host.primaryHostname(),
+			State:      host.Status.State,
+			OSMatches:  host.OS.matches(),
+			ExtraPorts: host.Ports.extraPorts(),
+			Trace:      host.Trace.hops(),
+			Scripts:    host.HostScripts.scripts(),
+			Ports:      host.ports(),
 		})
 	}
 	return summary, nil
@@ -104,6 +129,8 @@ type nmapHost struct {
 	Addresses   []nmapAddress `xml:"address"`
 	Hostnames   nmapHostnames `xml:"hostnames"`
 	Ports       nmapPorts     `xml:"ports"`
+	OS          nmapOS        `xml:"os"`
+	Trace       nmapTrace     `xml:"trace"`
 	HostScripts nmapScripts   `xml:"hostscript"`
 }
 
@@ -137,6 +164,7 @@ func (h nmapHost) ports() []Port {
 			Product:   port.Service.Product,
 			Version:   port.Service.Version,
 			ExtraInfo: port.Service.ExtraInfo,
+			CPEs:      port.Service.CPEs,
 			Scripts:   scriptOutputs(port.Scripts),
 		})
 	}
@@ -160,7 +188,39 @@ type nmapHostname struct {
 }
 
 type nmapPorts struct {
-	Ports []nmapPort `xml:"port"`
+	Ports      []nmapPort      `xml:"port"`
+	ExtraPorts []nmapExtraPort `xml:"extraports"`
+}
+
+func (p nmapPorts) extraPorts() []ExtraPorts {
+	extraPorts := make([]ExtraPorts, 0, len(p.ExtraPorts))
+	for _, extra := range p.ExtraPorts {
+		extraPorts = append(extraPorts, ExtraPorts{
+			State:  extra.State,
+			Count:  extra.Count,
+			Reason: extra.primaryReason(),
+		})
+	}
+	return extraPorts
+}
+
+type nmapExtraPort struct {
+	State   string            `xml:"state,attr"`
+	Count   int               `xml:"count,attr"`
+	Reasons []nmapExtraReason `xml:"extrareasons"`
+}
+
+func (p nmapExtraPort) primaryReason() string {
+	for _, reason := range p.Reasons {
+		if reason.Reason != "" {
+			return reason.Reason
+		}
+	}
+	return ""
+}
+
+type nmapExtraReason struct {
+	Reason string `xml:"reason,attr"`
 }
 
 type nmapPort struct {
@@ -177,10 +237,52 @@ type nmapState struct {
 }
 
 type nmapService struct {
-	Name      string `xml:"name,attr"`
-	Product   string `xml:"product,attr"`
-	Version   string `xml:"version,attr"`
-	ExtraInfo string `xml:"extrainfo,attr"`
+	Name      string   `xml:"name,attr"`
+	Product   string   `xml:"product,attr"`
+	Version   string   `xml:"version,attr"`
+	ExtraInfo string   `xml:"extrainfo,attr"`
+	CPEs      []string `xml:"cpe"`
+}
+
+type nmapOS struct {
+	Matches []nmapOSMatch `xml:"osmatch"`
+}
+
+func (o nmapOS) matches() []OSMatch {
+	matches := make([]OSMatch, 0, len(o.Matches))
+	for _, match := range o.Matches {
+		matches = append(matches, OSMatch{Name: match.Name, Accuracy: match.Accuracy})
+	}
+	return matches
+}
+
+type nmapOSMatch struct {
+	Name     string `xml:"name,attr"`
+	Accuracy string `xml:"accuracy,attr"`
+}
+
+type nmapTrace struct {
+	Hops []nmapHop `xml:"hop"`
+}
+
+func (t nmapTrace) hops() []TraceHop {
+	hops := make([]TraceHop, 0, len(t.Hops))
+	for _, hop := range t.Hops {
+		hops = append(hops, TraceHop{
+			TTL:      hop.TTL,
+			Address:  hop.Address,
+			Hostname: hop.Hostname,
+			RTT:      hop.RTT,
+		})
+	}
+	return hops
+}
+
+type nmapHop struct {
+	TTL      string `xml:"ttl,attr"`
+	Address  string `xml:"ipaddr,attr"`
+	Hostname string `xml:"host,attr"`
+	RTT      string `xml:"rtt,attr"`
 }
 
 type nmapScripts struct {

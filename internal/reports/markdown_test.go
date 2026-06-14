@@ -29,6 +29,15 @@ func TestMarkdownIncludesCommandAndSummary(t *testing.T) {
 					Address:  "192.0.2.1",
 					Hostname: "router.example",
 					State:    "up",
+					OSMatches: []OSMatch{
+						{Name: "Linux 5.x", Accuracy: "98"},
+					},
+					ExtraPorts: []ExtraPorts{
+						{State: "filtered", Count: 998, Reason: "no-responses"},
+					},
+					Trace: []TraceHop{
+						{TTL: "1", Address: "192.0.2.254", Hostname: "gateway.example", RTT: "1.23"},
+					},
 					Scripts: []ScriptOutput{
 						{ID: "nbstat", Output: "NetBIOS name: ROUTER"},
 					},
@@ -42,6 +51,7 @@ func TestMarkdownIncludesCommandAndSummary(t *testing.T) {
 							Product:   "OpenSSH",
 							Version:   "9.6",
 							ExtraInfo: "protocol 2.0",
+							CPEs:      []string{"cpe:/a:openbsd:openssh:9.6"},
 							Scripts: []ScriptOutput{
 								{ID: "ssh-hostkey", Output: "2048 SHA256:abc (RSA)\n```"},
 							},
@@ -76,12 +86,19 @@ func TestMarkdownIncludesCommandAndSummary(t *testing.T) {
 		"## Hosts",
 		"| 192.0.2.1 | router.example | up |",
 		"| 192.0.2.2 | - | down |",
+		"### Host details for router.example",
+		"- OS: Linux 5.x (98%)",
+		"- Other ports: 998 filtered (no-responses)",
+		"#### Trace for router.example",
+		"| 1 | 192.0.2.254 | gateway.example | 1.23 |",
 		"#### Host scripts for router.example",
 		"- nbstat",
 		"```text\nNetBIOS name: ROUTER\n```",
 		"### Ports for router.example",
 		"| tcp/22 | open | syn-ack | ssh | OpenSSH 9.6 | protocol 2.0 |",
 		"| tcp/80 | closed | reset | http | - | - |",
+		"#### CPEs for tcp/22",
+		"- cpe:/a:openbsd:openssh:9.6",
 		"#### Scripts for tcp/22",
 		"- ssh-hostkey",
 		"````text\n2048 SHA256:abc (RSA)\n```\n````",

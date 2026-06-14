@@ -9,10 +9,13 @@ import {
   stateClassName,
 } from "../core/history-detail-display";
 import type {
+  ScanHistoryExtraPorts,
   ScanHistoryHost,
+  ScanHistoryOSMatch,
   ScanHistoryPort,
   ScanHistoryRecord,
   ScanHistoryScriptOutput,
+  ScanHistoryTraceHop,
 } from "../services/history-service";
 
 type ResultFilter = "all" | "open" | "hosts-up" | "findings";
@@ -66,7 +69,7 @@ function ResultSearch({
       <span>Search expanded result</span>
       <input
         onChange={(event) => onChange(event.target.value)}
-        placeholder="Host, service, product, reason, script"
+        placeholder="Host, service, product, reason, OS, CPE, script"
         type="search"
         value={query}
       />
@@ -167,6 +170,7 @@ function HostDetail({
           )}
         </div>
       </div>
+      <HostMetadata host={host} />
       <ScriptOutputList scripts={host.scripts ?? []} title="Host scripts" />
       {visiblePorts.length === 0 ? (
         <p className="muted">No ports reported for this host.</p>
@@ -199,7 +203,118 @@ function PortDetail({ port }: { port: ScanHistoryPort }): React.JSX.Element {
         )}
         {port.reason === undefined || port.reason === "" ? null : <span>{port.reason}</span>}
       </div>
+      <StringList items={port.cpes ?? []} title="CPEs" />
       <ScriptOutputList scripts={port.scripts ?? []} title="Port scripts" />
+    </div>
+  );
+}
+
+function HostMetadata({ host }: { host: ScanHistoryHost }): React.JSX.Element | null {
+  const hasMetadata =
+    (host.osMatches ?? []).length > 0 ||
+    (host.extraPorts ?? []).length > 0 ||
+    (host.trace ?? []).length > 0;
+  if (!hasMetadata) {
+    return null;
+  }
+  return (
+    <div className="history-host-metadata">
+      <OSMatchList matches={host.osMatches ?? []} />
+      <ExtraPortsList extraPorts={host.extraPorts ?? []} />
+      <TraceList hops={host.trace ?? []} />
+    </div>
+  );
+}
+
+function OSMatchList({
+  matches,
+}: {
+  matches: readonly ScanHistoryOSMatch[];
+}): React.JSX.Element | null {
+  if (matches.length === 0) {
+    return null;
+  }
+  return (
+    <div>
+      <strong>OS matches</strong>
+      <ul>
+        {matches.map((match) => (
+          <li key={`${match.name ?? "os"}:${match.accuracy ?? ""}`}>
+            {match.name ?? "Unknown OS"}
+            {match.accuracy === undefined || match.accuracy === "" ? null : (
+              <span>{match.accuracy}%</span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function ExtraPortsList({
+  extraPorts,
+}: {
+  extraPorts: readonly ScanHistoryExtraPorts[];
+}): React.JSX.Element | null {
+  if (extraPorts.length === 0) {
+    return null;
+  }
+  return (
+    <div>
+      <strong>Other ports</strong>
+      <ul>
+        {extraPorts.map((extraPort) => (
+          <li key={`${extraPort.state ?? "unknown"}:${extraPort.count ?? 0}`}>
+            {extraPort.count ?? 0} {extraPort.state ?? "unknown"}
+            {extraPort.reason === undefined || extraPort.reason === "" ? null : (
+              <span>{extraPort.reason}</span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function TraceList({ hops }: { hops: readonly ScanHistoryTraceHop[] }): React.JSX.Element | null {
+  if (hops.length === 0) {
+    return null;
+  }
+  return (
+    <div>
+      <strong>Trace</strong>
+      <ol>
+        {hops.map((hop) => (
+          <li key={`${hop.ttl ?? "hop"}:${hop.address ?? ""}:${hop.rtt ?? ""}`}>
+            <span>{hop.ttl ?? "?"}</span>
+            <span>{hop.address ?? "Unknown hop"}</span>
+            {hop.hostname === undefined || hop.hostname === "" ? null : <span>{hop.hostname}</span>}
+            {hop.rtt === undefined || hop.rtt === "" ? null : <span>{hop.rtt} ms</span>}
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+function StringList({
+  items,
+  title,
+}: {
+  items: readonly string[];
+  title: string;
+}): React.JSX.Element | null {
+  if (items.length === 0) {
+    return null;
+  }
+  return (
+    <div className="history-string-list">
+      <strong>{title}</strong>
+      <ul>
+        {items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -234,9 +349,13 @@ function hasDiagnostics(record: ScanHistoryRecord): boolean {
 function hostFindingLabel(host: ScanHistoryHost): string {
   const openPorts = host.ports.filter((port) => port.state === "open").length;
   const scriptCount = hostScriptCount(host);
+  const evidenceCount = hostEvidenceCount(host);
   if (openPorts === 0) {
     if (scriptCount > 0) {
       return `${scriptCount} script ${scriptCount === 1 ? "result" : "results"}`;
+    }
+    if (evidenceCount > 0) {
+      return `${evidenceCount} host ${evidenceCount === 1 ? "detail" : "details"}`;
     }
     return "No open ports";
   }
@@ -248,13 +367,22 @@ function hostHasOpenPorts(host: ScanHistoryHost): boolean {
 }
 
 function hostHasFindings(host: ScanHistoryHost): boolean {
-  return hostHasOpenPorts(host) || hostScriptCount(host) > 0;
+  return hostHasOpenPorts(host) || hostEvidenceCount(host) > 0;
 }
 
 function hostScriptCount(host: ScanHistoryHost): number {
   return (
     (host.scripts ?? []).length +
     host.ports.reduce((total, port) => total + (port.scripts ?? []).length, 0)
+  );
+}
+
+function hostEvidenceCount(host: ScanHistoryHost): number {
+  return (
+    hostScriptCount(host) +
+    (host.osMatches ?? []).length +
+    (host.extraPorts ?? []).length +
+    (host.trace ?? []).length
   );
 }
 
@@ -316,6 +444,9 @@ function hostMatches(host: ScanHistoryHost, query: string): boolean {
   return (
     includesQuery(host.address, query) ||
     includesQuery(host.hostname, query) ||
+    osMatchesMatch(host.osMatches, query) ||
+    extraPortsMatch(host.extraPorts, query) ||
+    traceMatches(host.trace, query) ||
     scriptsMatch(host.scripts, query)
   );
 }
@@ -330,8 +461,50 @@ function portMatches(port: ScanHistoryPort, query: string): boolean {
     includesQuery(port.version, query) ||
     includesQuery(port.extraInfo, query) ||
     includesQuery(port.reason, query) ||
+    stringListMatches(port.cpes, query) ||
     scriptsMatch(port.scripts, query)
   );
+}
+
+function osMatchesMatch(
+  matches: readonly ScanHistoryOSMatch[] | undefined,
+  query: string,
+): boolean {
+  return (
+    matches?.some(
+      (match) => includesQuery(match.name, query) || includesQuery(match.accuracy, query),
+    ) ?? false
+  );
+}
+
+function extraPortsMatch(
+  extraPorts: readonly ScanHistoryExtraPorts[] | undefined,
+  query: string,
+): boolean {
+  return (
+    extraPorts?.some(
+      (extraPort) =>
+        includesQuery(extraPort.state, query) ||
+        includesQuery(extraPort.reason, query) ||
+        String(extraPort.count ?? "").includes(query),
+    ) ?? false
+  );
+}
+
+function traceMatches(hops: readonly ScanHistoryTraceHop[] | undefined, query: string): boolean {
+  return (
+    hops?.some(
+      (hop) =>
+        includesQuery(hop.ttl, query) ||
+        includesQuery(hop.address, query) ||
+        includesQuery(hop.hostname, query) ||
+        includesQuery(hop.rtt, query),
+    ) ?? false
+  );
+}
+
+function stringListMatches(values: readonly string[] | undefined, query: string): boolean {
+  return values?.some((value) => includesQuery(value, query)) ?? false;
 }
 
 function scriptsMatch(

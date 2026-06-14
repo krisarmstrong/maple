@@ -96,9 +96,42 @@ func writeHosts(builder *strings.Builder, hosts []Host) {
 		builder.WriteString(" |\n")
 	}
 	for _, host := range hosts {
+		writeHostDetails(builder, host)
 		writeScripts(builder, "Host scripts for "+hostLabel(host), host.Scripts)
 		writePorts(builder, host)
 	}
+}
+
+func writeHostDetails(builder *strings.Builder, host Host) {
+	if len(host.OSMatches) == 0 && len(host.ExtraPorts) == 0 && len(host.Trace) == 0 {
+		return
+	}
+	builder.WriteString("\n### Host details for ")
+	builder.WriteString(hostLabel(host))
+	builder.WriteString("\n\n")
+	for _, match := range host.OSMatches {
+		builder.WriteString("- OS: ")
+		builder.WriteString(markdownCell(match.Name))
+		if match.Accuracy != "" {
+			builder.WriteString(" (")
+			builder.WriteString(markdownCell(match.Accuracy))
+			builder.WriteString("%)")
+		}
+		builder.WriteString("\n")
+	}
+	for _, extra := range host.ExtraPorts {
+		builder.WriteString("- Other ports: ")
+		builder.WriteString(fmt.Sprintf("%d", extra.Count))
+		builder.WriteString(" ")
+		builder.WriteString(markdownCell(extra.State))
+		if extra.Reason != "" {
+			builder.WriteString(" (")
+			builder.WriteString(markdownCell(extra.Reason))
+			builder.WriteString(")")
+		}
+		builder.WriteString("\n")
+	}
+	writeTrace(builder, host)
 }
 
 func markdownCell(value string) string {
@@ -133,7 +166,45 @@ func writePorts(builder *strings.Builder, host Host) {
 		builder.WriteString(" |\n")
 	}
 	for _, port := range host.Ports {
-		writeScripts(builder, "Scripts for "+port.Protocol+"/"+port.ID, port.Scripts)
+		portLabel := port.Protocol + "/" + port.ID
+		writeList(builder, "CPEs for "+portLabel, port.CPEs)
+		writeScripts(builder, "Scripts for "+portLabel, port.Scripts)
+	}
+}
+
+func writeTrace(builder *strings.Builder, host Host) {
+	if len(host.Trace) == 0 {
+		return
+	}
+	builder.WriteString("\n#### Trace for ")
+	builder.WriteString(hostLabel(host))
+	builder.WriteString("\n\n")
+	builder.WriteString("| TTL | Address | Hostname | RTT |\n")
+	builder.WriteString("| --- | --- | --- | --- |\n")
+	for _, hop := range host.Trace {
+		builder.WriteString("| ")
+		builder.WriteString(markdownCell(hop.TTL))
+		builder.WriteString(" | ")
+		builder.WriteString(markdownCell(hop.Address))
+		builder.WriteString(" | ")
+		builder.WriteString(markdownCell(hop.Hostname))
+		builder.WriteString(" | ")
+		builder.WriteString(markdownCell(hop.RTT))
+		builder.WriteString(" |\n")
+	}
+}
+
+func writeList(builder *strings.Builder, heading string, values []string) {
+	if len(values) == 0 {
+		return
+	}
+	builder.WriteString("\n#### ")
+	builder.WriteString(heading)
+	builder.WriteString("\n\n")
+	for _, value := range values {
+		builder.WriteString("- ")
+		builder.WriteString(markdownCell(value))
+		builder.WriteString("\n")
 	}
 }
 

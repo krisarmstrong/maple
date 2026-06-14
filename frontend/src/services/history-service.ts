@@ -40,6 +40,7 @@ export interface ScanHistoryPort {
   product?: string;
   version?: string;
   extraInfo?: string;
+  cpes?: string[];
   scripts?: ScanHistoryScriptOutput[];
 }
 
@@ -47,6 +48,9 @@ export interface ScanHistoryHost {
   address?: string;
   hostname?: string;
   state?: string;
+  osMatches?: ScanHistoryOSMatch[];
+  extraPorts?: ScanHistoryExtraPorts[];
+  trace?: ScanHistoryTraceHop[];
   scripts?: ScanHistoryScriptOutput[];
   ports: ScanHistoryPort[];
 }
@@ -54,6 +58,24 @@ export interface ScanHistoryHost {
 export interface ScanHistoryScriptOutput {
   id?: string;
   output?: string;
+}
+
+export interface ScanHistoryOSMatch {
+  name?: string;
+  accuracy?: string;
+}
+
+export interface ScanHistoryExtraPorts {
+  state?: string;
+  count?: number;
+  reason?: string;
+}
+
+export interface ScanHistoryTraceHop {
+  ttl?: string;
+  address?: string;
+  hostname?: string;
+  rtt?: string;
 }
 
 interface BackendSummary {
@@ -139,8 +161,15 @@ export function clearScanHistory(): Promise<void> {
 function normalizeHosts(hosts: ScanHistoryHost[]): ScanHistoryHost[] {
   return hosts.map((host) => ({
     ...host,
+    osMatches: host.osMatches ?? [],
+    extraPorts: host.extraPorts ?? [],
+    trace: host.trace ?? [],
     scripts: host.scripts ?? [],
-    ports: (host.ports ?? []).map((port) => ({ ...port, scripts: port.scripts ?? [] })),
+    ports: (host.ports ?? []).map((port) => ({
+      ...port,
+      cpes: port.cpes ?? [],
+      scripts: port.scripts ?? [],
+    })),
   }));
 }
 

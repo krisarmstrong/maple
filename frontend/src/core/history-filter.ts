@@ -51,6 +51,14 @@ function hostSearchText(recordHost: ScanHistoryRecord["hosts"][number]): string 
     recordHost.address,
     recordHost.hostname,
     recordHost.state,
+    recordHost.osMatches?.map((match) => [match.name, match.accuracy].join(" ")).join(" "),
+    recordHost.extraPorts
+      ?.map((extraPort) => [extraPort.state, extraPort.count, extraPort.reason].join(" "))
+      .join(" "),
+    recordHost.trace
+      ?.map((hop) => [hop.ttl, hop.address, hop.hostname, hop.rtt].join(" "))
+      .join(" "),
+    recordHost.scripts?.map((script) => [script.id, script.output].join(" ")).join(" "),
     recordHost.ports.map(portSearchText).join(" "),
   ]
     .filter(Boolean)
@@ -67,6 +75,8 @@ function portSearchText(port: ScanHistoryRecord["hosts"][number]["ports"][number
     port.version,
     port.extraInfo,
     port.reason,
+    port.cpes?.join(" "),
+    port.scripts?.map((script) => [script.id, script.output].join(" ")).join(" "),
   ]
     .filter(Boolean)
     .join(" ");

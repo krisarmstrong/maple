@@ -39,6 +39,9 @@ describe("history-service", () => {
               address: "127.0.0.1",
               hostname: "localhost",
               state: "up",
+              osMatches: [{ name: "Linux 5.x", accuracy: "98" }],
+              extraPorts: [{ state: "filtered", count: 998, reason: "no-responses" }],
+              trace: [{ ttl: "1", address: "192.0.2.254", hostname: "gateway", rtt: "1.23" }],
               scripts: [{ id: "nbstat", output: "NetBIOS name: LOCALHOST" }],
               ports: [
                 {
@@ -46,6 +49,7 @@ describe("history-service", () => {
                   protocol: "tcp",
                   state: "open",
                   service: "ssh",
+                  cpes: ["cpe:/a:openbsd:openssh:9.6"],
                   scripts: [{ id: "ssh-hostkey", output: "2048 SHA256:abc (RSA)" }],
                 },
               ],
@@ -67,11 +71,19 @@ describe("history-service", () => {
     expect(records[0]?.hosts[0]?.scripts).toEqual([
       { id: "nbstat", output: "NetBIOS name: LOCALHOST" },
     ]);
+    expect(records[0]?.hosts[0]?.osMatches).toEqual([{ name: "Linux 5.x", accuracy: "98" }]);
+    expect(records[0]?.hosts[0]?.extraPorts).toEqual([
+      { state: "filtered", count: 998, reason: "no-responses" },
+    ]);
+    expect(records[0]?.hosts[0]?.trace).toEqual([
+      { ttl: "1", address: "192.0.2.254", hostname: "gateway", rtt: "1.23" },
+    ]);
     expect(records[0]?.hosts[0]?.ports[0]).toEqual({
       id: "22",
       protocol: "tcp",
       state: "open",
       service: "ssh",
+      cpes: ["cpe:/a:openbsd:openssh:9.6"],
       scripts: [{ id: "ssh-hostkey", output: "2048 SHA256:abc (RSA)" }],
     });
   });
