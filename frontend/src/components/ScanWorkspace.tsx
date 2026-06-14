@@ -803,6 +803,22 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                   />
                 </label>
                 <label>
+                  <span>Maximum packet rate</span>
+                  <input
+                    min={1}
+                    max={1000000}
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        maxRate: event.target.value === "" ? 0 : Number(event.target.value),
+                      }))
+                    }
+                    placeholder="2000"
+                    type="number"
+                    value={scanOptions.maxRate === 0 ? "" : scanOptions.maxRate}
+                  />
+                </label>
+                <label>
                   <span>Maximum retries</span>
                   <input
                     min={0}
@@ -902,6 +918,38 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                     placeholder="4"
                     type="number"
                     value={scanOptions.minParallelism === 0 ? "" : scanOptions.minParallelism}
+                  />
+                </label>
+                <label>
+                  <span>Minimum host group</span>
+                  <input
+                    max="100000"
+                    min="1"
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        minHostGroup: event.target.value === "" ? 0 : Number(event.target.value),
+                      }))
+                    }
+                    placeholder="8"
+                    type="number"
+                    value={scanOptions.minHostGroup === 0 ? "" : scanOptions.minHostGroup}
+                  />
+                </label>
+                <label>
+                  <span>Maximum host group</span>
+                  <input
+                    max="100000"
+                    min="1"
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        maxHostGroup: event.target.value === "" ? 0 : Number(event.target.value),
+                      }))
+                    }
+                    placeholder="256"
+                    type="number"
+                    value={scanOptions.maxHostGroup === 0 ? "" : scanOptions.maxHostGroup}
                   />
                 </label>
                 <label>
@@ -1571,6 +1619,16 @@ function hasIdentityOptions(options: ScanOptions): boolean {
 }
 
 function messageForInvalidScanOptions(options: ScanOptions): string {
+  if (options.minRate !== 0 && options.maxRate !== 0 && options.minRate > options.maxRate) {
+    return "Minimum packet rate cannot be greater than maximum packet rate.";
+  }
+  if (
+    options.minHostGroup !== 0 &&
+    options.maxHostGroup !== 0 &&
+    options.minHostGroup > options.maxHostGroup
+  ) {
+    return "Minimum host group cannot be greater than maximum host group.";
+  }
   if (options.fragmentPackets && options.mtu !== 0) {
     return "Fragment packets and custom MTU cannot be used together.";
   }

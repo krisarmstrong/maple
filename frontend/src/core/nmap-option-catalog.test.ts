@@ -28,6 +28,8 @@ describe("nmap option catalog", () => {
     expect(supportedSwitches).toContain("-sV");
     expect(supportedSwitches).toContain("--script-args-file");
     expect(supportedSwitches).toContain("--max-rtt-timeout");
+    expect(supportedSwitches).toContain("--max-rate");
+    expect(supportedSwitches).toContain("--min-hostgroup");
     expect(supportedSwitches).toContain("--scan-delay");
     expect(supportedSwitches).toContain("--data-length");
     expect(supportedSwitches).toContain("--spoof-mac");

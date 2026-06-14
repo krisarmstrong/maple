@@ -45,12 +45,15 @@ export interface ScanOptions {
   reason: boolean;
   openOnly: boolean;
   minRate: number;
+  maxRate: number;
   maxRetries: string;
   hostTimeout: string;
   maxRttTimeout: string;
   statsEvery: string;
   scanDelay: string;
   maxScanDelay: string;
+  minHostGroup: number;
+  maxHostGroup: number;
   minParallelism: number;
   maxParallelism: number;
   fragmentPackets: boolean;
@@ -91,12 +94,15 @@ export const defaultScanOptions: ScanOptions = {
   reason: false,
   openOnly: false,
   minRate: 0,
+  maxRate: 0,
   maxRetries: "",
   hostTimeout: "",
   maxRttTimeout: "",
   statsEvery: "",
   scanDelay: "",
   maxScanDelay: "",
+  minHostGroup: 0,
+  maxHostGroup: 0,
   minParallelism: 0,
   maxParallelism: 0,
   fragmentPackets: false,

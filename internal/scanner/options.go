@@ -75,12 +75,15 @@ type ScanOptions struct {
 	Reason           bool          `json:"reason,omitempty"`
 	OpenOnly         bool          `json:"openOnly,omitempty"`
 	MinRate          int           `json:"minRate,omitempty"`
+	MaxRate          int           `json:"maxRate,omitempty"`
 	MaxRetries       string        `json:"maxRetries,omitempty"`
 	HostTimeout      string        `json:"hostTimeout,omitempty"`
 	MaxRTTTimeout    string        `json:"maxRttTimeout,omitempty"`
 	StatsEvery       string        `json:"statsEvery,omitempty"`
 	ScanDelay        string        `json:"scanDelay,omitempty"`
 	MaxScanDelay     string        `json:"maxScanDelay,omitempty"`
+	MinHostGroup     int           `json:"minHostGroup,omitempty"`
+	MaxHostGroup     int           `json:"maxHostGroup,omitempty"`
 	MinParallelism   int           `json:"minParallelism,omitempty"`
 	MaxParallelism   int           `json:"maxParallelism,omitempty"`
 	FragmentPackets  bool          `json:"fragmentPackets,omitempty"`
@@ -179,6 +182,9 @@ func BuildOptionArgs(options ScanOptions) ([]string, error) {
 	if options.MinRate != 0 {
 		args = append(args, "--min-rate", strconv.Itoa(options.MinRate))
 	}
+	if options.MaxRate != 0 {
+		args = append(args, "--max-rate", strconv.Itoa(options.MaxRate))
+	}
 	if strings.TrimSpace(options.MaxRetries) != "" {
 		args = append(args, "--max-retries", strings.TrimSpace(options.MaxRetries))
 	}
@@ -196,6 +202,12 @@ func BuildOptionArgs(options ScanOptions) ([]string, error) {
 	}
 	if strings.TrimSpace(options.MaxScanDelay) != "" {
 		args = append(args, "--max-scan-delay", strings.TrimSpace(options.MaxScanDelay))
+	}
+	if options.MinHostGroup != 0 {
+		args = append(args, "--min-hostgroup", strconv.Itoa(options.MinHostGroup))
+	}
+	if options.MaxHostGroup != 0 {
+		args = append(args, "--max-hostgroup", strconv.Itoa(options.MaxHostGroup))
 	}
 	if options.MinParallelism != 0 {
 		args = append(args, "--min-parallelism", strconv.Itoa(options.MinParallelism))
@@ -274,6 +286,10 @@ func ProfileArgsForOptions(profile Profile, options ScanOptions) []string {
 			index++
 			continue
 		}
+		if options.MaxRate != 0 && arg == "--max-rate" {
+			index++
+			continue
+		}
 		if strings.TrimSpace(options.MaxRetries) != "" && arg == "--max-retries" {
 			index++
 			continue
@@ -295,6 +311,14 @@ func ProfileArgsForOptions(profile Profile, options ScanOptions) []string {
 			continue
 		}
 		if strings.TrimSpace(options.MaxScanDelay) != "" && arg == "--max-scan-delay" {
+			index++
+			continue
+		}
+		if options.MinHostGroup != 0 && arg == "--min-hostgroup" {
+			index++
+			continue
+		}
+		if options.MaxHostGroup != 0 && arg == "--max-hostgroup" {
 			index++
 			continue
 		}
@@ -452,6 +476,12 @@ func validatePerformanceOptions(options ScanOptions) error {
 	if options.MinRate < 0 || options.MinRate > 1_000_000 {
 		return ErrInvalidScanOption
 	}
+	if options.MaxRate < 0 || options.MaxRate > 1_000_000 {
+		return ErrInvalidScanOption
+	}
+	if options.MinRate != 0 && options.MaxRate != 0 && options.MinRate > options.MaxRate {
+		return ErrInvalidScanOption
+	}
 	if strings.TrimSpace(options.MaxRetries) != "" {
 		retries, err := strconv.Atoi(strings.TrimSpace(options.MaxRetries))
 		if err != nil || retries < 0 || retries > 10 {
@@ -479,6 +509,9 @@ func validatePerformanceOptions(options ScanOptions) error {
 	if err := validateParallelismOptions(options); err != nil {
 		return err
 	}
+	if err := validateHostGroupOptions(options); err != nil {
+		return err
+	}
 	if err := validatePacketShapingOptions(options); err != nil {
 		return err
 	}
@@ -498,6 +531,20 @@ func validateScanDelayOptions(options ScanOptions) error {
 		return err
 	}
 	if scanDelay != 0 && maxScanDelay != 0 && scanDelay > maxScanDelay {
+		return ErrInvalidScanOption
+	}
+	return nil
+}
+
+func validateHostGroupOptions(options ScanOptions) error {
+	if options.MinHostGroup < 0 || options.MinHostGroup > 100_000 {
+		return ErrInvalidScanOption
+	}
+	if options.MaxHostGroup < 0 || options.MaxHostGroup > 100_000 {
+		return ErrInvalidScanOption
+	}
+	if options.MinHostGroup != 0 && options.MaxHostGroup != 0 &&
+		options.MinHostGroup > options.MaxHostGroup {
 		return ErrInvalidScanOption
 	}
 	return nil

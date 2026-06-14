@@ -262,6 +262,8 @@ describe("ScanWorkspace", () => {
       "--open",
       "--min-rate",
       "500",
+      "--max-rate",
+      "2000",
       "--max-retries",
       "2",
       "--host-timeout",
@@ -274,6 +276,10 @@ describe("ScanWorkspace", () => {
       "50ms",
       "--max-scan-delay",
       "1s",
+      "--min-hostgroup",
+      "8",
+      "--max-hostgroup",
+      "256",
       "--min-parallelism",
       "4",
       "--max-parallelism",
@@ -324,12 +330,15 @@ describe("ScanWorkspace", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Timing" }));
     fireEvent.change(screen.getByLabelText("Minimum packet rate"), { target: { value: "500" } });
+    fireEvent.change(screen.getByLabelText("Maximum packet rate"), { target: { value: "2000" } });
     fireEvent.change(screen.getByLabelText("Maximum retries"), { target: { value: "2" } });
     fireEvent.change(screen.getByLabelText("Host timeout"), { target: { value: "30m" } });
     fireEvent.change(screen.getByLabelText("Max RTT timeout"), { target: { value: "2s" } });
     fireEvent.change(screen.getByLabelText("Stats interval"), { target: { value: "10s" } });
     fireEvent.change(screen.getByLabelText("Scan delay"), { target: { value: "50ms" } });
     fireEvent.change(screen.getByLabelText("Max scan delay"), { target: { value: "1s" } });
+    fireEvent.change(screen.getByLabelText("Minimum host group"), { target: { value: "8" } });
+    fireEvent.change(screen.getByLabelText("Maximum host group"), { target: { value: "256" } });
     fireEvent.change(screen.getByLabelText("Minimum parallelism"), { target: { value: "4" } });
     fireEvent.change(screen.getByLabelText("Maximum parallelism"), { target: { value: "64" } });
 
@@ -391,12 +400,15 @@ describe("ScanWorkspace", () => {
         reason: true,
         openOnly: true,
         minRate: 500,
+        maxRate: 2000,
         maxRetries: "2",
         hostTimeout: "30m",
         maxRttTimeout: "2s",
         statsEvery: "10s",
         scanDelay: "50ms",
         maxScanDelay: "1s",
+        minHostGroup: 8,
+        maxHostGroup: 256,
         minParallelism: 4,
         maxParallelism: 64,
         fragmentPackets: true,
@@ -411,7 +423,7 @@ describe("ScanWorkspace", () => {
     });
     expect(
       await screen.findByText(
-        "nmap -oX <managed-xml-file> -sU -PS22,80,443 -PA80,443 -PU53,161 -PY3868 -PE -PP -PM -T4 -p 22,80,443 -sV --version-all -6 -O --traceroute -n -vv --reason --open --min-rate 500 --max-retries 2 --host-timeout 30m --max-rtt-timeout 2s --stats-every 10s --scan-delay 50ms --max-scan-delay 1s --min-parallelism 4 --max-parallelism 64 -f --data-length 24 --source-port 53 -D ME,198.51.100.10,RND:2 -S 192.0.2.20 -e en0 --spoof-mac 02:11:22:33:44:55 --packet-trace -- scanme.nmap.org",
+        "nmap -oX <managed-xml-file> -sU -PS22,80,443 -PA80,443 -PU53,161 -PY3868 -PE -PP -PM -T4 -p 22,80,443 -sV --version-all -6 -O --traceroute -n -vv --reason --open --min-rate 500 --max-rate 2000 --max-retries 2 --host-timeout 30m --max-rtt-timeout 2s --stats-every 10s --scan-delay 50ms --max-scan-delay 1s --min-hostgroup 8 --max-hostgroup 256 --min-parallelism 4 --max-parallelism 64 -f --data-length 24 --source-port 53 -D ME,198.51.100.10,RND:2 -S 192.0.2.20 -e en0 --spoof-mac 02:11:22:33:44:55 --packet-trace -- scanme.nmap.org",
       ),
     ).toBeInTheDocument();
   }, 30_000);
@@ -438,6 +450,34 @@ describe("ScanWorkspace", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Timing" }));
     expect(screen.getByLabelText("Minimum packet rate")).toHaveValue(250);
+  });
+
+  it("validates timing range relationships before preview", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
+    await userEvent.click(screen.getByRole("button", { name: "Options" }));
+    await userEvent.click(screen.getByRole("button", { name: "Timing" }));
+    fireEvent.change(screen.getByLabelText("Minimum packet rate"), { target: { value: "2000" } });
+    fireEvent.change(screen.getByLabelText("Maximum packet rate"), { target: { value: "1000" } });
+
+    await userEvent.click(screen.getByRole("button", { name: "Preview" }));
+
+    expect(
+      screen.getByText("Minimum packet rate cannot be greater than maximum packet rate."),
+    ).toBeInTheDocument();
+    expect(previewScanCommandMock).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText("Minimum packet rate"), { target: { value: "500" } });
+    fireEvent.change(screen.getByLabelText("Minimum host group"), { target: { value: "50" } });
+    fireEvent.change(screen.getByLabelText("Maximum host group"), { target: { value: "10" } });
+
+    await userEvent.click(screen.getByRole("button", { name: "Preview" }));
+
+    expect(
+      screen.getByText("Minimum host group cannot be greater than maximum host group."),
+    ).toBeInTheDocument();
+    expect(previewScanCommandMock).not.toHaveBeenCalled();
   });
 
   it("validates custom MTU and clears it when packet fragmentation is selected", async () => {

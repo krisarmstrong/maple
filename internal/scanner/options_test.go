@@ -27,12 +27,15 @@ func TestBuildOptionArgsAddsStructuredNmapOptions(t *testing.T) {
 		Reason:           true,
 		OpenOnly:         true,
 		MinRate:          500,
+		MaxRate:          2000,
 		MaxRetries:       "2",
 		HostTimeout:      "30m",
 		MaxRTTTimeout:    "2s",
 		StatsEvery:       "10s",
 		ScanDelay:        "50ms",
 		MaxScanDelay:     "1s",
+		MinHostGroup:     8,
+		MaxHostGroup:     256,
 		MinParallelism:   4,
 		MaxParallelism:   64,
 		FragmentPackets:  true,
@@ -48,7 +51,7 @@ func TestBuildOptionArgsAddsStructuredNmapOptions(t *testing.T) {
 		t.Fatalf("BuildOptionArgs returned error: %v", err)
 	}
 
-	want := []string{"-sU", "-PS22,80,443", "-PA80,443", "-PU53,161", "-PY80", "-PE", "-PP", "-PM", "-iL", "/Users/krisarmstrong/targets.txt", "--exclude", "192.168.1.10,scanme.nmap.org", "--excludefile", "/Users/krisarmstrong/exclude-targets.txt", "-T4", "-p", "22,80,443", "-sV", "--version-all", "-6", "-O", "--traceroute", "-n", "-vv", "--reason", "--open", "--min-rate", "500", "--max-retries", "2", "--host-timeout", "30m", "--max-rtt-timeout", "2s", "--stats-every", "10s", "--scan-delay", "50ms", "--max-scan-delay", "1s", "--min-parallelism", "4", "--max-parallelism", "64", "-f", "--data-length", "24", "--source-port", "53", "-D", "ME,198.51.100.10,RND:2", "-S", "192.0.2.20", "-e", "en0", "--spoof-mac", "02:11:22:33:44:55", "--packet-trace"}
+	want := []string{"-sU", "-PS22,80,443", "-PA80,443", "-PU53,161", "-PY80", "-PE", "-PP", "-PM", "-iL", "/Users/krisarmstrong/targets.txt", "--exclude", "192.168.1.10,scanme.nmap.org", "--excludefile", "/Users/krisarmstrong/exclude-targets.txt", "-T4", "-p", "22,80,443", "-sV", "--version-all", "-6", "-O", "--traceroute", "-n", "-vv", "--reason", "--open", "--min-rate", "500", "--max-rate", "2000", "--max-retries", "2", "--host-timeout", "30m", "--max-rtt-timeout", "2s", "--stats-every", "10s", "--scan-delay", "50ms", "--max-scan-delay", "1s", "--min-hostgroup", "8", "--max-hostgroup", "256", "--min-parallelism", "4", "--max-parallelism", "64", "-f", "--data-length", "24", "--source-port", "53", "-D", "ME,198.51.100.10,RND:2", "-S", "192.0.2.20", "-e", "en0", "--spoof-mac", "02:11:22:33:44:55", "--packet-trace"}
 	if !sameStrings(args, want) {
 		t.Fatalf("args = %#v, want %#v", args, want)
 	}
@@ -175,6 +178,8 @@ func TestBuildOptionArgsRejectsInvalidOptions(t *testing.T) {
 		{SCTPInitProbes: "80,,443"},
 		{VerbosityMode: "trace"},
 		{MinRate: -1},
+		{MaxRate: -1},
+		{MinRate: 2000, MaxRate: 1000},
 		{MaxRetries: "-1"},
 		{MaxRetries: "abc"},
 		{MaxRetries: "11"},
@@ -188,6 +193,11 @@ func TestBuildOptionArgsRejectsInvalidOptions(t *testing.T) {
 		{ScanDelay: "50ms\n--script"},
 		{MaxScanDelay: "one-second"},
 		{ScanDelay: "2s", MaxScanDelay: "1s"},
+		{MinHostGroup: -1},
+		{MaxHostGroup: -1},
+		{MinHostGroup: 100001},
+		{MaxHostGroup: 100001},
+		{MinHostGroup: 50, MaxHostGroup: 10},
 		{MinParallelism: -1},
 		{MaxParallelism: -1},
 		{MinParallelism: 1001},
@@ -236,7 +246,7 @@ func TestBuildOptionArgsRejectsInvalidOptions(t *testing.T) {
 }
 
 func TestProfileArgsForOptionsRemovesOverriddenProfileDefaults(t *testing.T) {
-	profile := Profile{Args: []string{"-sT", "-Pn", "-sV", "--version-light", "-T3", "--top-ports", "100", "-v", "--reason", "--open"}}
+	profile := Profile{Args: []string{"-sT", "-Pn", "-sV", "--version-light", "-T3", "--top-ports", "100", "-v", "--reason", "--open", "--min-rate", "100", "--max-rate", "1000", "--min-hostgroup", "8", "--max-hostgroup", "128"}}
 
 	args := ProfileArgsForOptions(profile, ScanOptions{
 		ScanTechnique:    ScanTechniqueSYN,
@@ -248,6 +258,10 @@ func TestProfileArgsForOptionsRemovesOverriddenProfileDefaults(t *testing.T) {
 		VerbosityMode:    VerbosityModeDebug,
 		Reason:           true,
 		OpenOnly:         true,
+		MinRate:          500,
+		MaxRate:          2000,
+		MinHostGroup:     16,
+		MaxHostGroup:     256,
 	})
 
 	want := []string{}

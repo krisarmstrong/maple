@@ -157,7 +157,7 @@ export const nmapOptionCatalog: readonly NmapOptionCatalogEntry[] = [
   entry(
     "timing",
     "Rates and retries",
-    ["--min-rate", "--max-retries"],
+    ["--min-rate", "--max-rate", "--max-retries"],
     "structured",
     "Common performance controls are available.",
   ),
@@ -171,7 +171,14 @@ export const nmapOptionCatalog: readonly NmapOptionCatalogEntry[] = [
   entry(
     "timing",
     "Detailed timing knobs",
-    ["--scan-delay", "--max-scan-delay", "--min-parallelism", "--max-parallelism"],
+    [
+      "--scan-delay",
+      "--max-scan-delay",
+      "--min-hostgroup",
+      "--max-hostgroup",
+      "--min-parallelism",
+      "--max-parallelism",
+    ],
     "structured",
     "Advanced delay and parallelism controls are bounded and validated.",
   ),
