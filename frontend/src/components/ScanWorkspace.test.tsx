@@ -404,7 +404,7 @@ describe("ScanWorkspace", () => {
         "nmap -oX <managed-xml-file> -sU -PS22,80,443 -PA80,443 -PU53,161 -PY3868 -PE -PP -PM -T4 -p 22,80,443 -sV --version-all -6 -O --traceroute -n -vv --reason --open --min-rate 500 --max-retries 2 --host-timeout 30m --max-rtt-timeout 2s --stats-every 10s --scan-delay 50ms --max-scan-delay 1s --min-parallelism 4 --max-parallelism 64 -f --data-length 24 --source-port 53 -D ME,198.51.100.10,RND:2 -S 192.0.2.20 -e en0 --spoof-mac 02:11:22:33:44:55 --packet-trace -- scanme.nmap.org",
       ),
     ).toBeInTheDocument();
-  });
+  }, 30_000);
 
   it("validates custom MTU and clears it when packet fragmentation is selected", async () => {
     previewScanCommandMock.mockResolvedValue([

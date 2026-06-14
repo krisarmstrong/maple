@@ -223,8 +223,18 @@ describe("App", () => {
     await userEvent.click(screen.getByRole("button", { name: /Help/u }));
 
     expect(screen.getByText("Nmap Option Coverage")).toBeInTheDocument();
+    expect(screen.getByTestId("option-coverage-readiness")).toHaveClass(
+      "coverage-readiness--ready",
+    );
+    expect(screen.getByText("Beta option surface ready")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "All tracked Nmap option groups are either implemented or intentionally blocked.",
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByText("Structured controls")).toBeInTheDocument();
     expect(screen.getByText("Advanced escape hatches")).toBeInTheDocument();
+    expect(screen.getByText("Planned option gaps")).toBeInTheDocument();
     expect(screen.getByText("Raw shell command input")).toBeInTheDocument();
     expect(screen.getAllByText("Blocked by design").length).toBeGreaterThan(0);
     expect(screen.getByText("-sT -sS -sU -sA -sW -sM -sN -sF -sX -sY -sZ -sO")).toBeInTheDocument();

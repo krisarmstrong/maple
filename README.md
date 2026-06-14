@@ -17,10 +17,12 @@ Maple is not affiliated with or endorsed by the Nmap Project. Maple does not bun
 ## Requirements
 
 - Go 1.26.4
-- Node.js 26.x
-- npm 11.x
+- Node.js 26.2.0
+- npm 11.7.0 or newer
 - Wails CLI 2.12.0
-- TypeScript 7 beta via `@typescript/native-preview` and `tsgo`
+- React 19.2.7
+- TypeScript 7 beta via `@typescript/native-preview` 7.0.0-dev.20260421.2 and `tsgo`
+- Biome 2.5.0, Vite 8.0.16, and Vitest 4.1.8 from `frontend/package-lock.json`
 - Nmap installed separately for real scans
 
 ## Development

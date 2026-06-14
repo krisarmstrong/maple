@@ -44,7 +44,7 @@ export function HelpWorkspace(): React.JSX.Element {
             <li>Preview every scan to inspect the exact argv before execution.</li>
             <li>Save presets for repeated option and script combinations, not target lists.</li>
             <li>Use stats intervals on long scans so progress is visible in Output.</li>
-            <li>Prefer structured options before custom NSE arguments.</li>
+            <li>Use structured controls first, then NSE escape hatches for specialized work.</li>
           </ul>
         </article>
 
@@ -52,7 +52,7 @@ export function HelpWorkspace(): React.JSX.Element {
           <h3>Results Guide</h3>
           <ul className="help-list">
             <li>History shows parsed hosts, ports, service labels, and Nmap reason fields.</li>
-            <li>Raw XML and JSON exports are available from completed scans.</li>
+            <li>Raw XML, full JSON, and Markdown reports are available from completed scans.</li>
             <li>Empty host rows can still have useful run statistics from Nmap.</li>
             <li>Diagnostics are stderr and parser notes preserved for troubleshooting.</li>
           </ul>
@@ -115,19 +115,31 @@ export function HelpWorkspace(): React.JSX.Element {
 
 function OptionCoveragePanel(): React.JSX.Element {
   const counts = optionCoverageCounts();
+  const isReady = counts.planned === 0;
   return (
     <article className="help-panel option-coverage-panel">
       <div>
         <h3>Nmap Option Coverage</h3>
         <p>
-          Maple tracks Nmap support as structured controls, advanced escape hatches, planned
-          controls, and blocked-by-design behavior.
+          Maple tracks Nmap support as structured controls, advanced escape hatches, and
+          blocked-by-design behavior. Planned option groups must stay at zero for the beta gate.
         </p>
+      </div>
+      <div
+        className={`coverage-readiness coverage-readiness--${isReady ? "ready" : "blocked"}`}
+        data-testid="option-coverage-readiness"
+      >
+        <strong>{isReady ? "Beta option surface ready" : "Option gaps remain"}</strong>
+        <span>
+          {isReady
+            ? "All tracked Nmap option groups are either implemented or intentionally blocked."
+            : "Planned option groups must be resolved before beta smoke."}
+        </span>
       </div>
       <div className="option-coverage-summary">
         <CoverageMetric label="Structured controls" value={counts.structured} />
         <CoverageMetric label="Advanced escape hatches" value={counts["escape-hatch"]} />
-        <CoverageMetric label="Planned controls" value={counts.planned} />
+        <CoverageMetric label="Planned option gaps" value={counts.planned} />
         <CoverageMetric label="Blocked by design" value={counts.blocked} />
       </div>
       <div className="option-catalog-groups">

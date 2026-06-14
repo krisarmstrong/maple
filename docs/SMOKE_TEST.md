@@ -17,22 +17,26 @@ Expected:
 - If Nmap is missing, Maple shows a clear missing-tool state and disables scan actions.
 - The app creates a local history store under the platform app config directory.
 - The Scan view starts with System theme selected by default.
+- Configure, Options, Scripts, Output, History, Environment, and Help are reachable without horizontal overflow.
 
 Recommended scan:
 
 1. In Target Builder, choose `Single target` and enter `127.0.0.1`.
 2. Confirm Target Builder shows accepted syntax, parsed target type, and estimated addresses.
-2. Click `Preview`.
-3. Confirm Output shows Run status, Preview argv, Live log, and Diagnostics sections.
-4. Confirm the command is shown as argv tokens and includes `--` before the target.
+3. Open Options and confirm structured controls render for discovery, scan technique, ports, timing, packet shaping, and identity/evasion.
+4. Open Scripts and confirm built-in categories, named scripts, absolute custom script paths, custom script directories, script args, and script args files are available without raw shell input.
+5. Click `Preview`.
+6. Confirm Output shows Run status, Preview argv, Live log, and Diagnostics sections.
+7. Confirm the command is shown as argv tokens and includes `--` before the target.
    The XML output path should appear as Maple's managed XML placeholder, not as `-oX -`.
-5. Click `Run Scan`.
-6. Confirm the live log does not show raw XML.
-7. Confirm a history row appears with `exit 0` for a successful Nmap run.
-8. Open `Details` and confirm host/port rows are grouped and readable.
-9. Test Details filters: `All ports`, `Open ports`, `Hosts up`, and `Hosts with findings`.
-10. Export Raw XML, Full JSON, and Markdown Report.
-11. Confirm each export shows the generated filename and saved path.
+8. Click `Run Scan`.
+9. Confirm the live log does not show raw XML.
+10. Confirm a history row appears with `exit 0` for a successful Nmap run.
+11. Open `Details` and confirm host/port rows are grouped and readable.
+12. Test Details filters: `All ports`, `Open ports`, `Hosts up`, and `Hosts with findings`.
+13. Export Raw XML, Full JSON, and Markdown Report.
+14. Confirm each export shows the generated filename and saved path.
+15. Open Help and confirm Nmap Option Coverage reports zero planned option gaps.
 
 ## Windows Smoke
 
@@ -48,6 +52,7 @@ Expected:
 - Tool detection finds user-installed `nmap.exe` when it is on `PATH`.
 - Missing Nmap is reported cleanly.
 - Target Builder, preview argv tokens, scan/history/details, and all three export formats pass.
+- The macOS `make package-windows-dryrun` command is documented as the local package command-generation gate; final smoke happens on Windows.
 
 ## Linux Smoke
 
@@ -62,6 +67,7 @@ Expected:
 - Tool detection finds user-installed `nmap` when it is on `PATH`.
 - Missing Nmap is reported cleanly.
 - Target Builder, preview argv tokens, scan/history/details, and all three export formats pass.
+- The macOS `make package-linux-dryrun` command records Wails' cross-compilation limitation; final smoke happens on Linux.
 
 ## Invariants
 

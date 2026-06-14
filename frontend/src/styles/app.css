@@ -302,6 +302,33 @@
   gap: var(--space-11);
 }
 
+.coverage-readiness {
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-sm);
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-8);
+}
+
+.coverage-readiness--ready {
+  background: var(--color-success-surface);
+  color: var(--accent-strong);
+}
+
+.coverage-readiness--blocked {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+}
+
+.coverage-readiness strong {
+  font-size: var(--font-size-md);
+}
+
+.coverage-readiness span {
+  color: var(--text);
+  line-height: var(--line-height-copy);
+}
+
 .option-coverage-panel > div > p,
 .option-catalog-group > p {
   color: var(--muted);
