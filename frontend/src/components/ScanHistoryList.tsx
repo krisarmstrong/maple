@@ -122,33 +122,50 @@ export function ScanHistoryList({ records, onChanged }: ScanHistoryListProps): R
       ) : null}
       {visibleRecords.map((record) => (
         <article className="history-card" key={record.runId}>
-          <div>
-            <h3>{formatTimestamp(record.finishedAt)}</h3>
-            <strong className="history-profile">{record.profileName}</strong>
-            <p>{historyLabel(record)}</p>
+          <div className="history-card-header">
+            <div>
+              <h3>{formatTimestamp(record.finishedAt)}</h3>
+              <strong className="history-profile">{record.profileName}</strong>
+              <p>{historyLabel(record)}</p>
+            </div>
+            <span
+              className={
+                record.error === undefined || record.error === ""
+                  ? "state-badge state-badge--good"
+                  : "state-badge state-badge--warn"
+              }
+            >
+              {record.error === undefined || record.error === "" ? "Completed" : "Needs review"}
+            </span>
           </div>
-          <code>{record.command.join(" ")}</code>
-          <button
-            type="button"
-            onClick={() => setDetailsRunId(toggleRunId(detailsRunId, record.runId))}
-          >
-            {detailsRunId === record.runId ? "Hide Details" : "Details"}
-          </button>
-          <button type="button" onClick={() => void showReport(record.runId)}>
-            {report?.runId === record.runId ? "Hide Report" : "Report"}
-          </button>
-          <button type="button" onClick={() => void exportRecord(record.runId, "xml")}>
-            Raw XML
-          </button>
-          <button type="button" onClick={() => void exportRecord(record.runId, "json")}>
-            Full JSON
-          </button>
-          <button type="button" onClick={() => void exportRecord(record.runId, "markdown")}>
-            Markdown Report
-          </button>
-          <button type="button" onClick={() => void deleteRecord(record.runId)}>
-            {pendingDeleteRunId === record.runId ? "Confirm Delete" : "Delete"}
-          </button>
+          <code className="history-command">{record.command.join(" ")}</code>
+          <div className="history-card-actions">
+            <div>
+              <button
+                type="button"
+                onClick={() => setDetailsRunId(toggleRunId(detailsRunId, record.runId))}
+              >
+                {detailsRunId === record.runId ? "Hide Details" : "Details"}
+              </button>
+              <button type="button" onClick={() => void showReport(record.runId)}>
+                {report?.runId === record.runId ? "Hide Report" : "Report"}
+              </button>
+            </div>
+            <div>
+              <button type="button" onClick={() => void exportRecord(record.runId, "xml")}>
+                Raw XML
+              </button>
+              <button type="button" onClick={() => void exportRecord(record.runId, "json")}>
+                Full JSON
+              </button>
+              <button type="button" onClick={() => void exportRecord(record.runId, "markdown")}>
+                Markdown Report
+              </button>
+            </div>
+            <button type="button" onClick={() => void deleteRecord(record.runId)}>
+              {pendingDeleteRunId === record.runId ? "Confirm Delete" : "Delete"}
+            </button>
+          </div>
           {report?.runId === record.runId ? (
             <pre className="report-preview">{report.text}</pre>
           ) : null}

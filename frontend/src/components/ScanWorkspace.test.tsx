@@ -133,7 +133,7 @@ describe("ScanWorkspace", () => {
     expect(screen.getByRole("heading", { name: "Preview argv" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Run status" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Live log" })).toBeInTheDocument();
-    expect(screen.getByText("Preview ready")).toBeInTheDocument();
+    expect(screen.getAllByText("Preview ready").length).toBeGreaterThan(0);
     expect(
       screen.getByText("Raw XML is captured for History exports, not shown here."),
     ).toBeInTheDocument();
@@ -802,7 +802,7 @@ describe("ScanWorkspace", () => {
     act(() => {
       scanEventListener?.({ type: "started", runId: "scan-1" });
     });
-    expect(screen.getByText("Scan running")).toBeInTheDocument();
+    expect(screen.getAllByText("Scan running").length).toBeGreaterThan(0);
 
     act(() => {
       scanEventListener?.({
@@ -810,7 +810,7 @@ describe("ScanWorkspace", () => {
         result: { runId: "scan-1", exitCode: 0, xml: "<nmaprun />" },
       });
     });
-    expect(screen.getByText("Scan complete")).toBeInTheDocument();
+    expect(screen.getAllByText("Scan complete").length).toBeGreaterThan(0);
   });
 
   it("summarizes target kinds before running", async () => {
@@ -824,8 +824,8 @@ describe("ScanWorkspace", () => {
     );
 
     expect(
-      screen.getByText("1 hostname, 1 IP address, 1 subnet, 1 IPv4 range"),
-    ).toBeInTheDocument();
+      screen.getAllByText("1 hostname, 1 IP address, 1 subnet, 1 IPv4 range").length,
+    ).toBeGreaterThan(0);
     expect(screen.getByText("Parsed targets")).toBeInTheDocument();
     expect(screen.getByText("Estimated addresses")).toBeInTheDocument();
     expect(screen.getByText("Accepted syntax")).toBeInTheDocument();
@@ -859,7 +859,7 @@ describe("ScanWorkspace", () => {
 
     await userEvent.click(screen.getByRole("radio", { name: "IPv4 range" }));
 
-    expect(screen.getAllByText("IPv4 range")).toHaveLength(2);
+    expect(screen.getAllByText("IPv4 range").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText("Scan an inclusive IPv4 last-octet range.")).toBeInTheDocument();
     expect(screen.getByLabelText("Targets")).toHaveAttribute("placeholder", "192.168.1.1-20");
     expect(screen.getByText("Example:")).toBeInTheDocument();
@@ -878,7 +878,7 @@ describe("ScanWorkspace", () => {
     expect(screen.getByLabelText("Targets")).toHaveAttribute("placeholder", "192.168.1.0/24");
 
     await userEvent.click(screen.getByRole("radio", { name: "Target list" }));
-    expect(screen.getAllByText("Target list")).toHaveLength(2);
+    expect(screen.getAllByText("Target list").length).toBeGreaterThanOrEqual(2);
   });
 
   it("validates targets against the selected target intent", async () => {
@@ -908,7 +908,7 @@ describe("ScanWorkspace", () => {
     await userEvent.click(screen.getByRole("radio", { name: "IPv4 range" }));
 
     expect(screen.getByLabelText("Targets")).toHaveValue("scanme.nmap.org");
-    expect(screen.getByText("1 hostname")).toBeInTheDocument();
+    expect(screen.getAllByText("1 hostname").length).toBeGreaterThan(0);
   });
 
   it("shows selected script chips and removes one without editing textarea text", async () => {

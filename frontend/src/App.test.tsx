@@ -67,7 +67,7 @@ describe("App", () => {
     render(<App />);
 
     expect(screen.getByRole("heading", { name: "Modern Nmap workbench" })).toBeInTheDocument();
-    expect(await screen.findByText("1 tools detected")).toBeInTheDocument();
+    expect((await screen.findAllByText("1 tools detected")).length).toBeGreaterThan(0);
     await userEvent.click(screen.getByRole("button", { name: /Environment/u }));
 
     expect(await screen.findByText("Nmap version 7.95")).toBeInTheDocument();
@@ -75,6 +75,25 @@ describe("App", () => {
       "aria-current",
       "page",
     );
+  });
+
+  it("renders a desktop workbench shell with live status metadata", async () => {
+    detectToolsMock.mockResolvedValue([
+      {
+        name: "nmap",
+        displayName: "Nmap",
+        required: true,
+        installed: true,
+        version: "Nmap version 7.99",
+      },
+    ]);
+
+    render(<App />);
+
+    expect(screen.getByText("Local desktop")).toBeInTheDocument();
+    expect(screen.getByText("Beta 2")).toBeInTheDocument();
+    expect(screen.getByText("argv-only execution")).toBeInTheDocument();
+    expect((await screen.findAllByText("1 tools detected")).length).toBeGreaterThan(0);
   });
 
   it("defaults theme selection to system mode", () => {
@@ -107,7 +126,7 @@ describe("App", () => {
 
     render(<App />);
 
-    expect(await screen.findByText("1 required tool missing")).toBeInTheDocument();
+    expect((await screen.findAllByText("1 required tool missing")).length).toBeGreaterThan(0);
     await userEvent.click(screen.getByRole("button", { name: /Environment/u }));
     expect(await screen.findByText("Required")).toBeInTheDocument();
 

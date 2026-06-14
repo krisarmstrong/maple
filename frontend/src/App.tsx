@@ -54,12 +54,16 @@ export default function App(): React.JSX.Element {
   return (
     <main className="app-shell">
       <aside className="app-sidebar">
-        <div>
+        <div className="brand-panel">
           <p className="eyebrow">Maple</p>
           <h1>Modern Nmap workbench</h1>
           <p className="summary">
             Build scans, inspect results, and export reports with locally installed Nmap.
           </p>
+          <div className="app-badges">
+            <span>Local desktop</span>
+            <span>Beta 2</span>
+          </div>
         </div>
         <nav className="app-nav" aria-label="Maple sections">
           <NavButton activeView={activeView} id="scan" label="Scan" onSelect={setActiveView} />
@@ -86,6 +90,18 @@ export default function App(): React.JSX.Element {
       </aside>
 
       <div className="app-content">
+        <header className="app-topbar">
+          <div>
+            <span className="topbar-kicker">Desktop scan console</span>
+            <strong>{viewTitle(activeView)}</strong>
+          </div>
+          <div className="topbar-status">
+            <span>{statusText(state)}</span>
+            <span>{historyMeta(historyState)}</span>
+            <span>argv-only execution</span>
+          </div>
+        </header>
+
         {activeView === "scan" ? (
           <ScanWorkspace
             nmapPath={nmapPathFor(state)}
@@ -248,4 +264,17 @@ function historyMeta(state: HistoryState): string {
     return "Unavailable";
   }
   return `${state.records.length} ${state.records.length === 1 ? "scan" : "scans"}`;
+}
+
+function viewTitle(view: AppView): string {
+  if (view === "scan") {
+    return "Scan workspace";
+  }
+  if (view === "history") {
+    return "History and exports";
+  }
+  if (view === "environment") {
+    return "Environment";
+  }
+  return "Help and references";
 }

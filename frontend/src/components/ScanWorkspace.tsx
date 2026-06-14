@@ -1557,7 +1557,8 @@ function browserStorage(): Storage | undefined {
 function ContextMetric({ label, value }: { label: string; value: string }): React.JSX.Element {
   return (
     <div>
-      <strong>{`${label}: ${value}`}</strong>
+      <span>{label}</span>
+      <strong>{value}</strong>
     </div>
   );
 }

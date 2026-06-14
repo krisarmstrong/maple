@@ -1,32 +1,39 @@
 :root {
-  --color-canvas: #f4f6f8;
-  --color-surface: #ffffff;
-  --color-surface-subtle: #eef2f6;
-  --color-text: #18212f;
-  --color-text-muted: #607083;
-  --color-border: #d7dee6;
-  --color-accent: #26745d;
-  --color-accent-strong: #17624d;
-  --color-danger-surface: #fde4e2;
-  --color-danger-text: #9d2f25;
-  --color-success-surface: #dff4ea;
-  --color-code-surface: #101723;
-  --color-code-text: #dce8f6;
+  --color-canvas: #eef3f1;
+  --color-surface: #fbfcfb;
+  --color-surface-raised: #ffffff;
+  --color-surface-subtle: #e8efed;
+  --color-sidebar: #17231f;
+  --color-sidebar-muted: #afc4bc;
+  --color-sidebar-border: #2d4039;
+  --color-text: #17211f;
+  --color-text-muted: #51645f;
+  --color-border: #cad7d3;
+  --color-accent: #1d7f61;
+  --color-accent-strong: #126149;
+  --color-accent-contrast: #ffffff;
+  --color-warm: #b86b12;
+  --color-warm-surface: #fff0dc;
+  --color-danger-surface: #fde4df;
+  --color-danger-text: #9b2d1f;
+  --color-success-surface: #dff4e8;
+  --color-code-surface: #0d1513;
+  --color-code-text: #d8f2ea;
 
   --font-sans:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 
-  --font-size-2xs: 0.76rem;
-  --font-size-xs: 0.78rem;
+  --font-size-2xs: 0.72rem;
+  --font-size-xs: 0.76rem;
   --font-size-sm: 0.82rem;
-  --font-size-md: 0.84rem;
-  --font-size-base: 0.88rem;
-  --font-size-body: 0.9rem;
-  --font-size-lg: 0.95rem;
-  --font-size-title: 1.1rem;
-  --font-size-brand: 1.55rem;
-  --font-size-brand-compact: 1.45rem;
+  --font-size-md: 0.86rem;
+  --font-size-base: 0.9rem;
+  --font-size-body: 0.94rem;
+  --font-size-lg: 1rem;
+  --font-size-title: 1.22rem;
+  --font-size-brand: 1.72rem;
+  --font-size-brand-compact: 1.52rem;
 
   --font-weight-control: 650;
   --font-weight-strong: 700;
@@ -62,8 +69,11 @@
 
   --border-width: 1px;
   --focus-rail-width: 3px;
+  --shadow-panel: 0 18px 48px rgb(13 21 19 / 12%);
+  --shadow-subtle: 0 8px 24px rgb(13 21 19 / 8%);
+  --shadow-inset: inset 0 1px 0 rgb(255 255 255 / 70%);
 
-  --size-control-min: 40px;
+  --size-control-min: 44px;
   --size-tab-min: 42px;
   --size-nav-min: 58px;
   --size-nav-min-compact: 52px;
@@ -81,7 +91,7 @@
   --size-chip-min: 32px;
   --size-app-viewport: 100vh;
 
-  --layout-sidebar-width: 280px;
+  --layout-sidebar-width: 300px;
   --layout-mobile-min-width: 320px;
   --layout-breakpoint-compact: 760px;
   --layout-full-span: 1 / -1;
@@ -96,12 +106,16 @@
 
   --bg: var(--color-canvas);
   --panel: var(--color-surface);
+  --panel-raised: var(--color-surface-raised);
   --panel-subtle: var(--color-surface-subtle);
   --text: var(--color-text);
   --muted: var(--color-text-muted);
   --border: var(--color-border);
   --accent: var(--color-accent);
   --accent-strong: var(--color-accent-strong);
+  --accent-contrast: var(--color-accent-contrast);
+  --warm: var(--color-warm);
+  --warm-bg: var(--color-warm-surface);
   --warn-bg: var(--color-danger-surface);
   --warn-text: var(--color-danger-text);
   --warning: var(--color-danger-text);
@@ -110,17 +124,27 @@
 }
 
 :root[data-theme="dark"] {
-  --color-canvas: #111720;
-  --color-surface: #192230;
-  --color-surface-subtle: #243044;
-  --color-text: #edf3f8;
-  --color-text-muted: #aab7c5;
-  --color-border: #334154;
-  --color-accent: #55b893;
-  --color-accent-strong: #8bd6b6;
-  --color-danger-surface: #4b2424;
-  --color-danger-text: #ffc7bf;
-  --color-success-surface: #214637;
-  --color-code-surface: #070b11;
-  --color-code-text: #dce8f6;
+  --color-canvas: #0f1514;
+  --color-surface: #17201e;
+  --color-surface-raised: #1e2a27;
+  --color-surface-subtle: #23312d;
+  --color-sidebar: #0a100f;
+  --color-sidebar-muted: #9bb1aa;
+  --color-sidebar-border: #20312d;
+  --color-text: #eef7f4;
+  --color-text-muted: #afc0bb;
+  --color-border: #344640;
+  --color-accent: #5bd1a5;
+  --color-accent-strong: #9af0cf;
+  --color-accent-contrast: #07110e;
+  --color-warm: #f2b15f;
+  --color-warm-surface: #3a2b17;
+  --color-danger-surface: #4b2421;
+  --color-danger-text: #ffc5bd;
+  --color-success-surface: #214a38;
+  --color-code-surface: #070c0b;
+  --color-code-text: #d8f2ea;
+  --shadow-panel: 0 18px 54px rgb(0 0 0 / 28%);
+  --shadow-subtle: 0 8px 28px rgb(0 0 0 / 20%);
+  --shadow-inset: inset 0 1px 0 rgb(255 255 255 / 8%);
 }
