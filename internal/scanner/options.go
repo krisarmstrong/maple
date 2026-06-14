@@ -40,6 +40,9 @@ var ErrInvalidScanOption = errors.New("enter valid structured Nmap options")
 type ScanOptions struct {
 	ScanTechnique    ScanTechnique `json:"scanTechnique,omitempty"`
 	DiscoveryMode    DiscoveryMode `json:"discoveryMode,omitempty"`
+	TargetInputFile  string        `json:"targetInputFile,omitempty"`
+	ExcludeTargets   string        `json:"excludeTargets,omitempty"`
+	ExcludeFile      string        `json:"excludeFile,omitempty"`
 	TimingTemplate   string        `json:"timingTemplate,omitempty"`
 	Ports            string        `json:"ports,omitempty"`
 	TopPorts         int           `json:"topPorts,omitempty"`
@@ -68,6 +71,10 @@ func BuildOptionArgs(options ScanOptions) ([]string, error) {
 	if err := validatePerformanceOptions(options); err != nil {
 		return nil, err
 	}
+	targetScopeArgs, err := buildTargetScopeArgs(options)
+	if err != nil {
+		return nil, err
+	}
 
 	args := make([]string, 0, 12)
 	techniqueArgs, err := buildTechniqueArgs(options.ScanTechnique)
@@ -80,6 +87,7 @@ func BuildOptionArgs(options ScanOptions) ([]string, error) {
 		return nil, err
 	}
 	args = append(args, discoveryArgs...)
+	args = append(args, targetScopeArgs...)
 	if options.TimingTemplate != "" {
 		timing, err := validateTimingTemplate(options.TimingTemplate)
 		if err != nil {
@@ -300,6 +308,58 @@ func validatePerformanceOptions(options ScanOptions) error {
 		return err
 	}
 	return nil
+}
+
+func buildTargetScopeArgs(options ScanOptions) ([]string, error) {
+	args := make([]string, 0, 6)
+	targetInputFile, err := validateAbsoluteOptionPath(options.TargetInputFile)
+	if err != nil {
+		return nil, err
+	}
+	if targetInputFile != "" {
+		args = append(args, "-iL", targetInputFile)
+	}
+	excludeTargets, err := validateExcludeTargets(options.ExcludeTargets)
+	if err != nil {
+		return nil, err
+	}
+	if excludeTargets != "" {
+		args = append(args, "--exclude", excludeTargets)
+	}
+	excludeFile, err := validateAbsoluteOptionPath(options.ExcludeFile)
+	if err != nil {
+		return nil, err
+	}
+	if excludeFile != "" {
+		args = append(args, "--excludefile", excludeFile)
+	}
+	return args, nil
+}
+
+func validateExcludeTargets(value string) (string, error) {
+	targets, err := ParseTargets(value)
+	if strings.TrimSpace(value) == "" {
+		return "", nil
+	}
+	if err != nil {
+		return "", ErrInvalidScanOption
+	}
+	values := make([]string, 0, len(targets))
+	for _, target := range targets {
+		values = append(values, target.Value)
+	}
+	return strings.Join(values, ","), nil
+}
+
+func validateAbsoluteOptionPath(path string) (string, error) {
+	value := strings.TrimSpace(path)
+	if value == "" {
+		return "", nil
+	}
+	if strings.ContainsAny(value, "\x00\r\n") || !isAbsoluteUserPath(value) {
+		return "", ErrInvalidScanOption
+	}
+	return value, nil
 }
 
 func isTimingArg(value string) bool {

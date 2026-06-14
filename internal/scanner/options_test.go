@@ -6,6 +6,9 @@ func TestBuildOptionArgsAddsStructuredNmapOptions(t *testing.T) {
 	args, err := BuildOptionArgs(ScanOptions{
 		ScanTechnique:    ScanTechniqueUDP,
 		DiscoveryMode:    DiscoveryModeSkip,
+		TargetInputFile:  "/Users/krisarmstrong/targets.txt",
+		ExcludeTargets:   "192.168.1.10, scanme.nmap.org",
+		ExcludeFile:      "/Users/krisarmstrong/exclude-targets.txt",
 		TimingTemplate:   "T4",
 		Ports:            "22,80,443",
 		ServiceDetection: true,
@@ -28,7 +31,7 @@ func TestBuildOptionArgsAddsStructuredNmapOptions(t *testing.T) {
 		t.Fatalf("BuildOptionArgs returned error: %v", err)
 	}
 
-	want := []string{"-sU", "-Pn", "-T4", "-p", "22,80,443", "-sV", "--version-all", "-6", "-O", "--traceroute", "-n", "-vv", "--reason", "--open", "--min-rate", "500", "--max-retries", "2", "--host-timeout", "30m", "--max-rtt-timeout", "2s", "--stats-every", "10s", "--packet-trace"}
+	want := []string{"-sU", "-Pn", "-iL", "/Users/krisarmstrong/targets.txt", "--exclude", "192.168.1.10,scanme.nmap.org", "--excludefile", "/Users/krisarmstrong/exclude-targets.txt", "-T4", "-p", "22,80,443", "-sV", "--version-all", "-6", "-O", "--traceroute", "-n", "-vv", "--reason", "--open", "--min-rate", "500", "--max-retries", "2", "--host-timeout", "30m", "--max-rtt-timeout", "2s", "--stats-every", "10s", "--packet-trace"}
 	if !sameStrings(args, want) {
 		t.Fatalf("args = %#v, want %#v", args, want)
 	}
@@ -77,6 +80,12 @@ func TestBuildOptionArgsRejectsInvalidOptions(t *testing.T) {
 		{MaxRTTTimeout: "2s\n--script"},
 		{StatsEvery: "every 10s"},
 		{StatsEvery: "10s\n--packet-trace"},
+		{TargetInputFile: "relative-targets.txt"},
+		{TargetInputFile: "/Users/krisarmstrong/targets\n--script.txt"},
+		{ExcludeFile: "relative-excludes.txt"},
+		{ExcludeFile: "/Users/krisarmstrong/excludes\x00.txt"},
+		{ExcludeTargets: "192.168.1.1;rm"},
+		{ExcludeTargets: "-Pn"},
 	}
 
 	for _, test := range tests {

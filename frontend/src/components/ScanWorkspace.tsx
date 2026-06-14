@@ -522,6 +522,52 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                 ))}
               </select>
             </label>
+            <h4 className="option-section-heading">Target scope</h4>
+            <label>
+              <span>Target input file</span>
+              <input
+                aria-label="Target input file"
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    targetInputFile: event.target.value,
+                  }))
+                }
+                placeholder="/Users/krisarmstrong/targets.txt"
+                type="text"
+                value={scanOptions.targetInputFile}
+              />
+            </label>
+            <label>
+              <span>Exclude targets</span>
+              <input
+                aria-label="Exclude targets"
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    excludeTargets: event.target.value,
+                  }))
+                }
+                placeholder="192.168.1.10, scanme.nmap.org"
+                type="text"
+                value={scanOptions.excludeTargets}
+              />
+            </label>
+            <label>
+              <span>Exclude file</span>
+              <input
+                aria-label="Exclude file"
+                onChange={(event) =>
+                  updateScanOptions((current) => ({
+                    ...current,
+                    excludeFile: event.target.value,
+                  }))
+                }
+                placeholder="/Users/krisarmstrong/excludes.txt"
+                type="text"
+                value={scanOptions.excludeFile}
+              />
+            </label>
             <label>
               <span>Version detail</span>
               <select

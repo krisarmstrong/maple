@@ -271,6 +271,9 @@ export namespace scanner {
 	export class ScanOptions {
 	    scanTechnique?: string;
 	    discoveryMode?: string;
+	    targetInputFile?: string;
+	    excludeTargets?: string;
+	    excludeFile?: string;
 	    timingTemplate?: string;
 	    ports?: string;
 	    topPorts?: number;
@@ -299,6 +302,9 @@ export namespace scanner {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.scanTechnique = source["scanTechnique"];
 	        this.discoveryMode = source["discoveryMode"];
+	        this.targetInputFile = source["targetInputFile"];
+	        this.excludeTargets = source["excludeTargets"];
+	        this.excludeFile = source["excludeFile"];
 	        this.timingTemplate = source["timingTemplate"];
 	        this.ports = source["ports"];
 	        this.topPorts = source["topPorts"];

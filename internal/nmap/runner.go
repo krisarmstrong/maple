@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/krisarmstrong/maple/internal/scanner"
 )
@@ -63,7 +64,7 @@ func buildCommandParts(request scanner.ScanRequest) (Command, scanner.Profile, [
 	if err != nil {
 		return Command{}, scanner.Profile{}, nil, err
 	}
-	targets, err := scanner.ParseTargets(request.Targets)
+	targets, err := parseRequestTargets(request)
 	if err != nil {
 		return Command{}, scanner.Profile{}, nil, err
 	}
@@ -118,7 +119,7 @@ func previewCommandParts(request scanner.ScanRequest) (Command, scanner.Profile,
 	if err != nil {
 		return Command{}, scanner.Profile{}, nil, err
 	}
-	targets, err := scanner.ParseTargets(request.Targets)
+	targets, err := parseRequestTargets(request)
 	if err != nil {
 		return Command{}, scanner.Profile{}, nil, err
 	}
@@ -151,6 +152,13 @@ func previewCommandParts(request scanner.ScanRequest) (Command, scanner.Profile,
 		targets,
 	)
 	return Command{Path: argv[0], Args: argv[1:], XMLPath: previewXMLOutputPath}, profile, targets, nil
+}
+
+func parseRequestTargets(request scanner.ScanRequest) ([]scanner.Target, error) {
+	if strings.TrimSpace(request.Options.TargetInputFile) != "" && strings.TrimSpace(request.Targets) == "" {
+		return nil, nil
+	}
+	return scanner.ParseTargets(request.Targets)
 }
 
 func createXMLOutputPath() (string, error) {

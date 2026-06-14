@@ -1,5 +1,5 @@
 import type { NSECategory } from "./nse-scripts";
-import type { ScanOptions } from "./scan-options";
+import { defaultScanOptions, type ScanOptions } from "./scan-options";
 import type { ScanProfileID } from "./scan-profiles";
 
 export const savedPresetStorageKey = "maple.scanPresets.v1";
@@ -24,10 +24,14 @@ export function loadSavedPresets(storage: Storage): ScanPreset[] {
   }
   try {
     const parsed: unknown = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed.filter(isScanPreset) : [];
+    return Array.isArray(parsed) ? parsed.filter(isScanPreset).map(normalizePreset) : [];
   } catch {
     return [];
   }
+}
+
+function normalizePreset(preset: ScanPreset): ScanPreset {
+  return { ...preset, options: { ...defaultScanOptions, ...preset.options } };
 }
 
 export function savePreset(

@@ -72,7 +72,7 @@ func BuildScriptArgsFileArgs(path string) ([]string, error) {
 	if value == "" {
 		return nil, nil
 	}
-	if strings.ContainsAny(value, "\x00\r\n") || !isAbsoluteScriptPath(value) {
+	if strings.ContainsAny(value, "\x00\r\n") || !isAbsoluteUserPath(value) {
 		return nil, ErrInvalidScript
 	}
 	return []string{"--script-args-file", value}, nil
@@ -97,7 +97,7 @@ func validateScript(script Script) (string, error) {
 			return value, nil
 		}
 	case ScriptPath:
-		if isAbsoluteScriptPath(value) && isScriptFileOrDirectoryPath(value) {
+		if isAbsoluteUserPath(value) && isScriptFileOrDirectoryPath(value) {
 			return value, nil
 		}
 	}
@@ -109,6 +109,6 @@ func isScriptFileOrDirectoryPath(value string) bool {
 	return extension == "" || strings.EqualFold(extension, ".nse")
 }
 
-func isAbsoluteScriptPath(value string) bool {
+func isAbsoluteUserPath(value string) bool {
 	return filepath.IsAbs(value) || windowsDrivePath.MatchString(value) || strings.HasPrefix(value, `\\`)
 }

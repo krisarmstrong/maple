@@ -29,7 +29,7 @@ export function makeRequest(
   scriptArgs = "",
   scriptArgsFile = "",
 ) {
-  if (nmapPath === undefined || !validateTargetsForMode(targetModeId, targets).ok) {
+  if (nmapPath === undefined || !hasRunnableTargets(targetModeId, targets, options)) {
     return undefined;
   }
   return {
@@ -41,6 +41,17 @@ export function makeRequest(
     scriptArgs,
     scriptArgsFile,
   };
+}
+
+function hasRunnableTargets(
+  targetModeId: TargetModeID,
+  targets: string,
+  options?: ScanOptions,
+): boolean {
+  if ((options?.targetInputFile ?? "").trim() !== "" && targets.trim() === "") {
+    return true;
+  }
+  return validateTargetsForMode(targetModeId, targets).ok;
 }
 
 export function updateProfile(

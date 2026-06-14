@@ -8,6 +8,9 @@ export type VersionMode = "" | "light" | "all";
 export interface ScanOptions {
   scanTechnique: ScanTechnique;
   discoveryMode: DiscoveryMode;
+  targetInputFile: string;
+  excludeTargets: string;
+  excludeFile: string;
   timingTemplate: TimingTemplate;
   ports: string;
   topPorts: number;
@@ -32,6 +35,9 @@ export interface ScanOptions {
 export const defaultScanOptions: ScanOptions = {
   scanTechnique: "",
   discoveryMode: "",
+  targetInputFile: "",
+  excludeTargets: "",
+  excludeFile: "",
   timingTemplate: "",
   ports: "",
   topPorts: 0,

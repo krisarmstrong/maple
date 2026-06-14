@@ -25,6 +25,30 @@ describe("scan-presets", () => {
     expect(loadSavedPresets(storage)[0]?.name).toBe("Web Check");
   });
 
+  it("normalizes older presets with partial option data", () => {
+    const storage = storageWith(
+      JSON.stringify([
+        {
+          id: "old-check",
+          name: "Old Check",
+          profileId: "connect",
+          options: { timingTemplate: "T4" },
+          scriptCategories: [],
+          scriptNames: "",
+          customScriptPaths: "",
+          customScriptDirectories: "",
+          scriptArgs: "",
+          scriptArgsFile: "",
+        },
+      ]),
+    );
+
+    expect(loadSavedPresets(storage)[0]?.options).toEqual({
+      ...defaultScanOptions,
+      timingTemplate: "T4",
+    });
+  });
+
   it("ignores malformed storage", () => {
     expect(loadSavedPresets(storageWith("{bad json"))).toEqual([]);
     expect(loadSavedPresets(storageWith(JSON.stringify([{ id: 42 }])))).toEqual([]);

@@ -80,6 +80,32 @@ func TestBuildPreviewIncludesStructuredOptionsBeforeScriptsAndTargets(t *testing
 	}
 }
 
+func TestBuildPreviewAllowsTargetInputFileWithoutTypedTargets(t *testing.T) {
+	preview, err := BuildPreview("/usr/local/bin/nmap", scanner.ScanRequest{
+		ProfileID: scanner.ProfilePing,
+		Targets:   "  ",
+		Options: scanner.ScanOptions{
+			TargetInputFile: "/Users/krisarmstrong/targets.txt",
+			ExcludeTargets:  "192.168.1.10,scanme.nmap.org",
+			ExcludeFile:     "/Users/krisarmstrong/excludes.txt",
+		},
+	})
+	if err != nil {
+		t.Fatalf("BuildPreview returned error: %v", err)
+	}
+
+	wantArgs := []string{
+		"-oX", "<managed-xml-file>",
+		"-sn", "-iL", "/Users/krisarmstrong/targets.txt",
+		"--exclude", "192.168.1.10,scanme.nmap.org",
+		"--excludefile", "/Users/krisarmstrong/excludes.txt",
+		"--",
+	}
+	if !sameStrings(preview.Args, wantArgs) {
+		t.Fatalf("args = %#v, want %#v", preview.Args, wantArgs)
+	}
+}
+
 func TestBuildPreviewRejectsUnknownProfile(t *testing.T) {
 	_, err := BuildPreview("nmap", scanner.ScanRequest{
 		ProfileID: "unsafe",

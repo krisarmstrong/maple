@@ -1,4 +1,4 @@
-import { act, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -64,7 +64,7 @@ describe("ScanWorkspace", () => {
     expect(context.getByText(/Ready to preview/u)).toBeInTheDocument();
     expect(context.getByText(/No target set/u)).toBeInTheDocument();
 
-    await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
+    fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
 
     expect(context.getByText(/1 hostname/u)).toBeInTheDocument();
   });
@@ -118,7 +118,7 @@ describe("ScanWorkspace", () => {
     ]);
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
-    await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
+    fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
     await userEvent.click(screen.getByRole("button", { name: "Preview" }));
 
     expect(screen.getByRole("button", { name: "Output" })).toHaveAttribute("aria-current", "page");
@@ -140,7 +140,7 @@ describe("ScanWorkspace", () => {
     previewScanCommandMock.mockRejectedValue(new Error("enter valid structured Nmap options"));
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
-    await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
+    fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
     await userEvent.click(screen.getByRole("button", { name: "Preview" }));
 
     expect(await screen.findByText("enter valid structured Nmap options")).toBeInTheDocument();
@@ -154,7 +154,7 @@ describe("ScanWorkspace", () => {
     startScanMock.mockRejectedValue(new Error("enter known NSE categories"));
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
-    await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
+    fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
     await userEvent.click(screen.getByRole("button", { name: "Run Scan" }));
 
     expect(await screen.findByText("enter known NSE categories")).toBeInTheDocument();
@@ -191,22 +191,23 @@ describe("ScanWorkspace", () => {
     await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
     await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
     await userEvent.click(screen.getByRole("checkbox", { name: "safe" }));
-    await userEvent.type(screen.getByLabelText("Built-in script names"), "http-title");
-    await userEvent.type(screen.getByLabelText("Find built-in scripts"), "ssl");
+    fireEvent.change(screen.getByLabelText("Built-in script names"), {
+      target: { value: "http-title" },
+    });
+    fireEvent.change(screen.getByLabelText("Find built-in scripts"), { target: { value: "ssl" } });
     await userEvent.click(screen.getByRole("checkbox", { name: "ssl-cert" }));
-    await userEvent.type(
-      screen.getByLabelText("Custom .nse script files"),
-      "/Users/krisarmstrong/Scripts/custom-check.nse",
-    );
-    await userEvent.type(
-      screen.getByLabelText("Custom script directories"),
-      "/Users/krisarmstrong/Scripts/nse-pack",
-    );
-    await userEvent.type(screen.getByLabelText("Script arguments"), "http.useragent=Maple");
-    await userEvent.type(
-      screen.getByLabelText("Script arguments file"),
-      "/Users/krisarmstrong/nse-args.txt",
-    );
+    fireEvent.change(screen.getByLabelText("Custom .nse script files"), {
+      target: { value: "/Users/krisarmstrong/Scripts/custom-check.nse" },
+    });
+    fireEvent.change(screen.getByLabelText("Custom script directories"), {
+      target: { value: "/Users/krisarmstrong/Scripts/nse-pack" },
+    });
+    fireEvent.change(screen.getByLabelText("Script arguments"), {
+      target: { value: "http.useragent=Maple" },
+    });
+    fireEvent.change(screen.getByLabelText("Script arguments file"), {
+      target: { value: "/Users/krisarmstrong/nse-args.txt" },
+    });
     await userEvent.click(screen.getByRole("button", { name: "Preview" }));
 
     expect(previewScanCommandMock).toHaveBeenCalledWith({
@@ -218,6 +219,9 @@ describe("ScanWorkspace", () => {
       options: {
         scanTechnique: "",
         discoveryMode: "",
+        targetInputFile: "",
+        excludeTargets: "",
+        excludeFile: "",
         timingTemplate: "",
         ports: "",
         topPorts: 0,
@@ -295,7 +299,7 @@ describe("ScanWorkspace", () => {
     await userEvent.selectOptions(screen.getByLabelText("Timing"), "T4");
     await userEvent.click(screen.getByRole("checkbox", { name: "Service detection" }));
     await userEvent.selectOptions(screen.getByLabelText("Version detail"), "all");
-    await userEvent.type(screen.getByLabelText("Ports"), "22,80,443");
+    fireEvent.change(screen.getByLabelText("Ports"), { target: { value: "22,80,443" } });
     await userEvent.click(screen.getByRole("checkbox", { name: "IPv6" }));
     await userEvent.click(screen.getByRole("checkbox", { name: "OS detection" }));
     await userEvent.click(screen.getByRole("checkbox", { name: "Traceroute" }));
@@ -303,11 +307,11 @@ describe("ScanWorkspace", () => {
     await userEvent.selectOptions(screen.getByLabelText("Output detail"), "debug");
     await userEvent.click(screen.getByRole("checkbox", { name: "Show reasons" }));
     await userEvent.click(screen.getByRole("checkbox", { name: "Only open ports" }));
-    await userEvent.type(screen.getByLabelText("Minimum packet rate"), "500");
-    await userEvent.type(screen.getByLabelText("Maximum retries"), "2");
-    await userEvent.type(screen.getByLabelText("Host timeout"), "30m");
-    await userEvent.type(screen.getByLabelText("Max RTT timeout"), "2s");
-    await userEvent.type(screen.getByLabelText("Stats interval"), "10s");
+    fireEvent.change(screen.getByLabelText("Minimum packet rate"), { target: { value: "500" } });
+    fireEvent.change(screen.getByLabelText("Maximum retries"), { target: { value: "2" } });
+    fireEvent.change(screen.getByLabelText("Host timeout"), { target: { value: "30m" } });
+    fireEvent.change(screen.getByLabelText("Max RTT timeout"), { target: { value: "2s" } });
+    fireEvent.change(screen.getByLabelText("Stats interval"), { target: { value: "10s" } });
     await userEvent.click(screen.getByRole("checkbox", { name: "Packet trace" }));
     await userEvent.click(screen.getByRole("button", { name: "Preview" }));
 
@@ -321,6 +325,9 @@ describe("ScanWorkspace", () => {
       options: {
         scanTechnique: "udp",
         discoveryMode: "skip",
+        targetInputFile: "",
+        excludeTargets: "",
+        excludeFile: "",
         timingTemplate: "T4",
         ports: "22,80,443",
         serviceDetection: true,
@@ -345,6 +352,76 @@ describe("ScanWorkspace", () => {
     expect(
       await screen.findByText(
         "nmap -oX <managed-xml-file> -sU -Pn -T4 -p 22,80,443 -sV --version-all -6 -O --traceroute -n -vv --reason --open --min-rate 500 --max-retries 2 --host-timeout 30m --max-rtt-timeout 2s --stats-every 10s --packet-trace -- scanme.nmap.org",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("adds target file and exclusion controls to preview requests", async () => {
+    previewScanCommandMock.mockResolvedValue([
+      "nmap",
+      "-oX",
+      "<managed-xml-file>",
+      "-sn",
+      "-iL",
+      "/Users/krisarmstrong/targets.txt",
+      "--exclude",
+      "192.168.1.10,scanme.nmap.org",
+      "--excludefile",
+      "/Users/krisarmstrong/excludes.txt",
+      "--",
+    ]);
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.selectOptions(screen.getByLabelText("Profile"), "ping");
+    await userEvent.click(screen.getByRole("button", { name: "Options" }));
+    fireEvent.change(screen.getByLabelText("Target input file"), {
+      target: { value: "/Users/krisarmstrong/targets.txt" },
+    });
+    fireEvent.change(screen.getByLabelText("Exclude targets"), {
+      target: { value: "192.168.1.10,scanme.nmap.org" },
+    });
+    fireEvent.change(screen.getByLabelText("Exclude file"), {
+      target: { value: "/Users/krisarmstrong/excludes.txt" },
+    });
+    await userEvent.click(screen.getByRole("button", { name: "Preview" }));
+
+    expect(previewScanCommandMock).toHaveBeenCalledWith({
+      profileId: "ping",
+      targets: "",
+      nmapPath: "/usr/local/bin/nmap",
+      scripts: [],
+      scriptArgs: "",
+      scriptArgsFile: "",
+      options: {
+        scanTechnique: "",
+        discoveryMode: "",
+        targetInputFile: "/Users/krisarmstrong/targets.txt",
+        excludeTargets: "192.168.1.10,scanme.nmap.org",
+        excludeFile: "/Users/krisarmstrong/excludes.txt",
+        timingTemplate: "",
+        ports: "",
+        topPorts: 0,
+        allPorts: false,
+        serviceDetection: false,
+        versionMode: "",
+        ipv6: false,
+        osDetection: false,
+        traceroute: false,
+        dnsMode: "",
+        verbosityMode: "",
+        reason: false,
+        openOnly: false,
+        minRate: 0,
+        maxRetries: "",
+        hostTimeout: "",
+        maxRttTimeout: "",
+        statsEvery: "",
+        packetTrace: false,
+      },
+    });
+    expect(
+      await screen.findByText(
+        "nmap -oX <managed-xml-file> -sn -iL /Users/krisarmstrong/targets.txt --exclude 192.168.1.10,scanme.nmap.org --excludefile /Users/krisarmstrong/excludes.txt --",
       ),
     ).toBeInTheDocument();
   });
