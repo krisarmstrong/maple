@@ -108,16 +108,9 @@ export const nmapOptionCatalog: readonly NmapOptionCatalogEntry[] = [
   entry(
     "scan",
     "Scan technique",
-    ["-sT", "-sS", "-sU"],
+    ["-sT", "-sS", "-sU", "-sA", "-sW", "-sM", "-sN", "-sF", "-sX", "-sY", "-sZ", "-sO"],
     "structured",
-    "Curated TCP connect, SYN, and UDP controls are available.",
-  ),
-  entry(
-    "scan",
-    "Specialized scan techniques",
-    ["-sA", "-sW", "-sM", "-sN", "-sF", "-sX", "-sY", "-sZ", "-sO"],
-    "planned",
-    "Needs warnings and privilege guidance per mode.",
+    "Common and specialized scan techniques are exposed with privilege guidance.",
   ),
   entry(
     "ports",

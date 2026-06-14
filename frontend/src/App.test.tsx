@@ -227,7 +227,7 @@ describe("App", () => {
     expect(screen.getByText("Advanced escape hatches")).toBeInTheDocument();
     expect(screen.getByText("Raw shell command input")).toBeInTheDocument();
     expect(screen.getAllByText("Blocked by design").length).toBeGreaterThan(0);
-    expect(screen.getByText("-sT -sS -sU")).toBeInTheDocument();
+    expect(screen.getByText("-sT -sS -sU -sA -sW -sM -sN -sF -sX -sY -sZ -sO")).toBeInTheDocument();
     expect(screen.getByText("--script-args --script-args-file")).toBeInTheDocument();
   });
 

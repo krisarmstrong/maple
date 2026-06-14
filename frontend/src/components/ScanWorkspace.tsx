@@ -953,6 +953,12 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
               UDP scans can be slow and may need elevated privileges for best results.
             </p>
           ) : null}
+          {isSpecializedScanTechnique(scanOptions.scanTechnique) ? (
+            <p className="option-warning">
+              ACK, Window, Maimon, NULL, FIN, Xmas, SCTP, and IP protocol scans are advanced
+              techniques that often require elevated privileges and careful authorization.
+            </p>
+          ) : null}
           {scanOptions.discoveryMode === "skip" ? (
             <p className="option-warning">
               Skip host discovery treats every target as online and can make large scans slower.
@@ -1248,6 +1254,20 @@ function isNSECategory(value: string): value is NSECategory {
 function isRiskyNSECategory(category: NSECategory): boolean {
   return (
     category === "dos" || category === "exploit" || category === "intrusive" || category === "vuln"
+  );
+}
+
+function isSpecializedScanTechnique(technique: ScanOptions["scanTechnique"]): boolean {
+  return (
+    technique === "ack" ||
+    technique === "window" ||
+    technique === "maimon" ||
+    technique === "null" ||
+    technique === "fin" ||
+    technique === "xmas" ||
+    technique === "sctp-init" ||
+    technique === "sctp-cookie" ||
+    technique === "protocol"
   );
 }
 

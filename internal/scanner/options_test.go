@@ -60,6 +60,36 @@ func TestBuildOptionArgsAddsDiscoveryProbeRanges(t *testing.T) {
 	}
 }
 
+func TestBuildOptionArgsAddsSpecializedScanTechniques(t *testing.T) {
+	tests := []struct {
+		name      string
+		technique ScanTechnique
+		want      []string
+	}{
+		{name: "ack", technique: ScanTechniqueACK, want: []string{"-sA"}},
+		{name: "window", technique: ScanTechniqueWindow, want: []string{"-sW"}},
+		{name: "maimon", technique: ScanTechniqueMaimon, want: []string{"-sM"}},
+		{name: "null", technique: ScanTechniqueNull, want: []string{"-sN"}},
+		{name: "fin", technique: ScanTechniqueFIN, want: []string{"-sF"}},
+		{name: "xmas", technique: ScanTechniqueXmas, want: []string{"-sX"}},
+		{name: "sctp init", technique: ScanTechniqueSCTPInit, want: []string{"-sY"}},
+		{name: "sctp cookie", technique: ScanTechniqueSCTPCookie, want: []string{"-sZ"}},
+		{name: "protocol", technique: ScanTechniqueProtocol, want: []string{"-sO"}},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			args, err := BuildOptionArgs(ScanOptions{ScanTechnique: test.technique})
+			if err != nil {
+				t.Fatalf("BuildOptionArgs returned error: %v", err)
+			}
+			if !sameStrings(args, test.want) {
+				t.Fatalf("args = %#v, want %#v", args, test.want)
+			}
+		})
+	}
+}
+
 func TestBuildOptionArgsSupportsAllPortsAndTopPorts(t *testing.T) {
 	args, err := BuildOptionArgs(ScanOptions{AllPorts: true})
 	if err != nil {
@@ -90,7 +120,7 @@ func TestBuildOptionArgsRejectsInvalidOptions(t *testing.T) {
 		{AllPorts: true, TopPorts: 10},
 		{DNSMode: "recursive"},
 		{VersionMode: "deep"},
-		{ScanTechnique: "ack"},
+		{ScanTechnique: "idle"},
 		{DiscoveryMode: "arp"},
 		{DiscoveryMode: DiscoveryModeSkip, TCPSYNProbes: "22"},
 		{TCPSYNProbes: "22 80"},

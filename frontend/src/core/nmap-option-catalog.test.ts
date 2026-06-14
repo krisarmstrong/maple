@@ -22,6 +22,7 @@ describe("nmap option catalog", () => {
     );
 
     expect(supportedSwitches).toContain("-sT");
+    expect(supportedSwitches).toContain("-sA");
     expect(supportedSwitches).toContain("-iL");
     expect(supportedSwitches).toContain("-PS");
     expect(supportedSwitches).toContain("-sV");
@@ -43,7 +44,7 @@ describe("nmap option catalog", () => {
     expect(optionCoverageCounts()).toEqual({
       structured: 18,
       "escape-hatch": 2,
-      planned: 4,
+      planned: 3,
       blocked: 3,
     });
   });

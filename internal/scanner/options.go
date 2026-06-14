@@ -21,10 +21,19 @@ const (
 	DiscoveryModeSkip    DiscoveryMode = "skip"
 	DiscoveryModePing    DiscoveryMode = "ping"
 
-	ScanTechniqueDefault ScanTechnique = ""
-	ScanTechniqueConnect ScanTechnique = "connect"
-	ScanTechniqueSYN     ScanTechnique = "syn"
-	ScanTechniqueUDP     ScanTechnique = "udp"
+	ScanTechniqueDefault    ScanTechnique = ""
+	ScanTechniqueConnect    ScanTechnique = "connect"
+	ScanTechniqueSYN        ScanTechnique = "syn"
+	ScanTechniqueUDP        ScanTechnique = "udp"
+	ScanTechniqueACK        ScanTechnique = "ack"
+	ScanTechniqueWindow     ScanTechnique = "window"
+	ScanTechniqueMaimon     ScanTechnique = "maimon"
+	ScanTechniqueNull       ScanTechnique = "null"
+	ScanTechniqueFIN        ScanTechnique = "fin"
+	ScanTechniqueXmas       ScanTechnique = "xmas"
+	ScanTechniqueSCTPInit   ScanTechnique = "sctp-init"
+	ScanTechniqueSCTPCookie ScanTechnique = "sctp-cookie"
+	ScanTechniqueProtocol   ScanTechnique = "protocol"
 
 	VerbosityModeDefault VerbosityMode = ""
 	VerbosityModeVerbose VerbosityMode = "verbose"
@@ -241,7 +250,7 @@ func ProfileArgsForOptions(profile Profile, options ScanOptions) []string {
 
 func isTechniqueArg(value string) bool {
 	switch value {
-	case "-sS", "-sT", "-sU":
+	case "-sS", "-sT", "-sU", "-sA", "-sW", "-sM", "-sN", "-sF", "-sX", "-sY", "-sZ", "-sO":
 		return true
 	default:
 		return false
@@ -595,6 +604,24 @@ func buildTechniqueArgs(technique ScanTechnique) ([]string, error) {
 		return []string{"-sS"}, nil
 	case ScanTechniqueUDP:
 		return []string{"-sU"}, nil
+	case ScanTechniqueACK:
+		return []string{"-sA"}, nil
+	case ScanTechniqueWindow:
+		return []string{"-sW"}, nil
+	case ScanTechniqueMaimon:
+		return []string{"-sM"}, nil
+	case ScanTechniqueNull:
+		return []string{"-sN"}, nil
+	case ScanTechniqueFIN:
+		return []string{"-sF"}, nil
+	case ScanTechniqueXmas:
+		return []string{"-sX"}, nil
+	case ScanTechniqueSCTPInit:
+		return []string{"-sY"}, nil
+	case ScanTechniqueSCTPCookie:
+		return []string{"-sZ"}, nil
+	case ScanTechniqueProtocol:
+		return []string{"-sO"}, nil
 	default:
 		return nil, ErrInvalidScanOption
 	}

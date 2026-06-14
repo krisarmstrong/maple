@@ -1,7 +1,20 @@
 export type TimingTemplate = "" | "T0" | "T1" | "T2" | "T3" | "T4" | "T5";
 export type DNSMode = "" | "skip" | "system";
 export type DiscoveryMode = "" | "skip" | "ping";
-export type ScanTechnique = "" | "connect" | "syn" | "udp";
+export type ScanTechnique =
+  | ""
+  | "connect"
+  | "syn"
+  | "udp"
+  | "ack"
+  | "window"
+  | "maimon"
+  | "null"
+  | "fin"
+  | "xmas"
+  | "sctp-init"
+  | "sctp-cookie"
+  | "protocol";
 export type VerbosityMode = "" | "verbose" | "debug";
 export type VersionMode = "" | "light" | "all";
 
@@ -88,6 +101,15 @@ export const scanTechniques: readonly { value: ScanTechnique; label: string }[] 
   { value: "connect", label: "TCP connect" },
   { value: "syn", label: "TCP SYN" },
   { value: "udp", label: "UDP" },
+  { value: "ack", label: "TCP ACK" },
+  { value: "window", label: "TCP Window" },
+  { value: "maimon", label: "TCP Maimon" },
+  { value: "null", label: "TCP NULL" },
+  { value: "fin", label: "TCP FIN" },
+  { value: "xmas", label: "TCP Xmas" },
+  { value: "sctp-init", label: "SCTP INIT" },
+  { value: "sctp-cookie", label: "SCTP COOKIE-ECHO" },
+  { value: "protocol", label: "IP protocol" },
 ];
 
 export const discoveryModes: readonly { value: DiscoveryMode; label: string }[] = [

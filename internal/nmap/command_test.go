@@ -82,6 +82,29 @@ func TestBuildPreviewIncludesStructuredOptionsBeforeScriptsAndTargets(t *testing
 	}
 }
 
+func TestBuildPreviewRemovesProfileTechniqueDefaultForSpecializedTechnique(t *testing.T) {
+	preview, err := BuildPreview("/usr/local/bin/nmap", scanner.ScanRequest{
+		ProfileID: scanner.ProfileConnect,
+		Targets:   "scanme.nmap.org",
+		Options: scanner.ScanOptions{
+			ScanTechnique: scanner.ScanTechniqueACK,
+		},
+	})
+	if err != nil {
+		t.Fatalf("BuildPreview returned error: %v", err)
+	}
+
+	wantArgs := []string{
+		"-oX", "<managed-xml-file>",
+		"-Pn", "-T3", "--top-ports", "100",
+		"-sA",
+		"--", "scanme.nmap.org",
+	}
+	if !sameStrings(preview.Args, wantArgs) {
+		t.Fatalf("args = %#v, want %#v", preview.Args, wantArgs)
+	}
+}
+
 func TestBuildPreviewRemovesProfileDiscoveryDefaultsWhenProbesAreSelected(t *testing.T) {
 	preview, err := BuildPreview("/usr/local/bin/nmap", scanner.ScanRequest{
 		ProfileID: scanner.ProfileConnect,

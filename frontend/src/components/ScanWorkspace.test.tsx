@@ -359,6 +359,42 @@ describe("ScanWorkspace", () => {
     ).toBeInTheDocument();
   });
 
+  it("sends specialized scan techniques through preview requests", async () => {
+    previewScanCommandMock.mockResolvedValue([
+      "nmap",
+      "-oX",
+      "<managed-xml-file>",
+      "-sA",
+      "--",
+      "scanme.nmap.org",
+    ]);
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
+    fireEvent.click(screen.getByRole("button", { name: "Options" }));
+    fireEvent.change(screen.getByLabelText("Scan technique"), { target: { value: "ack" } });
+    expect(
+      screen.getByText(/ACK, Window, Maimon, NULL, FIN, Xmas, SCTP, and IP protocol scans/),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
+
+    expect(previewScanCommandMock).toHaveBeenCalledWith({
+      profileId: "connect",
+      targets: "scanme.nmap.org",
+      nmapPath: "/usr/local/bin/nmap",
+      scripts: [],
+      scriptArgs: "",
+      scriptArgsFile: "",
+      options: {
+        ...defaultScanOptions,
+        scanTechnique: "ack",
+      },
+    });
+    expect(
+      await screen.findByText("nmap -oX <managed-xml-file> -sA -- scanme.nmap.org"),
+    ).toBeInTheDocument();
+  });
+
   it("adds target file and exclusion controls to preview requests", async () => {
     previewScanCommandMock.mockResolvedValue([
       "nmap",
