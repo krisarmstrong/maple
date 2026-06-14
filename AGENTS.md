@@ -1,6 +1,6 @@
 # Maple Development Instructions
 
-Maple is a personal open-source desktop UI for locally installed Nmap tools.
+Maple is a personal desktop UI for locally installed Nmap tools.
 
 ## Core Rules
 
@@ -31,4 +31,8 @@ Run before declaring done:
 make fmt-check
 make lint
 make test
+make test-e2e
+make security
+make build
+make package-dryrun
 ```

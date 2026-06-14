@@ -31,6 +31,7 @@ Maple is not affiliated with or endorsed by the Nmap Project. Maple does not bun
 make tidy
 npm --prefix frontend ci
 make test
+make test-e2e
 make security
 make dev
 ```
@@ -53,6 +54,7 @@ make package-dryrun
 ```
 
 Run the smoke checklist in `docs/SMOKE_TEST.md` on each target operating system before publishing an artifact.
+Use `make package-dryrun` locally to validate macOS and Windows package command generation; Linux packaging must be verified on a Linux host because Wails does not cross-compile Linux packages from macOS.
 
 See `docs/CROSS_PLATFORM.md` for current packaging notes. The validated local macOS path today is `make build`; Wails package mode needs target-host verification before release.
 
