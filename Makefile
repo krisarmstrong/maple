@@ -12,8 +12,8 @@ WAILS_PLATFORM_FLAGS ?=
 PACKAGE_VERSION ?= 0.1.0
 PACKAGE_RELEASE ?= 1
 PACKAGE_ARCH ?= amd64
-PACKAGE_DEB_WEBKIT_DEP ?= libwebkit2gtk-4.0-37
-PACKAGE_RPM_WEBKIT_DEP ?= webkit2gtk3
+PACKAGE_DEB_WEBKIT_DEP ?= libwebkit2gtk-4.1-0
+PACKAGE_RPM_WEBKIT_DEP ?= webkit2gtk4.1
 LINUX_PACKAGE_PLATFORM ?= linux/$(PACKAGE_ARCH)
 
 .PHONY: build dev fmt fmt-check lint package-all package-dryrun package-linux package-linux-amd64-dryrun package-linux-arm64-dryrun package-linux-deb package-linux-dryrun package-linux-installers package-linux-rpm package-macos package-macos-dryrun package-macos-installer package-macos-pkg package-platform package-windows package-windows-amd64-dryrun package-windows-arm64-dryrun package-windows-dryrun rc-check security test test-e2e test-go test-ui tidy
@@ -34,12 +34,16 @@ fmt-check:
 	npm --prefix frontend run format:check
 
 lint:
-	GOCACHE=$(GOCACHE) go test $(GO_PACKAGES)
+	GOCACHE=$(GOCACHE) go vet $(GO_PACKAGES)
+	GOCACHE=$(GOCACHE) golangci-lint run
 	npm --prefix frontend run lint
 	npm --prefix frontend run typecheck
 
 security:
 	GOCACHE=$(GOCACHE) govulncheck ./...
+	GOCACHE=$(GOCACHE) gosec -quiet ./...
+	gitleaks detect --no-banner --redact
+	shellcheck scripts/*.sh
 
 test: test-go test-ui
 

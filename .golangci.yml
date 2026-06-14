@@ -1,0 +1,11 @@
+version: "2"
+
+run:
+  build-tags:
+    - desktop
+
+linters:
+  default: standard
+  exclusions:
+    paths:
+      - frontend/node_modules

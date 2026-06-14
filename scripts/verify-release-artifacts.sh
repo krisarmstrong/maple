@@ -27,9 +27,10 @@ require_file() {
 require_glob() {
   local pattern="$1"
   local matches=()
-  shopt -s nullglob
-  matches=($pattern)
-  shopt -u nullglob
+  # compgen -G expands the pathname glob to one match per line without relying
+  # on word-splitting, so paths containing spaces are handled and the array is
+  # empty when nothing matches.
+  mapfile -t matches < <(compgen -G "$pattern" || true)
   if [[ "${#matches[@]}" -eq 0 ]]; then
     echo "missing release artifact matching: $pattern" >&2
     exit 1

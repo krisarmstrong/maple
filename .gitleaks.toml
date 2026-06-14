@@ -1,0 +1,13 @@
+# Gitleaks configuration for Maple.
+# Extends the bundled default ruleset and adds narrowly-scoped allowlist entries
+# for verified false positives only.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Verified false positives"
+regexes = [
+  # localStorage key constant for saved scan presets — not a credential.
+  # (frontend/src/core/scan-presets.ts: savedPresetStorageKey)
+  '''maple\.scanPresets\.v1''',
+]
