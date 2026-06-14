@@ -36,6 +36,12 @@ make security
 make dev
 ```
 
+Release candidate validation:
+
+```bash
+make rc-check
+```
+
 ## Build
 
 ```bash
@@ -56,7 +62,7 @@ make package-dryrun
 Run the smoke checklist in `docs/SMOKE_TEST.md` on each target operating system before publishing an artifact.
 Use `make package-dryrun` locally to validate macOS and Windows package command generation; Linux packaging must be verified on a Linux host because Wails does not cross-compile Linux packages from macOS.
 
-See `docs/CROSS_PLATFORM.md` for current packaging notes. The validated local macOS path today is `make build`; Wails package mode needs target-host verification before release.
+See `docs/RELEASE_CANDIDATE.md` and `docs/CROSS_PLATFORM.md` for current release and packaging notes. The validated local macOS path today is `make build`; Wails package mode needs target-host verification before release.
 
 ## Platform Notes
 

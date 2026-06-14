@@ -91,7 +91,7 @@ describe("App", () => {
     render(<App />);
 
     expect(screen.getByText("Local desktop")).toBeInTheDocument();
-    expect(screen.getByText("Beta 2")).toBeInTheDocument();
+    expect(screen.getByText("Release candidate")).toBeInTheDocument();
     expect(screen.getByText("argv-only execution")).toBeInTheDocument();
     expect((await screen.findAllByText("1 tools detected")).length).toBeGreaterThan(0);
   });
@@ -272,7 +272,7 @@ describe("App", () => {
     expect(screen.getByTestId("option-coverage-readiness")).toHaveClass(
       "coverage-readiness--ready",
     );
-    expect(screen.getByText("Beta option surface ready")).toBeInTheDocument();
+    expect(screen.getByText("RC option surface ready")).toBeInTheDocument();
     expect(
       screen.getByText(
         "All tracked Nmap option groups are either implemented or intentionally blocked.",

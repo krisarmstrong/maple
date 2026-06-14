@@ -51,13 +51,7 @@ make package-linux-dryrun
 Before publishing an artifact:
 
 ```bash
-make fmt-check
-make lint
-make test
-make test-e2e
-make security
-make build
-make package-dryrun
+make rc-check
 ```
 
 Then run the relevant smoke checklist in `docs/SMOKE_TEST.md` on the target operating system.
@@ -65,15 +59,15 @@ For Windows and Linux, the target-host smoke must include target validation, DNS
 version intensity, preview argv tokens, one safe local scan, History details, and Raw XML, Full JSON,
 and Markdown Report exports.
 
-## MVP Platform Bar
+## Release Candidate Platform Bar
 
-The usable MVP platform bar is:
+The release candidate platform bar is:
 
 - macOS: `make build` produces a runnable desktop binary and the macOS smoke checklist passes.
 - Windows: package command generation is validated locally; final package smoke runs on a Windows host with user-installed Nmap and, when needed, user-installed Npcap.
 - Linux: package command generation records Wails' macOS cross-compilation limitation; final package smoke runs on a Linux host with user-installed Nmap and WebKitGTK dependencies.
 
-Real signed installers are release work after this MVP bar, not a prerequisite for the MVP baseline.
+Real signed installers are release work after this RC bar, not a prerequisite for the release candidate.
 
 ## Current Packaging Note
 

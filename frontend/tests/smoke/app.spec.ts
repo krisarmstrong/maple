@@ -6,7 +6,7 @@ test.describe("Maple browser smoke", () => {
 
     await expect(page.getByRole("heading", { name: "Modern Nmap workbench" })).toBeVisible();
     await expect(page.getByText("Local desktop", { exact: true })).toBeVisible();
-    await expect(page.getByText("Beta 2")).toBeVisible();
+    await expect(page.getByText("Release candidate")).toBeVisible();
     await expect(page.getByText("argv-only execution")).toBeVisible();
     await expect(page.getByRole("radio", { name: "System" })).toBeChecked();
   });

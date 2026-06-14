@@ -152,18 +152,18 @@ function OptionCoveragePanel(): React.JSX.Element {
         <h3>Nmap Option Coverage</h3>
         <p>
           Maple tracks Nmap support as structured controls, advanced escape hatches, and
-          blocked-by-design behavior. Planned option groups must stay at zero for the beta gate.
+          blocked-by-design behavior. Planned option groups must stay at zero for the RC gate.
         </p>
       </div>
       <div
         className={`coverage-readiness coverage-readiness--${isReady ? "ready" : "blocked"}`}
         data-testid="option-coverage-readiness"
       >
-        <strong>{isReady ? "Beta option surface ready" : "Option gaps remain"}</strong>
+        <strong>{isReady ? "RC option surface ready" : "Option gaps remain"}</strong>
         <span>
           {isReady
             ? "All tracked Nmap option groups are either implemented or intentionally blocked."
-            : "Planned option groups must be resolved before beta smoke."}
+            : "Planned option groups must be resolved before RC smoke."}
         </span>
       </div>
       <div className="option-coverage-summary">

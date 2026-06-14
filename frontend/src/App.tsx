@@ -62,7 +62,7 @@ export default function App(): React.JSX.Element {
           </p>
           <div className="app-badges">
             <span>Local desktop</span>
-            <span>Beta 2</span>
+            <span>Release candidate</span>
           </div>
         </div>
         <nav className="app-nav" aria-label="Maple sections">

@@ -26,23 +26,5 @@ jobs:
       - name: Install browser smoke dependencies
         run: npm --prefix frontend run test:e2e:install
 
-      - name: Format check
-        run: make fmt-check
-
-      - name: Lint
-        run: make lint
-
-      - name: Test
-        run: make test
-
-      - name: Browser smoke
-        run: make test-e2e
-
-      - name: Security
-        run: make security
-
-      - name: Build
-        run: make build
-
-      - name: Package dry run
-        run: make package-dryrun
+      - name: Release candidate gate
+        run: make rc-check

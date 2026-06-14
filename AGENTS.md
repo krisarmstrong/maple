@@ -28,11 +28,5 @@ Maple is a personal desktop UI for locally installed Nmap tools.
 Run before declaring done:
 
 ```bash
-make fmt-check
-make lint
-make test
-make test-e2e
-make security
-make build
-make package-dryrun
+make rc-check
 ```

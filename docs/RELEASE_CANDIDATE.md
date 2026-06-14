@@ -1,0 +1,60 @@
+# Release Candidate Checklist
+
+Maple is release-candidate ready when the local RC gate passes and target-host smoke is either
+complete or explicitly tracked as pending external validation.
+
+## Local RC Gate
+
+Run from the repository root:
+
+```bash
+make rc-check
+```
+
+This expands to:
+
+- `make fmt-check`
+- `make lint`
+- `make test`
+- `make test-e2e`
+- `make security`
+- `make build`
+- `make package-dryrun`
+
+Expected result:
+
+- Frontend and Go formatting are clean.
+- Go tests and frontend unit tests pass.
+- Browser smoke passes for desktop and mobile Chromium.
+- `govulncheck` reports no vulnerabilities.
+- `build/bin/maple` is produced.
+- macOS and Windows package command dry-runs are valid.
+- Linux dry-run documents Wails' macOS cross-compilation limitation.
+
+## Native Smoke
+
+Run the checklist in `docs/SMOKE_TEST.md` on each target host:
+
+- macOS with user-installed Nmap.
+- Windows with user-installed Nmap and user-installed Npcap when a scan mode requires it.
+- Linux with user-installed Nmap and Wails WebKitGTK runtime dependencies.
+
+Required smoke coverage:
+
+- System theme default.
+- Target Builder validation for single host, range, subnet, and list modes.
+- Preview argv tokens with `--` before targets.
+- A safe local scan such as `127.0.0.1`.
+- Readable History details.
+- Raw XML, Full JSON, and Markdown Report exports.
+- Environment and Help guidance that Maple does not bundle Nmap, Npcap, Ncat, Ndiff, or Nping.
+
+## Release Constraints
+
+- Keep Wails v2.12.0.
+- Keep Go 1.26.4.
+- Keep Node 26.3.0.
+- Keep React 19.2.7.
+- Keep frontend tooling pinned through `frontend/package-lock.json`.
+- Never accept shell command strings.
+- Never bundle or redistribute Nmap, Npcap, Ncat, Ndiff, or Nping.
