@@ -54,6 +54,8 @@ Before publishing an artifact:
 make fmt-check
 make lint
 make test
+make test-e2e
+make security
 make build
 ```
 

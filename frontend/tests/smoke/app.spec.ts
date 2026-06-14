@@ -1,0 +1,58 @@
+import { expect, type Page, test } from "@playwright/test";
+
+test.describe("Maple browser smoke", () => {
+  test("loads the workbench shell with system theme as default", async ({ page }) => {
+    await page.goto("/");
+
+    await expect(page.getByRole("heading", { name: "Modern Nmap workbench" })).toBeVisible();
+    await expect(page.getByText("Local desktop", { exact: true })).toBeVisible();
+    await expect(page.getByText("Beta 2")).toBeVisible();
+    await expect(page.getByText("argv-only execution")).toBeVisible();
+    await expect(page.getByRole("radio", { name: "System" })).toBeChecked();
+  });
+
+  test("renders primary workspaces without horizontal overflow", async ({ page }) => {
+    await page.goto("/");
+
+    await assertNoHorizontalOverflow(page);
+    await page.getByRole("button", { name: "Options" }).click();
+    await expect(page.getByRole("heading", { name: "Nmap options" })).toBeVisible();
+    await assertNoHorizontalOverflow(page);
+    await page.getByRole("button", { name: "Scripts" }).click();
+    await expect(page.getByRole("heading", { name: "NSE scripts" })).toBeVisible();
+    await assertNoHorizontalOverflow(page);
+    await page.getByRole("button", { name: "Output" }).click();
+    await expect(page.getByRole("heading", { name: "Preview argv" })).toBeVisible();
+    await assertNoHorizontalOverflow(page);
+  });
+
+  test("shows target builder summaries for every target mode", async ({ page }) => {
+    await page.goto("/");
+
+    await expect(page.getByRole("heading", { name: "Target Builder" })).toBeVisible();
+    await expect(page.getByText("One hostname, IPv4 address, or IPv6 address.")).toBeVisible();
+    await page.getByRole("radio", { name: "IPv4 range" }).click();
+    await expect(page.getByText("One IPv4 last-octet range like 192.168.1.1-20.")).toBeVisible();
+    await page.getByRole("radio", { name: "Subnet" }).click();
+    await expect(page.getByText("One IPv4 or IPv6 CIDR subnet.")).toBeVisible();
+    await page.getByRole("radio", { name: "Target list" }).click();
+    await expect(page.getByText(/Hostnames, IPs, CIDR subnets/u)).toBeVisible();
+  });
+
+  test("keeps no-bundled-tools guidance visible in environment and help", async ({ page }) => {
+    await page.goto("/");
+
+    await page.getByRole("button", { name: /Environment/u }).click();
+    await expect(page.getByText("Maple uses locally installed Nmap tools")).toBeVisible();
+    await page.getByRole("button", { name: "Help" }).click();
+    await expect(page.getByText(/Maple does not bundle or redistribute Nmap/u)).toBeVisible();
+    await expect(page.getByText(/Windows packet scans may require Npcap/u)).toBeVisible();
+  });
+});
+
+async function assertNoHorizontalOverflow(page: Page): Promise<void> {
+  const hasOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > window.innerWidth,
+  );
+  expect(hasOverflow).toBe(false);
+}

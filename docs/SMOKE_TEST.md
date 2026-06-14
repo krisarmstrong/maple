@@ -4,6 +4,23 @@ Run this checklist before tagging a build or making the initial baseline commit.
 
 ## macOS Desktop Smoke
 
+Automated browser smoke:
+
+```bash
+npm --prefix frontend run test:e2e:install
+make test-e2e
+```
+
+Expected:
+
+- Chromium desktop and mobile smoke checks pass.
+- System theme is selected by default.
+- Configure, Options, Scripts, Output, Environment, and Help render without horizontal overflow.
+- Target Builder mode summaries are visible.
+- Help and Environment continue to explain that Nmap and Npcap are not bundled.
+
+Native desktop smoke:
+
 ```bash
 make build
 build/bin/maple

@@ -6,7 +6,7 @@ WAILS ?= /Users/krisarmstrong/go/bin/wails
 WAILS_LDFLAGS ?= -w -s
 WAILS_BUILD_FLAGS ?= -clean -trimpath -tags "$(GO_BUILD_TAGS)"
 
-.PHONY: build dev fmt fmt-check lint package-all package-dryrun package-linux package-linux-dryrun package-macos package-macos-dryrun package-windows package-windows-dryrun security test test-go test-ui tidy
+.PHONY: build dev fmt fmt-check lint package-all package-dryrun package-linux package-linux-dryrun package-macos package-macos-dryrun package-windows package-windows-dryrun security test test-e2e test-go test-ui tidy
 
 build:
 	npm --prefix frontend run build
@@ -38,6 +38,9 @@ test-go:
 
 test-ui:
 	npm --prefix frontend test
+
+test-e2e:
+	npm --prefix frontend run test:e2e
 
 tidy:
 	GOCACHE=$(GOCACHE) go mod tidy
