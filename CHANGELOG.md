@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/krisarmstrong/maple/compare/v0.1.0...v0.1.1) (2026-06-15)
+
+
+### Bug Fixes
+
+* install release workflow gate tools ([dab4fd8](https://github.com/krisarmstrong/maple/commit/dab4fd8fb30bfe3fda15dfda087ef6e8b41d9160))
+
 ## 0.1.0 (2026-06-15)
 
 
