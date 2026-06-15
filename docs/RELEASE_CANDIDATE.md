@@ -57,6 +57,10 @@ GitHub Release. The tag triggers `.github/workflows/release.yml`, and the releas
 injects that tag into `internal/version` via linker flags so the desktop app reports the
 same version as the GitHub release.
 
+The release-please manifest stores the last released version. Until the first
+Maple release is tagged, `.release-please-manifest.json` stays at `0.0.0` so the
+first generated release PR is `0.1.0`.
+
 The GitHub release workflow builds unsigned artifacts for:
 
 - macOS ARM: Wails `darwin/arm64`.
