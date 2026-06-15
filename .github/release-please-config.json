@@ -1,5 +1,22 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "extra-files": [
+    {
+      "type": "json",
+      "path": "frontend/package.json",
+      "jsonpath": "$.version"
+    },
+    {
+      "type": "json",
+      "path": "frontend/package-lock.json",
+      "jsonpath": "$.version"
+    },
+    {
+      "type": "json",
+      "path": "frontend/package-lock.json",
+      "jsonpath": "$['packages'][''].version"
+    }
+  ],
   "packages": {
     ".": {
       "release-type": "go",
@@ -7,24 +24,7 @@
       "bump-patch-for-minor-pre-major": true,
       "changelog-path": "CHANGELOG.md",
       "initial-version": "0.0.1",
-      "versioning": "default",
-      "extra-files": [
-        {
-          "type": "json",
-          "path": "frontend/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "frontend/package-lock.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "frontend/package-lock.json",
-          "jsonpath": "$.packages[''].version"
-        }
-      ]
+      "versioning": "default"
     }
   },
   "changelog-sections": [
