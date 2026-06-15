@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/krisarmstrong/maple/compare/v0.1.1...v0.1.2) (2026-06-15)
+
+
+### Bug Fixes
+
+* make release artifact checks portable ([740c2ca](https://github.com/krisarmstrong/maple/commit/740c2cae728173bd3fb6b3afe1649c8a7c8a9268))
+
 ## [0.1.1](https://github.com/krisarmstrong/maple/compare/v0.1.0...v0.1.1) (2026-06-15)
 
 
