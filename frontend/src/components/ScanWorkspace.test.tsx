@@ -67,7 +67,8 @@ describe("ScanWorkspace", () => {
       "aria-current",
       "page",
     );
-    expect(screen.getByRole("heading", { name: "Target Builder" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Targets" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Target shape")).toHaveValue("single");
     expect(screen.getByLabelText("Targets")).toBeInTheDocument();
     expect(screen.queryByLabelText("Custom .nse script files")).not.toBeInTheDocument();
   });
@@ -104,6 +105,11 @@ describe("ScanWorkspace", () => {
 
     expect(screen.getByRole("button", { name: "Scripts" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByText("NSE scripts")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Selected scripts" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Browse scripts" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Custom scripts and arguments" }),
+    ).toBeInTheDocument();
     expect(screen.getByLabelText("Custom .nse script files")).toBeInTheDocument();
     expect(screen.queryByLabelText("Targets")).not.toBeInTheDocument();
   });
@@ -145,7 +151,7 @@ describe("ScanWorkspace", () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
     const configure = screen.getByTestId("configure-panel");
-    const targetBuilder = within(configure).getByRole("heading", { name: "Target Builder" });
+    const targetBuilder = within(configure).getByRole("heading", { name: "Targets" });
     const recipe = within(configure).getByRole("heading", { name: "Scan Recipe" });
 
     expect(
@@ -157,11 +163,11 @@ describe("ScanWorkspace", () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
     expect(screen.getByLabelText("Targets")).toHaveAttribute("rows", "2");
-    await userEvent.click(screen.getByRole("radio", { name: "IPv4 range" }));
+    await userEvent.selectOptions(screen.getByLabelText("Target shape"), "range");
     expect(screen.getByLabelText("Targets")).toHaveAttribute("rows", "2");
-    await userEvent.click(screen.getByRole("radio", { name: "Subnet" }));
+    await userEvent.selectOptions(screen.getByLabelText("Target shape"), "subnet");
     expect(screen.getByLabelText("Targets")).toHaveAttribute("rows", "2");
-    await userEvent.click(screen.getByRole("radio", { name: "Target list" }));
+    await userEvent.selectOptions(screen.getByLabelText("Target shape"), "list");
     expect(screen.getByLabelText("Targets")).toHaveAttribute("rows", "7");
   });
 
@@ -305,7 +311,7 @@ describe("ScanWorkspace", () => {
     await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
     await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
     await userEvent.click(screen.getByRole("checkbox", { name: "safe" }));
-    fireEvent.change(screen.getByLabelText("Built-in script names"), {
+    fireEvent.change(screen.getByLabelText("Manual script names"), {
       target: { value: "http-title" },
     });
     fireEvent.change(screen.getByLabelText("Search built-in scripts"), {
@@ -944,7 +950,7 @@ describe("ScanWorkspace", () => {
   it("summarizes target kinds before running", async () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
-    await userEvent.click(screen.getByRole("radio", { name: "Target list" }));
+    await userEvent.selectOptions(screen.getByLabelText("Target shape"), "list");
     await userEvent.clear(screen.getByLabelText("Targets"));
     await userEvent.type(
       screen.getByLabelText("Targets"),
@@ -963,7 +969,7 @@ describe("ScanWorkspace", () => {
   it("warns when a larger subnet uses a port scan profile", async () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
-    await userEvent.click(screen.getByRole("radio", { name: "Subnet" }));
+    await userEvent.selectOptions(screen.getByLabelText("Target shape"), "subnet");
     await userEvent.type(screen.getByLabelText("Targets"), "192.168.1.0/24");
 
     expect(screen.getByText("1 target expression, up to 256 addresses")).toBeInTheDocument();
@@ -985,7 +991,7 @@ describe("ScanWorkspace", () => {
   it("switches target intent without writing an example into the scan field", async () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
-    await userEvent.click(screen.getByRole("radio", { name: "IPv4 range" }));
+    await userEvent.selectOptions(screen.getByLabelText("Target shape"), "range");
 
     expect(screen.getAllByText("IPv4 range").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText("Scan an inclusive IPv4 last-octet range.")).toBeInTheDocument();
@@ -999,20 +1005,20 @@ describe("ScanWorkspace", () => {
   it("labels the target field for the selected target intent", async () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
-    expect(screen.getByText("Single hostname or IP")).toBeInTheDocument();
+    expect(screen.getByText("Target shape")).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("radio", { name: "Subnet" }));
-    expect(screen.getByText("CIDR subnet")).toBeInTheDocument();
+    await userEvent.selectOptions(screen.getByLabelText("Target shape"), "subnet");
+    expect(screen.getByLabelText("Target shape")).toHaveValue("subnet");
     expect(screen.getByLabelText("Targets")).toHaveAttribute("placeholder", "192.168.1.0/24");
 
-    await userEvent.click(screen.getByRole("radio", { name: "Target list" }));
+    await userEvent.selectOptions(screen.getByLabelText("Target shape"), "list");
     expect(screen.getAllByText("Target list").length).toBeGreaterThanOrEqual(2);
   });
 
   it("validates targets against the selected target intent", async () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
-    await userEvent.click(screen.getByRole("radio", { name: "Subnet" }));
+    await userEvent.selectOptions(screen.getByLabelText("Target shape"), "subnet");
     await userEvent.clear(screen.getByLabelText("Targets"));
     await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
 
@@ -1033,7 +1039,7 @@ describe("ScanWorkspace", () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
     await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
-    await userEvent.click(screen.getByRole("radio", { name: "IPv4 range" }));
+    await userEvent.selectOptions(screen.getByLabelText("Target shape"), "range");
 
     expect(screen.getByLabelText("Targets")).toHaveValue("scanme.nmap.org");
     expect(screen.getAllByText("1 hostname").length).toBeGreaterThan(0);
@@ -1043,15 +1049,15 @@ describe("ScanWorkspace", () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
     await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
-    await userEvent.type(screen.getByLabelText("Built-in script names"), "http-title\nssl-cert");
+    await userEvent.type(screen.getByLabelText("Manual script names"), "http-title\nssl-cert");
 
-    expect(screen.getByText("Selected scripts")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Selected scripts" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Remove http-title" })).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "Remove http-title" }));
 
     expect(screen.queryByRole("button", { name: "Remove http-title" })).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Built-in script names")).toHaveValue("ssl-cert");
+    expect(screen.getByLabelText("Manual script names")).toHaveValue("ssl-cert");
   });
 
   it("labels risky NSE categories", async () => {
@@ -1062,7 +1068,7 @@ describe("ScanWorkspace", () => {
     expect(screen.getByText("vuln")).toBeInTheDocument();
     expect(screen.getAllByText("Use carefully")).not.toHaveLength(0);
     expect(
-      screen.getByText("May be intrusive, exploit-oriented, or disruptive."),
+      screen.getByText("Risky categories can be intrusive, exploit-oriented, or disruptive."),
     ).toBeInTheDocument();
   });
 

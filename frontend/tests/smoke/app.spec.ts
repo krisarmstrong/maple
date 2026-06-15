@@ -26,16 +26,16 @@ test.describe("Maple browser smoke", () => {
     await assertNoHorizontalOverflow(page);
   });
 
-  test("shows target builder summaries for every target mode", async ({ page }) => {
+  test("shows target summaries for every target shape", async ({ page }) => {
     await page.goto("/");
 
-    await expect(page.getByRole("heading", { name: "Target Builder" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Targets" })).toBeVisible();
     await expect(page.getByText("One hostname, IPv4 address, or IPv6 address.")).toBeVisible();
-    await page.getByRole("radio", { name: "IPv4 range" }).click();
+    await page.getByLabel("Target shape").selectOption("range");
     await expect(page.getByText("One IPv4 last-octet range like 192.168.1.1-20.")).toBeVisible();
-    await page.getByRole("radio", { name: "Subnet" }).click();
+    await page.getByLabel("Target shape").selectOption("subnet");
     await expect(page.getByText("One IPv4 or IPv6 CIDR subnet.")).toBeVisible();
-    await page.getByRole("radio", { name: "Target list" }).click();
+    await page.getByLabel("Target shape").selectOption("list");
     await expect(page.getByText(/Hostnames, IPs, CIDR subnets/u)).toBeVisible();
   });
 
