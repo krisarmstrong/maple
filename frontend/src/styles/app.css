@@ -695,6 +695,11 @@
   grid-template-columns: repeat(auto-fit, minmax(var(--size-target-summary-min), 1fr));
 }
 
+.preset-card-grid-compact {
+  gap: var(--space-6);
+  grid-template-columns: repeat(auto-fit, minmax(var(--size-preset-card-min), 1fr));
+}
+
 .preset-card {
   background: var(--panel-raised);
   border: var(--border-width) solid var(--border);
@@ -721,10 +726,25 @@
   justify-self: start;
 }
 
+.preset-card-grid-compact .preset-card {
+  gap: var(--space-5);
+  padding: var(--space-7);
+}
+
+.preset-card-grid-compact .preset-card ul {
+  display: none;
+}
+
 .scan-grid {
   display: grid;
   gap: var(--space-11);
   grid-template-columns: var(--layout-profile-column-width) minmax(0, 1fr);
+}
+
+.profile-column {
+  display: grid;
+  gap: var(--space-7);
+  align-content: start;
 }
 
 .scan-grid label {
@@ -849,6 +869,14 @@ textarea {
   resize: vertical;
 }
 
+.target-textarea-compact {
+  min-height: var(--size-target-textarea-compact);
+}
+
+.target-textarea-list {
+  min-height: var(--size-target-textarea-list);
+}
+
 .history-controls input:focus,
 .history-result-search input:focus,
 .custom-script-paths input:focus,
@@ -916,7 +944,6 @@ textarea:focus {
   color: var(--text);
   display: grid;
   gap: var(--space-5);
-  margin-top: var(--space-8);
   padding: var(--space-9);
 }
 
