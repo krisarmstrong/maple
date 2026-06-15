@@ -1,8 +1,31 @@
 import { describe, expect, it } from "vitest";
 import { defaultScanOptions } from "./scan-options";
-import { loadSavedPresets, makePresetID, savedPresetStorageKey, savePreset } from "./scan-presets";
+import {
+  builtInScanPresets,
+  loadSavedPresets,
+  makePresetID,
+  savedPresetStorageKey,
+  savePreset,
+} from "./scan-presets";
 
 describe("scan-presets", () => {
+  it("ships a useful built-in preset library without saved targets", () => {
+    expect(builtInScanPresets).toHaveLength(10);
+    expect(builtInScanPresets.map((preset) => preset.name)).toEqual([
+      "Fast host discovery",
+      "Top TCP ports",
+      "Web quick look",
+      "TLS certificate review",
+      "Service inventory",
+      "SMB discovery",
+      "DNS discovery",
+      "UDP essentials",
+      "Authenticated surface check",
+      "Careful vulnerability check",
+    ]);
+    expect(builtInScanPresets.every((preset) => preset.id.startsWith("builtin-"))).toBe(true);
+  });
+
   it("loads saved presets from storage", () => {
     const storage = storageWith(
       JSON.stringify([

@@ -105,6 +105,27 @@ describe("ScanWorkspace", () => {
     expect(screen.getByText("-sT -Pn -T3 --top-ports 100")).toBeInTheDocument();
   });
 
+  it("shows built-in workflow presets before custom presets exist", () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    expect(screen.getByRole("option", { name: "Fast host discovery" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Built-in presets" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "TLS certificate review" })).toBeInTheDocument();
+    expect(screen.getAllByText("No target saved").length).toBeGreaterThan(0);
+  });
+
+  it("uses compact target fields except for target lists", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    expect(screen.getByLabelText("Targets")).toHaveAttribute("rows", "2");
+    await userEvent.click(screen.getByRole("radio", { name: "IPv4 range" }));
+    expect(screen.getByLabelText("Targets")).toHaveAttribute("rows", "2");
+    await userEvent.click(screen.getByRole("radio", { name: "Subnet" }));
+    expect(screen.getByLabelText("Targets")).toHaveAttribute("rows", "2");
+    await userEvent.click(screen.getByRole("radio", { name: "Target list" }));
+    expect(screen.getByLabelText("Targets")).toHaveAttribute("rows", "7");
+  });
+
   it("saves the current scan configuration as a preset", async () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
@@ -116,11 +137,11 @@ describe("ScanWorkspace", () => {
     await userEvent.click(screen.getByRole("button", { name: "Save Preset" }));
 
     expect(screen.getByRole("option", { name: "Web TLS check" })).toBeInTheDocument();
-    expect(screen.getByText("Saved workflow presets")).toBeInTheDocument();
+    expect(screen.getByText("Custom presets")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Web TLS check" })).toBeInTheDocument();
     expect(screen.getAllByText("Service Scan").length).toBeGreaterThan(0);
     expect(screen.getByText("1 script selection")).toBeInTheDocument();
-    expect(screen.getByText("No target saved")).toBeInTheDocument();
+    expect(screen.getAllByText("No target saved").length).toBeGreaterThan(0);
   });
 
   it("previews a safe argv command for valid targets", async () => {
@@ -251,7 +272,9 @@ describe("ScanWorkspace", () => {
     fireEvent.change(screen.getByLabelText("Built-in script names"), {
       target: { value: "http-title" },
     });
-    fireEvent.change(screen.getByLabelText("Find built-in scripts"), { target: { value: "ssl" } });
+    fireEvent.change(screen.getByLabelText("Search built-in scripts"), {
+      target: { value: "ssl" },
+    });
     await userEvent.click(screen.getByRole("checkbox", { name: "ssl-cert" }));
     fireEvent.change(screen.getByLabelText("Custom .nse script files"), {
       target: { value: "/Users/krisarmstrong/Scripts/custom-check.nse" },
@@ -289,6 +312,17 @@ describe("ScanWorkspace", () => {
         "nmap -oX <managed-xml-file> -sV --version-light --script safe --script http-title --script ssl-cert --script /Users/krisarmstrong/Scripts/custom-check.nse --script /Users/krisarmstrong/Scripts/nse-pack --script-args http.useragent=Maple --script-args-file /Users/krisarmstrong/nse-args.txt -- scanme.nmap.org",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("browses scripts for selected categories without a search query", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "discovery" }));
+
+    expect(screen.getByRole("group", { name: "Script browser" })).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: "dns-service-discovery" })).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: "smb-os-discovery" })).toBeInTheDocument();
   });
 
   it("adds structured scan options to preview requests", async () => {

@@ -3,7 +3,8 @@ import {
   buildScanScripts,
   type NSECategory,
   nseCategories,
-  popularNSEScripts,
+  searchNSEScripts,
+  suggestedScriptsForSelection,
 } from "../core/nse-scripts";
 import {
   defaultScanOptions,
@@ -22,7 +23,13 @@ import {
   versionModes,
 } from "../core/scan-options";
 import { summarizePreset } from "../core/scan-preset-summary";
-import { loadSavedPresets, makePresetID, type ScanPreset, savePreset } from "../core/scan-presets";
+import {
+  builtInScanPresets,
+  loadSavedPresets,
+  makePresetID,
+  type ScanPreset,
+  savePreset,
+} from "../core/scan-presets";
 import { findProfile, type ScanProfileID, scanProfiles } from "../core/scan-profiles";
 import { scanScope } from "../core/scan-scope";
 import {
@@ -102,10 +109,12 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
     customScriptPaths,
     customScriptDirectories,
   );
-  const visiblePopularScripts = popularNSEScripts.filter((script) =>
-    script.toLowerCase().includes(scriptSearch.trim().toLowerCase()),
-  );
+  const visibleScripts =
+    scriptSearch.trim() === ""
+      ? suggestedScriptsForSelection(scriptCategories)
+      : searchNSEScripts(scriptSearch);
   const selectedScriptNames = scriptNameLines(scriptNames);
+  const availablePresets = [...savedPresets, ...builtInScanPresets];
   const selectedScriptValues = [
     ...scriptCategories.map((category) => ({ id: `category:${category}`, label: category })),
     ...selectedScriptNames.map((script) => ({ id: `name:${script}`, label: script })),
@@ -257,7 +266,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
   }
 
   function applyPreset(presetID: string): void {
-    const preset = savedPresets.find((candidate) => candidate.id === presetID);
+    const preset = availablePresets.find((candidate) => candidate.id === presetID);
     if (preset === undefined) {
       return;
     }
@@ -382,18 +391,29 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
         <div className="scan-panel">
           <div className="preset-bar">
             <label>
-              <span>Saved preset</span>
+              <span>Preset</span>
               <select
-                aria-label="Saved preset"
+                aria-label="Preset"
                 onChange={(event) => applyPreset(event.target.value)}
                 value=""
               >
                 <option value="">Choose preset</option>
-                {savedPresets.map((preset) => (
-                  <option key={preset.id} value={preset.id}>
-                    {preset.name}
-                  </option>
-                ))}
+                <optgroup label="Built-in presets">
+                  {builtInScanPresets.map((preset) => (
+                    <option key={preset.id} value={preset.id}>
+                      {preset.name}
+                    </option>
+                  ))}
+                </optgroup>
+                {savedPresets.length === 0 ? null : (
+                  <optgroup label="Custom presets">
+                    {savedPresets.map((preset) => (
+                      <option key={preset.id} value={preset.id}>
+                        {preset.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
             </label>
             <label>
@@ -409,35 +429,23 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
               Save Preset
             </button>
           </div>
-          {savedPresets.length === 0 ? null : (
-            <section className="preset-library" aria-label="Saved workflow presets">
-              <div>
-                <h3>Saved workflow presets</h3>
-                <p className="target-mode-help">
-                  Presets save scan shape, options, and scripts only.
-                </p>
-              </div>
-              <div className="preset-card-grid">
-                {savedPresets.map((preset) => (
-                  <PresetCard key={preset.id} onApply={applyPreset} preset={preset} />
-                ))}
-              </div>
-            </section>
-          )}
           <div className="scan-grid">
-            <label>
-              <span>Profile</span>
-              <select
-                value={profileId}
-                onChange={(event) => updateProfile(event.target.value, setProfileId, setPreview)}
-              >
-                {scanProfiles.map((profile) => (
-                  <option key={profile.id} value={profile.id}>
-                    {profile.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div className="profile-column">
+              <label>
+                <span>Profile</span>
+                <select
+                  value={profileId}
+                  onChange={(event) => updateProfile(event.target.value, setProfileId, setPreview)}
+                >
+                  {scanProfiles.map((profile) => (
+                    <option key={profile.id} value={profile.id}>
+                      {profile.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <ProfileSummary profile={selectedProfile} />
+            </div>
             <div className="target-input">
               <div>
                 <h3>Target Builder</h3>
@@ -463,9 +471,12 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                 <span>{targetModeInputLabel(targetModeId)}</span>
                 <textarea
                   aria-label="Targets"
+                  className={
+                    targetModeId === "list" ? "target-textarea-list" : "target-textarea-compact"
+                  }
                   onChange={(event) => updateTargets(event.target.value, setTargets, setPreview)}
                   placeholder={targetModePlaceholder(targetModeId)}
-                  rows={5}
+                  rows={targetModeId === "list" ? 7 : 2}
                   value={targets}
                 />
               </label>
@@ -499,7 +510,34 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
               </div>
             </div>
           </div>
-          <ProfileSummary profile={selectedProfile} />
+          <section className="preset-library" aria-label="Built-in workflow presets">
+            <div>
+              <h3>Built-in presets</h3>
+              <p className="target-mode-help">
+                Common Nmap workflows that save scan shape, options, and scripts, never targets.
+              </p>
+            </div>
+            <div className="preset-card-grid preset-card-grid-compact">
+              {builtInScanPresets.map((preset) => (
+                <PresetCard key={preset.id} onApply={applyPreset} preset={preset} />
+              ))}
+            </div>
+          </section>
+          {savedPresets.length === 0 ? null : (
+            <section className="preset-library" aria-label="Custom workflow presets">
+              <div>
+                <h3>Custom presets</h3>
+                <p className="target-mode-help">
+                  Your saved presets are local to this desktop and still do not store targets.
+                </p>
+              </div>
+              <div className="preset-card-grid">
+                {savedPresets.map((preset) => (
+                  <PresetCard key={preset.id} onApply={applyPreset} preset={preset} />
+                ))}
+              </div>
+            </section>
+          )}
           {scope?.warning === undefined ? null : <p className="scan-scope">{scope.warning}</p>}
         </div>
       ) : null}
@@ -1405,8 +1443,8 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
           <div>
             <h3>NSE scripts</h3>
             <p className="target-mode-help">
-              Add known categories or absolute custom script files without typing raw shell
-              commands.
+              Select categories, browse suggested scripts, or add absolute custom files without
+              typing raw shell commands.
             </p>
           </div>
           <fieldset className="script-category-picker">
@@ -1425,9 +1463,13 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
               </label>
             ))}
           </fieldset>
+          <p className="target-mode-help">
+            Category selections pass the category name to Nmap. The script browser below adds
+            individual scripts.
+          </p>
           <p className="target-mode-help">May be intrusive, exploit-oriented, or disruptive.</p>
           <label className="custom-script-paths">
-            <span>Find built-in scripts</span>
+            <span>Search built-in scripts</span>
             <input
               onChange={(event) => setScriptSearch(event.target.value)}
               placeholder="http, ssl, smb"
@@ -1436,8 +1478,8 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
             />
           </label>
           <fieldset className="script-category-picker">
-            <legend>Popular scripts</legend>
-            {visiblePopularScripts.map((script) => (
+            <legend>Script browser</legend>
+            {visibleScripts.map((script) => (
               <label key={script}>
                 <input
                   checked={selectedScriptNames.includes(script)}
@@ -1448,6 +1490,11 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
               </label>
             ))}
           </fieldset>
+          {scriptSearch.trim() === "" && scriptCategories.length > 0 ? (
+            <p className="target-mode-help">
+              Showing scripts commonly used with selected categories.
+            </p>
+          ) : null}
           <label className="custom-script-paths">
             <span>Built-in script names</span>
             <textarea

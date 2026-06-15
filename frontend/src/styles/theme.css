@@ -85,6 +85,9 @@
   --size-history-metric-min: 104px;
   --size-history-metric-height: 68px;
   --size-target-summary-min: 150px;
+  --size-target-textarea-compact: 76px;
+  --size-target-textarea-list: 180px;
+  --size-preset-card-min: 180px;
   --size-preset-select-min: 180px;
   --size-preset-name-min: 180px;
   --size-local-help-max: 460px;
