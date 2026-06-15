@@ -10,11 +10,15 @@ export function AppVersion():Promise<version.Info>;
 
 export function CancelScan():Promise<boolean>;
 
+export function ChooseNmapPath():Promise<string>;
+
 export function ClearScanHistory():Promise<void>;
 
 export function DeleteScanHistoryRecord(arg1:string):Promise<void>;
 
 export function DetectTools():Promise<Array<platform.ToolDetection>>;
+
+export function DetectNmapPath(arg1:string):Promise<platform.ToolDetection>;
 
 export function ExportScanHistoryRecord(arg1:string,arg2:exporter.Format):Promise<string>;
 

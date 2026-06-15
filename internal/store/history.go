@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sync"
 	"time"
 
@@ -13,8 +14,10 @@ import (
 )
 
 const historyFileMode = 0o600
+const sidecarDirMode = 0o700
 
 var ErrRecordNotFound = errors.New("scan record not found")
+var runIDSafeCharacter = regexp.MustCompile(`[^A-Za-z0-9_.-]+`)
 
 type ScanRecord struct {
 	RunID       string                 `json:"runId"`
@@ -24,6 +27,7 @@ type ScanRecord struct {
 	Summary     reports.Summary        `json:"summary"`
 	ExitCode    int                    `json:"exitCode"`
 	XML         string                 `json:"xml"`
+	XMLPath     string                 `json:"xmlPath,omitempty"`
 	Diagnostics string                 `json:"diagnostics,omitempty"`
 	Error       string                 `json:"error,omitempty"`
 }
@@ -65,7 +69,7 @@ func (s *HistoryStore) Find(runID string) (ScanRecord, error) {
 	}
 	for _, record := range records {
 		if record.RunID == runID {
-			return record, nil
+			return s.hydrateXML(record)
 		}
 	}
 	return ScanRecord{}, ErrRecordNotFound
@@ -91,12 +95,18 @@ func (s *HistoryStore) Delete(runID string) error {
 	if !found {
 		return ErrRecordNotFound
 	}
+	if err := s.removeRecordSidecar(runID); err != nil {
+		return err
+	}
 	return s.writeLocked(next)
 }
 
 func (s *HistoryStore) Clear() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if err := os.RemoveAll(s.sidecarDir()); err != nil {
+		return err
+	}
 	return s.writeLocked([]ScanRecord{})
 }
 
@@ -107,6 +117,14 @@ func (s *HistoryStore) Add(record ScanRecord) error {
 	records, err := s.readLocked()
 	if err != nil {
 		return err
+	}
+	if record.XML != "" {
+		path, err := s.writeRecordXML(record.RunID, record.XML)
+		if err != nil {
+			return err
+		}
+		record.XMLPath = path
+		record.XML = ""
 	}
 	records = append([]ScanRecord{record}, records...)
 
@@ -126,6 +144,47 @@ func (s *HistoryStore) writeLocked(records []ScanRecord) error {
 	}
 	data = append(data, '\n')
 	return writeFileAtomic(s.path, data, historyFileMode)
+}
+
+func (s *HistoryStore) hydrateXML(record ScanRecord) (ScanRecord, error) {
+	if record.XML != "" || record.XMLPath == "" {
+		return record, nil
+	}
+	data, err := os.ReadFile(record.XMLPath)
+	if errors.Is(err, os.ErrNotExist) {
+		return record, nil
+	}
+	if err != nil {
+		return ScanRecord{}, err
+	}
+	record.XML = string(data)
+	return record, nil
+}
+
+func (s *HistoryStore) writeRecordXML(runID string, xml string) (string, error) {
+	dir := s.sidecarDir()
+	if err := os.MkdirAll(dir, sidecarDirMode); err != nil {
+		return "", err
+	}
+	path := filepath.Join(dir, safeRunID(runID)+".xml")
+	return path, writeFileAtomic(path, []byte(xml), historyFileMode)
+}
+
+func (s *HistoryStore) removeRecordSidecar(runID string) error {
+	return os.RemoveAll(filepath.Join(s.sidecarDir(), safeRunID(runID)+".xml"))
+}
+
+func (s *HistoryStore) sidecarDir() string {
+	return filepath.Join(filepath.Dir(s.path), "records")
+}
+
+func safeRunID(runID string) string {
+	value := runIDSafeCharacter.ReplaceAllString(runID, "-")
+	value = filepath.Base(value)
+	if value == "." || value == string(filepath.Separator) || value == "" {
+		return "scan"
+	}
+	return value
 }
 
 // writeFileAtomic writes data to a sibling temp file and renames it into place

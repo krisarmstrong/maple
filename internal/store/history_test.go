@@ -1,8 +1,11 @@
 package store
 
 import (
+	"encoding/json"
 	"errors"
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -59,6 +62,45 @@ func TestHistoryStoreFindsRecordByRunID(t *testing.T) {
 	if got.RunID != "scan-1" {
 		t.Fatalf("RunID = %q, want scan-1", got.RunID)
 	}
+	if got.XML != "<nmaprun></nmaprun>" {
+		t.Fatalf("XML = %q, want hydrated XML", got.XML)
+	}
+}
+
+func TestHistoryStoreStoresRawXMLOutsideManifest(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "history.json")
+	store := NewHistoryStore(path)
+	record := scanRecord("scan-1")
+
+	if err := store.Add(record); err != nil {
+		t.Fatalf("Add returned error: %v", err)
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("ReadFile returned error: %v", err)
+	}
+	if strings.Contains(string(data), record.XML) {
+		t.Fatalf("history manifest contains raw XML: %s", string(data))
+	}
+
+	var records []ScanRecord
+	if err := json.Unmarshal(data, &records); err != nil {
+		t.Fatalf("json.Unmarshal returned error: %v", err)
+	}
+	if len(records) != 1 {
+		t.Fatalf("len(records) = %d, want 1", len(records))
+	}
+	if records[0].XMLPath == "" {
+		t.Fatal("XMLPath is empty, want sidecar XML path")
+	}
+	xml, err := os.ReadFile(records[0].XMLPath)
+	if err != nil {
+		t.Fatalf("ReadFile XMLPath returned error: %v", err)
+	}
+	if string(xml) != record.XML {
+		t.Fatalf("sidecar XML = %q, want %q", string(xml), record.XML)
+	}
 }
 
 func TestHistoryStoreFindReturnsNotFound(t *testing.T) {
@@ -93,6 +135,9 @@ func TestHistoryStoreDeletesRecordByRunID(t *testing.T) {
 	if records[0].RunID != "scan-2" {
 		t.Fatalf("remaining RunID = %q, want scan-2", records[0].RunID)
 	}
+	if _, err := os.Stat(filepath.Join(filepath.Dir(store.path), "records", "scan-1.xml")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("deleted sidecar stat error = %v, want not exist", err)
+	}
 }
 
 func TestHistoryStoreDeleteReturnsNotFound(t *testing.T) {
@@ -123,6 +168,9 @@ func TestHistoryStoreClearsRecords(t *testing.T) {
 	}
 	if len(records) != 0 {
 		t.Fatalf("len(records) = %d, want 0", len(records))
+	}
+	if _, err := os.Stat(filepath.Join(filepath.Dir(store.path), "records")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("records directory stat error = %v, want not exist", err)
 	}
 }
 

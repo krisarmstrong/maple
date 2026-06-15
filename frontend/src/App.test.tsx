@@ -5,6 +5,8 @@ import App from "./App";
 import { clearScanHistory, loadScanHistory } from "./services/history-service";
 import {
   appVersion,
+  chooseNmapPath,
+  detectNmapPath,
   detectTools,
   loadNmapHelp,
   openNmapDownloads,
@@ -19,6 +21,8 @@ vi.mock("./services/history-service", () => ({
 
 vi.mock("./services/tool-service", () => ({
   appVersion: vi.fn(),
+  chooseNmapPath: vi.fn(),
+  detectNmapPath: vi.fn(),
   detectTools: vi.fn(),
   loadNmapHelp: vi.fn(),
   openNmapDownloads: vi.fn(),
@@ -27,6 +31,8 @@ vi.mock("./services/tool-service", () => ({
 }));
 
 const appVersionMock = vi.mocked(appVersion);
+const chooseNmapPathMock = vi.mocked(chooseNmapPath);
+const detectNmapPathMock = vi.mocked(detectNmapPath);
 const detectToolsMock = vi.mocked(detectTools);
 const loadNmapHelpMock = vi.mocked(loadNmapHelp);
 const openNmapDownloadsMock = vi.mocked(openNmapDownloads);
@@ -46,6 +52,17 @@ describe("App", () => {
     });
     clearScanHistoryMock.mockReset();
     clearScanHistoryMock.mockResolvedValue(undefined);
+    chooseNmapPathMock.mockReset();
+    chooseNmapPathMock.mockResolvedValue("/opt/nmap/bin/nmap");
+    detectNmapPathMock.mockReset();
+    detectNmapPathMock.mockResolvedValue({
+      name: "nmap",
+      displayName: "Nmap",
+      required: true,
+      installed: true,
+      path: "/opt/nmap/bin/nmap",
+      version: "Nmap version 7.96",
+    });
     detectToolsMock.mockReset();
     loadNmapHelpMock.mockReset();
     loadNmapHelpMock.mockResolvedValue({
@@ -60,6 +77,7 @@ describe("App", () => {
     openNmapReferenceGuideMock.mockResolvedValue(undefined);
     loadScanHistoryMock.mockReset();
     loadScanHistoryMock.mockResolvedValue([]);
+    window.localStorage?.removeItem("maple.nmapPath");
     window.localStorage?.removeItem("maple.themeMode");
   });
 
@@ -193,6 +211,34 @@ describe("App", () => {
     expect(await screen.findByText("Maple desktop bridge is unavailable.")).toBeInTheDocument();
   });
 
+  it("persists a validated custom Nmap binary from the environment panel", async () => {
+    detectToolsMock.mockResolvedValue([]);
+
+    render(<App />);
+
+    await userEvent.click(await screen.findByRole("button", { name: /Environment/u }));
+    await userEvent.clear(screen.getByLabelText("Custom Nmap binary"));
+    await userEvent.type(screen.getByLabelText("Custom Nmap binary"), "/opt/nmap/bin/nmap");
+    await userEvent.click(screen.getByRole("button", { name: "Validate and use" }));
+
+    expect(detectNmapPathMock).toHaveBeenCalledWith("/opt/nmap/bin/nmap");
+    expect(window.localStorage?.getItem("maple.nmapPath")).toBe("/opt/nmap/bin/nmap");
+    expect(await screen.findByText("Nmap version 7.96")).toBeInTheDocument();
+  });
+
+  it("clears a custom Nmap binary and returns to PATH detection", async () => {
+    window.localStorage?.setItem("maple.nmapPath", "/opt/nmap/bin/nmap");
+    detectToolsMock.mockResolvedValue([]);
+
+    render(<App />);
+
+    await userEvent.click(await screen.findByRole("button", { name: /Environment/u }));
+    await userEvent.click(screen.getByRole("button", { name: "Use PATH detection" }));
+
+    expect(window.localStorage?.getItem("maple.nmapPath")).toBeNull();
+    expect(screen.getByLabelText("Custom Nmap binary")).toHaveValue("");
+  });
+
   it("confirms before clearing scan history", async () => {
     detectToolsMock.mockResolvedValue([]);
     loadScanHistoryMock
@@ -311,12 +357,12 @@ describe("App", () => {
     expect(screen.getByText("RC option surface ready")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "All tracked Nmap option groups are either implemented or intentionally blocked.",
+        "Tracked RC option groups are covered through controls, escape hatches, or intentional blocks.",
       ),
     ).toBeInTheDocument();
     expect(screen.getAllByText("Structured controls").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Advanced escape hatches").length).toBeGreaterThan(0);
-    expect(screen.getByText("Planned option gaps")).toBeInTheDocument();
+    expect(screen.getByText("Tracked option gaps")).toBeInTheDocument();
     expect(screen.getByText("Raw shell command input")).toBeInTheDocument();
     expect(screen.getAllByText("Blocked by design").length).toBeGreaterThan(0);
     expect(screen.getByText("-sT -sS -sU -sA -sW -sM -sN -sF -sX -sY -sZ -sO")).toBeInTheDocument();

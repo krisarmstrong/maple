@@ -46,6 +46,57 @@ func TestDetectOneFindsInstalledTool(t *testing.T) {
 	}
 }
 
+func TestDetectPathRunsExplicitToolPath(t *testing.T) {
+	detector := Detector{
+		lookPath: func(string) (string, error) {
+			t.Fatal("lookPath should not run for explicit paths")
+			return "", nil
+		},
+		run: func(_ context.Context, path string, args ...string) ([]byte, error) {
+			if path != "/custom/nmap" {
+				t.Fatalf("path = %q, want explicit path", path)
+			}
+			if len(args) != 1 || args[0] != "--version" {
+				t.Fatalf("args = %v, want --version", args)
+			}
+			return []byte("Nmap version 7.99\n"), nil
+		},
+	}
+
+	result := detector.DetectPath(context.Background(), ToolSpec{
+		Name:        "nmap",
+		DisplayName: "Nmap",
+		Required:    true,
+		VersionArg:  "--version",
+	}, "/custom/nmap")
+
+	if !result.Installed {
+		t.Fatal("expected explicit tool path to be installed")
+	}
+	if result.Path != "/custom/nmap" {
+		t.Fatalf("Path = %q, want explicit path", result.Path)
+	}
+	if result.Version != "Nmap version 7.99" {
+		t.Fatalf("Version = %q, want version output", result.Version)
+	}
+}
+
+func TestDetectPathRejectsBlankPath(t *testing.T) {
+	result := NewDetector().DetectPath(context.Background(), ToolSpec{
+		Name:        "nmap",
+		DisplayName: "Nmap",
+		Required:    true,
+		VersionArg:  "--version",
+	}, " ")
+
+	if result.Installed {
+		t.Fatal("expected blank path to be rejected")
+	}
+	if result.Error == "" {
+		t.Fatal("expected blank path error")
+	}
+}
+
 func TestDetectOneReportsMissingTool(t *testing.T) {
 	detector := Detector{
 		lookPath: func(string) (string, error) {

@@ -12,6 +12,7 @@ import (
 const versionTimeout = 2 * time.Second
 
 var errEmptyToolName = errors.New("tool name cannot be empty")
+var errEmptyToolPath = errors.New("tool path cannot be empty")
 
 type ToolSpec struct {
 	Name        string `json:"name"`
@@ -83,6 +84,33 @@ func (d Detector) DetectOne(ctx context.Context, spec ToolSpec) ToolDetection {
 	result.Installed = true
 	result.Path = path
 	result.Version = d.version(ctx, path, spec.VersionArg)
+	return result
+}
+
+func (d Detector) DetectPath(ctx context.Context, spec ToolSpec, path string) ToolDetection {
+	result := ToolDetection{
+		Name:        spec.Name,
+		DisplayName: spec.DisplayName,
+		Required:    spec.Required,
+	}
+	if spec.Name == "" {
+		result.Error = errEmptyToolName.Error()
+		return result
+	}
+	value := strings.TrimSpace(path)
+	if value == "" {
+		result.Error = errEmptyToolPath.Error()
+		result.InstallHint = installHint(spec.Name, runtime.GOOS)
+		return result
+	}
+	result.Installed = true
+	result.Path = value
+	result.Version = d.version(ctx, value, spec.VersionArg)
+	if result.Version == "" {
+		result.Installed = false
+		result.Error = "unable to run " + spec.DisplayName + " at the selected path"
+		result.InstallHint = installHint(spec.Name, runtime.GOOS)
+	}
 	return result
 }
 

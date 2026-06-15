@@ -256,6 +256,48 @@
   color: var(--muted);
 }
 
+.custom-tool-path {
+  background: var(--panel-subtle);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  display: grid;
+  gap: var(--space-10);
+  margin-bottom: var(--space-12);
+  padding: var(--space-12);
+}
+
+.custom-tool-path h3 {
+  font-size: var(--font-size-panel-title);
+  margin-bottom: var(--space-4);
+}
+
+.custom-tool-path p {
+  color: var(--muted);
+  margin-bottom: var(--space-0);
+}
+
+.custom-tool-path label {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.custom-tool-path label span {
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-label);
+}
+
+.inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.success {
+  color: var(--accent-strong);
+  font-weight: var(--font-weight-strong);
+}
+
 .theme-picker {
   border: 0;
   display: flex;

@@ -1,5 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 
+const testStorage = new Map<string, string>();
+
 Object.defineProperty(window, "matchMedia", {
   writable: true,
   value: (query: string): MediaQueryList => ({
@@ -12,6 +14,20 @@ Object.defineProperty(window, "matchMedia", {
     removeListener: () => undefined,
     dispatchEvent: () => false,
   }),
+});
+
+Object.defineProperty(window, "localStorage", {
+  writable: true,
+  value: {
+    clear: () => testStorage.clear(),
+    getItem: (key: string) => testStorage.get(key) ?? null,
+    key: (index: number) => Array.from(testStorage.keys())[index] ?? null,
+    removeItem: (key: string) => testStorage.delete(key),
+    setItem: (key: string, value: string) => testStorage.set(key, value),
+    get length() {
+      return testStorage.size;
+    },
+  } satisfies Storage,
 });
 
 Object.defineProperty(window, "runtime", {

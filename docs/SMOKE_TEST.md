@@ -32,6 +32,7 @@ Expected:
 - The Environment panel reports local tool detection.
 - If Nmap is installed, Nmap appears as detected with its version.
 - If Nmap is missing, Maple shows a clear missing-tool state and disables scan actions.
+- Environment accepts a validated custom Nmap binary path and can clear it back to PATH detection.
 - The app creates a local history store under the platform app config directory.
 - The Scan view starts with System theme selected by default.
 - Configure, Options, Scripts, Output, History, Environment, and Help are reachable without horizontal overflow.
@@ -58,7 +59,7 @@ Recommended scan:
 17. Test Details filters: `All ports`, `Open ports`, `Hosts up`, and `Hosts with findings`.
 18. Export Raw XML, Full JSON, and Markdown Report.
 19. Confirm each export shows the generated filename and saved path.
-20. Open Help and confirm Nmap Option Coverage reports zero planned option gaps.
+20. Open Help and confirm Nmap Option Coverage reports zero tracked option gaps.
 21. Load local Nmap help and confirm search filters the local help output.
 
 ## Windows Smoke
@@ -73,6 +74,7 @@ Expected:
 
 - Maple starts without requiring bundled Nmap or bundled Npcap.
 - Tool detection finds user-installed `nmap.exe` when it is on `PATH`.
+- A custom absolute `nmap.exe` path can be validated and used when Nmap is outside `PATH`.
 - Missing Nmap is reported cleanly.
 - Target Builder, DNS resolver validation, version intensity, preview argv tokens, scan/history/details, and all three export formats pass against a safe local target such as `127.0.0.1`.
 - The Windows CI artifact is unsigned unless a signing certificate has been configured.
@@ -88,6 +90,7 @@ Expected:
 
 - Maple starts with the system WebKit dependencies required by Wails.
 - Tool detection finds user-installed `nmap` when it is on `PATH`.
+- A custom absolute `nmap` path can be validated and used when Nmap is outside `PATH`.
 - Missing Nmap is reported cleanly.
 - Target Builder, DNS resolver validation, version intensity, preview argv tokens, scan/history/details, and all three export formats pass against a safe local target such as `127.0.0.1`.
 - The Linux `.deb` and `.rpm` packages recommend Nmap but do not bundle it.

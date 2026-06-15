@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { HelpWorkspace } from "./components/HelpWorkspace";
+import { NmapPathControl } from "./components/NmapPathControl";
 import { ScanHistoryList } from "./components/ScanHistoryList";
 import { ScanWorkspace } from "./components/ScanWorkspace";
 import { ThemeModePicker } from "./components/ThemeModePicker";
@@ -27,12 +28,15 @@ type HistoryState =
 
 type AppView = "scan" | "history" | "environment" | "help";
 
+const nmapPathStorageKey = "maple.nmapPath";
+
 export default function App(): React.JSX.Element {
   const [state, setState] = useState<LoadState>({ status: "loading" });
   const [historyState, setHistoryState] = useState<HistoryState>({ status: "loading" });
   const [confirmClearHistory, setConfirmClearHistory] = useState(false);
   const [toolActionError, setToolActionError] = useState("");
   const [activeView, setActiveView] = useState<AppView>("scan");
+  const [customNmapPath, setCustomNmapPath] = useState(readCustomNmapPath);
   const [versionInfo, setVersionInfo] = useState<BuildVersionInfo>({
     version: "dev",
     commit: "unknown",
@@ -124,7 +128,7 @@ export default function App(): React.JSX.Element {
 
         {activeView === "scan" ? (
           <ScanWorkspace
-            nmapPath={nmapPathFor(state)}
+            nmapPath={nmapPathFor(state, customNmapPath)}
             onScanFinished={() => refreshHistory(setHistoryState)}
           />
         ) : null}
@@ -184,6 +188,10 @@ export default function App(): React.JSX.Element {
             {state.status === "loading" ? <p className="muted">Detecting local tools...</p> : null}
             {state.status === "failed" ? <p className="error">{state.message}</p> : null}
             {toolActionError === "" ? null : <p className="error">{toolActionError}</p>}
+            <NmapPathControl
+              nmapPath={customNmapPath}
+              onPathChange={setStoredCustomNmapPath(setCustomNmapPath)}
+            />
             {state.status === "ready" ? (
               <ToolStatusList tools={state.tools} onError={setToolActionError} />
             ) : null}
@@ -261,11 +269,38 @@ async function clearHistory(
   }
 }
 
-function nmapPathFor(state: LoadState): string | undefined {
+function nmapPathFor(state: LoadState, customNmapPath: string): string | undefined {
+  const trimmedPath = customNmapPath.trim();
+  if (trimmedPath !== "") {
+    return trimmedPath;
+  }
   if (state.status !== "ready") {
     return undefined;
   }
   return state.tools.find((tool) => tool.name === "nmap" && tool.installed)?.path;
+}
+
+function readCustomNmapPath(): string {
+  return storage()?.getItem(nmapPathStorageKey) ?? "";
+}
+
+function setStoredCustomNmapPath(
+  setCustomNmapPath: (path: string) => void,
+): (path: string) => void {
+  return (path: string) => {
+    const trimmedPath = path.trim();
+    if (trimmedPath === "") {
+      storage()?.removeItem(nmapPathStorageKey);
+      setCustomNmapPath("");
+      return;
+    }
+    storage()?.setItem(nmapPathStorageKey, trimmedPath);
+    setCustomNmapPath(trimmedPath);
+  };
+}
+
+function storage(): Storage | undefined {
+  return typeof window.localStorage === "undefined" ? undefined : window.localStorage;
 }
 
 function statusText(state: LoadState): string {
