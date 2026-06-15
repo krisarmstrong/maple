@@ -3,6 +3,8 @@ package nmap
 import (
 	"context"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -10,8 +12,6 @@ import (
 )
 
 func TestExecExecutorReadsXMLFromManagedFile(t *testing.T) {
-	t.Setenv("MAPLE_EXEC_EXECUTOR_HELPER", "1")
-
 	xmlFile, err := os.CreateTemp(t.TempDir(), "maple-nmap-*.xml")
 	if err != nil {
 		t.Fatalf("CreateTemp returned error: %v", err)
@@ -23,16 +23,12 @@ func TestExecExecutorReadsXMLFromManagedFile(t *testing.T) {
 
 	executor := ExecExecutor{}
 	var chunks []scanner.ScanOutput
+	commandPath, commandArgs := helperCommand(t, xmlPath, false)
 	result, err := executor.Execute(
 		context.Background(),
 		Command{
-			Path: os.Args[0],
-			Args: []string{
-				"-test.run=TestExecExecutorHelperProcess",
-				"--",
-				"-oX",
-				xmlPath,
-			},
+			Path:    commandPath,
+			Args:    commandArgs,
 			XMLPath: xmlPath,
 		},
 		func(output scanner.ScanOutput) {
@@ -59,9 +55,6 @@ func TestExecExecutorReadsXMLFromManagedFile(t *testing.T) {
 }
 
 func TestExecExecutorDoesNotEmitXMLLikeStdout(t *testing.T) {
-	t.Setenv("MAPLE_EXEC_EXECUTOR_HELPER", "1")
-	t.Setenv("MAPLE_EXEC_EXECUTOR_XML_STDOUT", "1")
-
 	xmlFile, err := os.CreateTemp(t.TempDir(), "maple-nmap-*.xml")
 	if err != nil {
 		t.Fatalf("CreateTemp returned error: %v", err)
@@ -73,16 +66,12 @@ func TestExecExecutorDoesNotEmitXMLLikeStdout(t *testing.T) {
 
 	executor := ExecExecutor{}
 	var chunks []scanner.ScanOutput
+	commandPath, commandArgs := helperCommand(t, xmlPath, true)
 	result, err := executor.Execute(
 		context.Background(),
 		Command{
-			Path: os.Args[0],
-			Args: []string{
-				"-test.run=TestExecExecutorHelperProcess",
-				"--",
-				"-oX",
-				xmlPath,
-			},
+			Path:    commandPath,
+			Args:    commandArgs,
 			XMLPath: xmlPath,
 		},
 		func(output scanner.ScanOutput) {
@@ -228,16 +217,38 @@ func TestScanOutputFilterFlushesPendingNonXMLAtEOF(t *testing.T) {
 	}
 }
 
-func TestExecExecutorHelperProcess(t *testing.T) {
-	if os.Getenv("MAPLE_EXEC_EXECUTOR_HELPER") != "1" {
-		return
+func helperCommand(t *testing.T, xmlPath string, xmlStdout bool) (string, []string) {
+	t.Helper()
+
+	goPath, err := exec.LookPath("go")
+	if err != nil {
+		t.Fatalf("go executable not found: %v", err)
 	}
+	helperPath := filepath.Join(t.TempDir(), "executor-helper.go")
+	if err := os.WriteFile(helperPath, []byte(execExecutorHelperSource), 0o600); err != nil {
+		t.Fatalf("WriteFile returned error: %v", err)
+	}
+	args := []string{"run", helperPath}
+	if xmlStdout {
+		args = append(args, "--xml-stdout")
+	}
+	args = append(args, "--", "-oX", xmlPath)
+	return goPath, args
+}
+
+const execExecutorHelperSource = `package main
+
+import (
+	"os"
+)
+
+func main() {
 	xmlPath := helperXMLPath(os.Args)
 	if xmlPath == "" {
 		os.Exit(2)
 	}
 	stdout := "plain stdout diagnostic\n"
-	if os.Getenv("MAPLE_EXEC_EXECUTOR_XML_STDOUT") == "1" {
+	if hasArg(os.Args, "--xml-stdout") {
 		stdout = "<?xml version=\"1.0\"?>\n<nmaprun>\n</nmaprun>\n"
 	}
 	if _, err := os.Stdout.WriteString(stdout); err != nil {
@@ -249,7 +260,6 @@ func TestExecExecutorHelperProcess(t *testing.T) {
 	if err := os.WriteFile(xmlPath, []byte("<nmaprun><host /></nmaprun>"), 0o600); err != nil {
 		os.Exit(2)
 	}
-	os.Exit(0)
 }
 
 func helperXMLPath(args []string) string {
@@ -260,3 +270,13 @@ func helperXMLPath(args []string) string {
 	}
 	return ""
 }
+
+func hasArg(args []string, want string) bool {
+	for _, arg := range args {
+		if arg == want {
+			return true
+		}
+	}
+	return false
+}
+`

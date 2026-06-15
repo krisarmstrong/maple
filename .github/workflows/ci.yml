@@ -6,13 +6,21 @@ on:
 
 jobs:
   test:
-    runs-on: macos-15
+    runs-on: ubuntu-24.04
+    env:
+      GO_BUILD_TAGS: desktop,wv2runtime.download,production,webkit2_41
+      GO_LDFLAGS: -w -s
     steps:
       - uses: actions/checkout@v6.0.3
 
       - uses: ./.github/actions/setup-go
 
       - uses: ./.github/actions/setup-node
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev shellcheck
 
       - name: Install Wails
         run: |
@@ -30,13 +38,16 @@ jobs:
           echo "$HOME/go/bin" >> "$GITHUB_PATH"
 
       - name: Install security scanners
-        run: brew install gosec gitleaks shellcheck
+        run: |
+          go install github.com/securego/gosec/v2/cmd/gosec@v2.27.1
+          go install github.com/zricethezav/gitleaks/v8@v8.30.1
+          echo "$HOME/go/bin" >> "$GITHUB_PATH"
 
       - name: Install frontend dependencies
         run: npm --prefix frontend ci
 
       - name: Install browser smoke dependencies
-        run: npm --prefix frontend run test:e2e:install
+        run: npm --prefix frontend exec playwright install --with-deps chromium
 
       - name: Release candidate gate
         run: make rc-check
