@@ -472,6 +472,32 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                   Recipes choose scan defaults, options, and scripts. Targets stay separate.
                 </p>
               </div>
+              <label>
+                <span>Scan recipe</span>
+                <select
+                  aria-label="Scan recipe"
+                  onChange={(event) => applyPreset(event.target.value)}
+                  value={selectedPresetID}
+                >
+                  {selectedPresetID === "" ? <option value="">Custom unsaved recipe</option> : null}
+                  <optgroup label="Built-in recipes">
+                    {builtInScanPresets.map((preset) => (
+                      <option key={preset.id} value={preset.id}>
+                        {preset.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                  {savedPresets.length === 0 ? null : (
+                    <optgroup label="Custom recipes">
+                      {savedPresets.map((preset) => (
+                        <option key={preset.id} value={preset.id}>
+                          {preset.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                </select>
+              </label>
               <div className="recipe-selection">
                 <span>Selected recipe</span>
                 <strong>{selectedPreset?.name ?? "Custom unsaved recipe"}</strong>
@@ -501,44 +527,6 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
               </div>
             </section>
           </div>
-          <section className="preset-library" aria-label="Built-in scan recipes">
-            <div>
-              <h3>Choose a recipe</h3>
-              <p className="target-mode-help">
-                Common Nmap workflows that save scan shape, options, and scripts, never targets.
-              </p>
-            </div>
-            <div className="preset-card-grid preset-card-grid-compact">
-              {builtInScanPresets.map((preset) => (
-                <PresetCard
-                  active={selectedPresetID === preset.id}
-                  key={preset.id}
-                  onApply={applyPreset}
-                  preset={preset}
-                />
-              ))}
-            </div>
-          </section>
-          {savedPresets.length === 0 ? null : (
-            <section className="preset-library" aria-label="Custom scan recipes">
-              <div>
-                <h3>Custom recipes</h3>
-                <p className="target-mode-help">
-                  Your saved recipes are local to this desktop and still do not store targets.
-                </p>
-              </div>
-              <div className="preset-card-grid">
-                {savedPresets.map((preset) => (
-                  <PresetCard
-                    active={selectedPresetID === preset.id}
-                    key={preset.id}
-                    onApply={applyPreset}
-                    preset={preset}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
           {scope?.warning === undefined ? null : <p className="scan-scope">{scope.warning}</p>}
         </div>
       ) : null}
@@ -1689,38 +1677,6 @@ function clearDiscoveryProbes(options: ScanOptions): ScanOptions {
     icmpTimestamp: false,
     icmpNetmask: false,
   };
-}
-
-function PresetCard({
-  active,
-  onApply,
-  preset,
-}: {
-  active: boolean;
-  onApply: (presetID: string) => void;
-  preset: ScanPreset;
-}): React.JSX.Element {
-  const summary = summarizePreset(preset);
-  return (
-    <article className={`preset-card${active ? " preset-card-active" : ""}`}>
-      <div>
-        <h4>{preset.name}</h4>
-        <p>{summary.intentLabel}</p>
-      </div>
-      <ul>
-        <li>{summary.optionsLabel}</li>
-        <li>{summary.scriptsLabel}</li>
-        <li>{summary.targetPolicyLabel}</li>
-      </ul>
-      <button
-        aria-label={`${active ? "Selected" : "Apply"} ${preset.name}`}
-        type="button"
-        onClick={() => onApply(preset.id)}
-      >
-        {active ? "Applied" : "Apply"}
-      </button>
-    </article>
-  );
 }
 
 function errorMessage(caught: unknown): string {
