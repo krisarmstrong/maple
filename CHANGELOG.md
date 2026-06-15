@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/krisarmstrong/maple/compare/v0.1.3...v0.1.4) (2026-06-15)
+
+
+### Bug Fixes
+
+* pass repo context when publishing release assets ([d8014e4](https://github.com/krisarmstrong/maple/commit/d8014e4221d18dee8b961cd400895120f4fcccf6))
+
 ## [0.1.3](https://github.com/krisarmstrong/maple/compare/v0.1.2...v0.1.3) (2026-06-15)
 
 
