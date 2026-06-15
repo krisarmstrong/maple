@@ -44,6 +44,8 @@ test.describe("Maple browser smoke", () => {
 
     await page.getByRole("button", { name: /Environment/u }).click();
     await expect(page.getByText("Maple uses locally installed Nmap tools")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Custom Nmap Binary" })).toBeVisible();
+    await expect(page.getByLabel("Custom Nmap binary")).toBeVisible();
     await page.getByRole("button", { name: "Help" }).click();
     await expect(page.getByText(/Maple does not bundle or redistribute Nmap/u)).toBeVisible();
     await expect(page.getByText(/Windows packet scans may require Npcap/u)).toBeVisible();

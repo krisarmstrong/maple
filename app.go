@@ -47,8 +47,18 @@ func (a *App) DetectTools() []platform.ToolDetection {
 	return a.detector.Detect(a.context(), platform.DefaultToolSpecs())
 }
 
+func (a *App) DetectNmapPath(path string) platform.ToolDetection {
+	return a.detector.DetectPath(a.context(), nmapToolSpec(), path)
+}
+
 func (a *App) AppVersion() version.Info {
 	return version.Current()
+}
+
+func (a *App) ChooseNmapPath() (string, error) {
+	return runtime.OpenFileDialog(a.context(), runtime.OpenDialogOptions{
+		Title: "Choose Nmap Binary",
+	})
 }
 
 func (a *App) OpenNmapDownloads() {
@@ -64,11 +74,7 @@ func (a *App) OpenNmapNSEDocs() {
 }
 
 func (a *App) LoadNmapHelp() (platform.ToolHelp, error) {
-	return a.detector.Help(a.context(), platform.ToolSpec{
-		Name:        "nmap",
-		DisplayName: "Nmap",
-		Required:    true,
-	}, "--help")
+	return a.detector.Help(a.context(), nmapToolSpec(), "--help")
 }
 
 func (a *App) ScanProfiles() []scanner.Profile {
@@ -128,17 +134,21 @@ func (a *App) resolveScanRequest(request scanner.ScanRequest) (scanner.ScanReque
 	if request.NmapPath != "" {
 		return request, nil
 	}
-	detection := a.detector.DetectOne(a.context(), platform.ToolSpec{
-		Name:        "nmap",
-		DisplayName: "Nmap",
-		Required:    true,
-		VersionArg:  "--version",
-	})
+	detection := a.detector.DetectOne(a.context(), nmapToolSpec())
 	if !detection.Installed || detection.Path == "" {
 		return scanner.ScanRequest{}, errNmapNotInstalled
 	}
 	request.NmapPath = detection.Path
 	return request, nil
+}
+
+func nmapToolSpec() platform.ToolSpec {
+	return platform.ToolSpec{
+		Name:        "nmap",
+		DisplayName: "Nmap",
+		Required:    true,
+		VersionArg:  "--version",
+	}
 }
 
 func (a *App) historyEmitter(emit nmap.EventEmitter) nmap.EventEmitter {

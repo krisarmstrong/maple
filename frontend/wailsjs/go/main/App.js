@@ -6,6 +6,10 @@ export function CancelScan() {
   return window['go']['main']['App']['CancelScan']();
 }
 
+export function ChooseNmapPath() {
+  return window['go']['main']['App']['ChooseNmapPath']();
+}
+
 export function AppVersion() {
   return window['go']['main']['App']['AppVersion']();
 }
@@ -20,6 +24,10 @@ export function DeleteScanHistoryRecord(arg1) {
 
 export function DetectTools() {
   return window['go']['main']['App']['DetectTools']();
+}
+
+export function DetectNmapPath(arg1) {
+  return window['go']['main']['App']['DetectNmapPath'](arg1);
 }
 
 export function ExportScanHistoryRecord(arg1, arg2) {

@@ -1,5 +1,7 @@
 import {
   AppVersion,
+  ChooseNmapPath,
+  DetectNmapPath,
   DetectTools,
   LoadNmapHelp,
   OpenNmapDownloads,
@@ -16,6 +18,20 @@ export async function detectTools(): Promise<ToolDetection[]> {
     return [];
   }
   return DetectTools();
+}
+
+export function detectNmapPath(path: string): Promise<ToolDetection> {
+  if (!hasWailsBackend()) {
+    return Promise.reject(unavailableBridgeError());
+  }
+  return DetectNmapPath(path);
+}
+
+export function chooseNmapPath(): Promise<string> {
+  if (!hasWailsBackend()) {
+    return Promise.reject(unavailableBridgeError());
+  }
+  return ChooseNmapPath();
 }
 
 export async function appVersion(): Promise<BuildVersionInfo> {

@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   AppVersion,
+  ChooseNmapPath,
+  DetectNmapPath,
   DetectTools,
   LoadNmapHelp,
   OpenNmapDownloads,
@@ -9,6 +11,8 @@ import {
 } from "../../wailsjs/go/main/App";
 import {
   appVersion,
+  chooseNmapPath,
+  detectNmapPath,
   detectTools,
   loadNmapHelp,
   openNmapDownloads,
@@ -18,6 +22,8 @@ import {
 
 vi.mock("../../wailsjs/go/main/App", () => ({
   AppVersion: vi.fn(),
+  ChooseNmapPath: vi.fn(),
+  DetectNmapPath: vi.fn(),
   DetectTools: vi.fn(),
   LoadNmapHelp: vi.fn(),
   OpenNmapDownloads: vi.fn(),
@@ -26,6 +32,8 @@ vi.mock("../../wailsjs/go/main/App", () => ({
 }));
 
 const appVersionMock = vi.mocked(AppVersion);
+const chooseNmapPathMock = vi.mocked(ChooseNmapPath);
+const detectNmapPathMock = vi.mocked(DetectNmapPath);
 const detectToolsMock = vi.mocked(DetectTools);
 const loadNmapHelpMock = vi.mocked(LoadNmapHelp);
 const openNmapDownloadsMock = vi.mocked(OpenNmapDownloads);
@@ -35,6 +43,8 @@ const openNmapReferenceGuideMock = vi.mocked(OpenNmapReferenceGuide);
 describe("tool-service", () => {
   beforeEach(() => {
     appVersionMock.mockReset();
+    chooseNmapPathMock.mockReset();
+    detectNmapPathMock.mockReset();
     detectToolsMock.mockReset();
     loadNmapHelpMock.mockReset();
     openNmapDownloadsMock.mockReset();
@@ -91,6 +101,32 @@ describe("tool-service", () => {
     ]);
   });
 
+  it("validates a custom Nmap path through the Wails backend", async () => {
+    detectNmapPathMock.mockResolvedValue({
+      name: "nmap",
+      displayName: "Nmap",
+      required: true,
+      installed: true,
+      path: "/custom/nmap",
+      version: "Nmap version 7.99",
+    });
+
+    await expect(detectNmapPath("/custom/nmap")).resolves.toEqual({
+      name: "nmap",
+      displayName: "Nmap",
+      required: true,
+      installed: true,
+      path: "/custom/nmap",
+      version: "Nmap version 7.99",
+    });
+  });
+
+  it("chooses a custom Nmap path through the Wails backend", async () => {
+    chooseNmapPathMock.mockResolvedValue("/custom/nmap");
+
+    await expect(chooseNmapPath()).resolves.toBe("/custom/nmap");
+  });
+
   it("opens official Nmap downloads through the Wails backend", async () => {
     openNmapDownloadsMock.mockResolvedValue(undefined);
 
@@ -135,6 +171,15 @@ describe("tool-service", () => {
     await expect(loadNmapHelp()).rejects.toThrow("Maple desktop bridge is unavailable.");
     await expect(openNmapReferenceGuide()).rejects.toThrow("Maple desktop bridge is unavailable.");
     await expect(openNmapNSEDocs()).rejects.toThrow("Maple desktop bridge is unavailable.");
+  });
+
+  it("rejects custom path actions when the Wails backend is unavailable", async () => {
+    setBackendBridge(undefined);
+
+    await expect(detectNmapPath("/custom/nmap")).rejects.toThrow(
+      "Maple desktop bridge is unavailable.",
+    );
+    await expect(chooseNmapPath()).rejects.toThrow("Maple desktop bridge is unavailable.");
   });
 });
 

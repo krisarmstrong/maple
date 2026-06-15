@@ -152,7 +152,7 @@ function OptionCoveragePanel(): React.JSX.Element {
         <h3>Nmap Option Coverage</h3>
         <p>
           Maple tracks Nmap support as structured controls, advanced escape hatches, and
-          blocked-by-design behavior. Planned option groups must stay at zero for the RC gate.
+          blocked-by-design behavior. RC-tracked option gaps must stay at zero for the RC gate.
         </p>
       </div>
       <div
@@ -162,14 +162,14 @@ function OptionCoveragePanel(): React.JSX.Element {
         <strong>{isReady ? "RC option surface ready" : "Option gaps remain"}</strong>
         <span>
           {isReady
-            ? "All tracked Nmap option groups are either implemented or intentionally blocked."
-            : "Planned option groups must be resolved before RC smoke."}
+            ? "Tracked RC option groups are covered through controls, escape hatches, or intentional blocks."
+            : "Tracked option gaps must be resolved before RC smoke."}
         </span>
       </div>
       <div className="option-coverage-summary">
         <CoverageMetric label="Structured controls" value={counts.structured} />
         <CoverageMetric label="Advanced escape hatches" value={counts["escape-hatch"]} />
-        <CoverageMetric label="Planned option gaps" value={counts.planned} />
+        <CoverageMetric label="Tracked option gaps" value={counts.planned} />
         <CoverageMetric label="Blocked by design" value={counts.blocked} />
       </div>
       <div className="option-coverage-controls">
