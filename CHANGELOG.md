@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.5](https://github.com/krisarmstrong/maple/compare/v0.1.4...v0.1.5) (2026-06-15)
+
+
+### Bug Fixes
+
+* harden release version sync ([9d43e91](https://github.com/krisarmstrong/maple/commit/9d43e910c329710e0bfcb4f928bbddc8107aff7f))
+* honor release-please manifest config ([4a4667e](https://github.com/krisarmstrong/maple/commit/4a4667e108780654148465738e817db0b5b8251d))
+* keep frontend package version in release sync ([a5c3ed7](https://github.com/krisarmstrong/maple/commit/a5c3ed735e1fb5f059001b978ccdbb2e1b2b6e2f))
+
 ## [0.1.4](https://github.com/krisarmstrong/maple/compare/v0.1.3...v0.1.4) (2026-06-15)
 
 
