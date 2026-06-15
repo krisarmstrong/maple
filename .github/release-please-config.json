@@ -6,7 +6,7 @@
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,
       "changelog-path": "CHANGELOG.md",
-      "initial-version": "0.0.0",
+      "initial-version": "0.0.1",
       "versioning": "default",
       "extra-files": ["frontend/package.json", "frontend/package-lock.json"]
     }
