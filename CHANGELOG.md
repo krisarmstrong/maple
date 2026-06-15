@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/krisarmstrong/maple/compare/v0.1.2...v0.1.3) (2026-06-15)
+
+
+### Bug Fixes
+
+* expose nsis on windows release runners ([1d20c1f](https://github.com/krisarmstrong/maple/commit/1d20c1fe489386127d7fa7c606ff73fb2105023b))
+
 ## [0.1.2](https://github.com/krisarmstrong/maple/compare/v0.1.1...v0.1.2) (2026-06-15)
 
 
