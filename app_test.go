@@ -7,6 +7,7 @@ import (
 	"github.com/krisarmstrong/maple/internal/nmap"
 	"github.com/krisarmstrong/maple/internal/scanner"
 	"github.com/krisarmstrong/maple/internal/store"
+	"github.com/krisarmstrong/maple/internal/version"
 )
 
 func TestHistoryEmitterStoresXMLParseErrors(t *testing.T) {
@@ -52,5 +53,24 @@ func TestOfficialNmapHelpURLsUseProjectPages(t *testing.T) {
 	}
 	if nmapNSEDocsURL != "https://nmap.org/nsedoc/" {
 		t.Fatalf("nmapNSEDocsURL = %q", nmapNSEDocsURL)
+	}
+}
+
+func TestAppVersionReturnsBuildMetadata(t *testing.T) {
+	restore := version.SetForTesting("v0.2.0", "abc1234", "2026-06-15T14:00:00Z", "uihash")
+	defer restore()
+
+	info := NewApp().AppVersion()
+	if info.Version != "v0.2.0" {
+		t.Fatalf("Version = %q, want injected version", info.Version)
+	}
+	if info.Commit != "abc1234" {
+		t.Fatalf("Commit = %q, want injected commit", info.Commit)
+	}
+	if info.BuildTime != "2026-06-15T14:00:00Z" {
+		t.Fatalf("BuildTime = %q, want injected build time", info.BuildTime)
+	}
+	if info.UIBuildHash != "uihash" {
+		t.Fatalf("UIBuildHash = %q, want injected UI hash", info.UIBuildHash)
 	}
 }

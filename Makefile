@@ -1,15 +1,26 @@
 GOCACHE ?= $(CURDIR)/.cache/go-build
 GO_PACKAGES = $(shell GOCACHE=$(GOCACHE) go list ./... | grep -v '/frontend/node_modules/')
 GO_BUILD_TAGS ?= desktop,wv2runtime.download,production
-GO_LDFLAGS ?= -w -s -extldflags '-framework UniformTypeIdentifiers'
+VERSION_PKG := github.com/krisarmstrong/maple/internal/version
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
+COMMIT ?= $(shell git rev-parse --short=7 HEAD 2>/dev/null || echo unknown)
+BUILD_TIME ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+UI_BUILD_HASH = $(shell if [ -d "frontend/dist" ] && [ -n "$$(find frontend/dist -type f -print -quit 2>/dev/null)" ]; then \
+	find frontend/dist -type f -exec md5 -q {} \; 2>/dev/null | sort | md5 -q 2>/dev/null || \
+	find frontend/dist -type f -exec md5sum {} \; 2>/dev/null | sort | md5sum 2>/dev/null | cut -d' ' -f1; \
+else echo unknown; fi)
+VERSION_LDFLAGS = -X $(VERSION_PKG).Version=$(VERSION) -X $(VERSION_PKG).Commit=$(COMMIT) -X $(VERSION_PKG).BuildTime=$(BUILD_TIME) -X $(VERSION_PKG).UIBuildHash=$(UI_BUILD_HASH)
+GO_BASE_LDFLAGS ?= -w -s -extldflags '-framework UniformTypeIdentifiers'
+GO_LDFLAGS ?= $(GO_BASE_LDFLAGS) $(VERSION_LDFLAGS)
 WAILS ?= wails
-WAILS_LDFLAGS ?= -w -s
+WAILS_BASE_LDFLAGS ?= -w -s
+WAILS_LDFLAGS ?= $(WAILS_BASE_LDFLAGS) $(VERSION_LDFLAGS)
 PACKAGE_BUILD_TAGS ?= $(GO_BUILD_TAGS)
 WAILS_BUILD_FLAGS ?= -clean -trimpath -tags "$(PACKAGE_BUILD_TAGS)"
 PACKAGE_PLATFORM ?= darwin/arm64
-PACKAGE_LDFLAGS ?= $(WAILS_LDFLAGS)
+PACKAGE_LDFLAGS ?= $(WAILS_BASE_LDFLAGS)
 WAILS_PLATFORM_FLAGS ?=
-PACKAGE_VERSION ?= 0.1.0
+PACKAGE_VERSION ?= $(patsubst v%,%,$(VERSION))
 PACKAGE_RELEASE ?= 1
 PACKAGE_ARCH ?= amd64
 PACKAGE_DEB_WEBKIT_DEP ?= libwebkit2gtk-4.1-0
@@ -61,10 +72,10 @@ test-e2e:
 tidy:
 	GOCACHE=$(GOCACHE) go mod tidy
 
-package-platform:
-	GOCACHE=$(GOCACHE) $(WAILS) build $(WAILS_BUILD_FLAGS) -ldflags "$(PACKAGE_LDFLAGS)" -platform $(PACKAGE_PLATFORM) $(WAILS_PLATFORM_FLAGS)
+package-platform: frontend-build
+	GOCACHE=$(GOCACHE) $(WAILS) build $(WAILS_BUILD_FLAGS) -ldflags "$(PACKAGE_LDFLAGS) $(VERSION_LDFLAGS)" -platform $(PACKAGE_PLATFORM) $(WAILS_PLATFORM_FLAGS)
 
-package-macos:
+package-macos: frontend-build
 	GOCACHE=$(GOCACHE) $(WAILS) build $(WAILS_BUILD_FLAGS) -ldflags "$(GO_LDFLAGS)" -platform darwin/arm64
 
 package-macos-pkg:
@@ -75,7 +86,7 @@ package-macos-installer: package-macos package-macos-pkg
 package-macos-dryrun:
 	GOCACHE=$(GOCACHE) $(WAILS) build -dryrun $(WAILS_BUILD_FLAGS) -ldflags "$(GO_LDFLAGS)" -platform darwin/arm64
 
-package-windows:
+package-windows: frontend-build
 	GOCACHE=$(GOCACHE) $(WAILS) build $(WAILS_BUILD_FLAGS) -ldflags "$(WAILS_LDFLAGS)" -platform windows/amd64 -webview2 download
 
 package-windows-dryrun: package-windows-amd64-dryrun
@@ -86,7 +97,7 @@ package-windows-amd64-dryrun:
 package-windows-arm64-dryrun:
 	GOCACHE=$(GOCACHE) $(WAILS) build -dryrun $(WAILS_BUILD_FLAGS) -ldflags "$(WAILS_LDFLAGS)" -platform windows/arm64 -webview2 download
 
-package-linux:
+package-linux: frontend-build
 	GOCACHE=$(GOCACHE) $(WAILS) build $(WAILS_BUILD_FLAGS) -ldflags "$(WAILS_LDFLAGS)" -platform $(LINUX_PACKAGE_PLATFORM)
 
 package-linux-deb:

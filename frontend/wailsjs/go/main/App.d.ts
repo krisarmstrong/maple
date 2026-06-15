@@ -4,6 +4,9 @@ import {platform} from '../models';
 import {exporter} from '../models';
 import {scanner} from '../models';
 import {store} from '../models';
+import {version} from '../models';
+
+export function AppVersion():Promise<version.Info>;
 
 export function CancelScan():Promise<boolean>;
 

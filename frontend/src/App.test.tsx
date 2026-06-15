@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import { clearScanHistory, loadScanHistory } from "./services/history-service";
 import {
+  appVersion,
   detectTools,
   loadNmapHelp,
   openNmapDownloads,
@@ -17,6 +18,7 @@ vi.mock("./services/history-service", () => ({
 }));
 
 vi.mock("./services/tool-service", () => ({
+  appVersion: vi.fn(),
   detectTools: vi.fn(),
   loadNmapHelp: vi.fn(),
   openNmapDownloads: vi.fn(),
@@ -24,6 +26,7 @@ vi.mock("./services/tool-service", () => ({
   openNmapReferenceGuide: vi.fn(),
 }));
 
+const appVersionMock = vi.mocked(appVersion);
 const detectToolsMock = vi.mocked(detectTools);
 const loadNmapHelpMock = vi.mocked(loadNmapHelp);
 const openNmapDownloadsMock = vi.mocked(openNmapDownloads);
@@ -34,6 +37,13 @@ const loadScanHistoryMock = vi.mocked(loadScanHistory);
 
 describe("App", () => {
   beforeEach(() => {
+    appVersionMock.mockReset();
+    appVersionMock.mockResolvedValue({
+      version: "dev",
+      commit: "unknown",
+      buildTime: "unknown",
+      uiBuildHash: "unknown",
+    });
     clearScanHistoryMock.mockReset();
     clearScanHistoryMock.mockResolvedValue(undefined);
     detectToolsMock.mockReset();
@@ -51,6 +61,20 @@ describe("App", () => {
     loadScanHistoryMock.mockReset();
     loadScanHistoryMock.mockResolvedValue([]);
     window.localStorage?.removeItem("maple.themeMode");
+  });
+
+  it("shows the build version in the sidebar footer", async () => {
+    appVersionMock.mockResolvedValue({
+      version: "v0.2.0",
+      commit: "abc1234",
+      buildTime: "2026-06-15T14:00:00Z",
+      uiBuildHash: "uihash",
+    });
+    detectToolsMock.mockResolvedValue([]);
+
+    render(<App />);
+
+    expect(await screen.findByText("Maple v0.2.0")).toBeInTheDocument();
   });
 
   it("shows detected local tools", async () => {

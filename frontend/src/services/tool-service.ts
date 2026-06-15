@@ -1,10 +1,12 @@
 import {
+  AppVersion,
   DetectTools,
   LoadNmapHelp,
   OpenNmapDownloads,
   OpenNmapNSEDocs,
   OpenNmapReferenceGuide,
 } from "../../wailsjs/go/main/App";
+import type { BuildVersionInfo } from "../core/build-version";
 import type { ToolDetection } from "../core/tool-detection";
 import type { ToolHelp } from "../core/tool-help";
 import { hasWailsBackend, unavailableBridgeError } from "./wails-bridge";
@@ -14,6 +16,18 @@ export async function detectTools(): Promise<ToolDetection[]> {
     return [];
   }
   return DetectTools();
+}
+
+export async function appVersion(): Promise<BuildVersionInfo> {
+  if (!hasWailsBackend()) {
+    return {
+      version: "dev",
+      commit: "unknown",
+      buildTime: "unknown",
+      uiBuildHash: "unknown",
+    };
+  }
+  return AppVersion();
 }
 
 export function openNmapDownloads(): Promise<void> {

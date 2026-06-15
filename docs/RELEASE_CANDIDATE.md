@@ -51,6 +51,12 @@ Required smoke coverage:
 
 ## CI Release Gate
 
+Versioning is owned by release-please. Conventional commits merged to `main` update
+`CHANGELOG.md` through a release PR. Merging that release PR creates the `v*` tag and
+GitHub Release. The tag triggers `.github/workflows/release.yml`, and the release build
+injects that tag into `internal/version` via linker flags so the desktop app reports the
+same version as the GitHub release.
+
 The GitHub release workflow builds unsigned artifacts for:
 
 - macOS ARM: Wails `darwin/arm64`.
