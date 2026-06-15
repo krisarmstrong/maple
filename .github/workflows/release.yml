@@ -137,7 +137,16 @@ jobs:
 
       - name: Install Windows installer dependencies
         if: matrix.os == 'windows'
-        run: choco install nsis -y
+        run: |
+          choco install nsis -y
+          printf '%s\n' \
+            'C:\Program Files (x86)\NSIS' \
+            'C:\Program Files\NSIS' \
+            >> "$GITHUB_PATH"
+
+      - name: Verify Windows installer dependencies
+        if: matrix.os == 'windows'
+        run: makensis -VERSION
 
       - name: Install Wails
         run: |
