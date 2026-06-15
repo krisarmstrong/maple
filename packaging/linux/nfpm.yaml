@@ -11,7 +11,7 @@ maintainer: Kris Armstrong
 description: Desktop workbench for user-installed Nmap scans.
 vendor: Maple
 homepage: https://github.com/krisarmstrong/maple
-license: Proprietary
+license: Apache-2.0
 recommends:
   - nmap
 overrides:

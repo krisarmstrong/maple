@@ -74,4 +74,6 @@ The GitHub release workflow builds unsigned artifacts for macOS ARM, Linux ARM/x
 
 ## Legal Notes
 
+Maple is licensed under the Apache License 2.0. See `LICENSE` and `NOTICE`.
+
 Nmap is distributed by the Nmap Project under its own license. Maple invokes user-installed Nmap tools and does not redistribute Nmap, Npcap, or related binaries.
