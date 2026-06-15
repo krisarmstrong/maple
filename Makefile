@@ -1,5 +1,5 @@
 GOCACHE ?= $(CURDIR)/.cache/go-build
-GO_PACKAGES := $(shell GOCACHE=$(GOCACHE) go list ./... | grep -v '/frontend/node_modules/')
+GO_PACKAGES = $(shell GOCACHE=$(GOCACHE) go list ./... | grep -v '/frontend/node_modules/')
 GO_BUILD_TAGS ?= desktop,wv2runtime.download,production
 GO_LDFLAGS ?= -w -s -extldflags '-framework UniformTypeIdentifiers'
 WAILS ?= wails
@@ -16,10 +16,12 @@ PACKAGE_DEB_WEBKIT_DEP ?= libwebkit2gtk-4.1-0
 PACKAGE_RPM_WEBKIT_DEP ?= webkit2gtk4.1
 LINUX_PACKAGE_PLATFORM ?= linux/$(PACKAGE_ARCH)
 
-.PHONY: build dev fmt fmt-check lint package-all package-dryrun package-linux package-linux-amd64-dryrun package-linux-arm64-dryrun package-linux-deb package-linux-dryrun package-linux-installers package-linux-rpm package-macos package-macos-dryrun package-macos-installer package-macos-pkg package-platform package-windows package-windows-amd64-dryrun package-windows-arm64-dryrun package-windows-dryrun rc-check security test test-e2e test-go test-ui tidy
+.PHONY: build dev fmt fmt-check frontend-build lint package-all package-dryrun package-linux package-linux-amd64-dryrun package-linux-arm64-dryrun package-linux-deb package-linux-dryrun package-linux-installers package-linux-rpm package-macos package-macos-dryrun package-macos-installer package-macos-pkg package-platform package-windows package-windows-amd64-dryrun package-windows-arm64-dryrun package-windows-dryrun rc-check security test test-e2e test-go test-ui tidy
 
-build:
+frontend-build:
 	npm --prefix frontend run build
+
+build: frontend-build
 	GOCACHE=$(GOCACHE) go build -buildvcs=false -tags $(GO_BUILD_TAGS) -ldflags "$(GO_LDFLAGS)" -o build/bin/maple
 
 dev:
@@ -33,13 +35,13 @@ fmt-check:
 	test -z "$$(gofmt -l *.go internal)"
 	npm --prefix frontend run format:check
 
-lint:
+lint: frontend-build
 	GOCACHE=$(GOCACHE) go vet $(GO_PACKAGES)
 	GOCACHE=$(GOCACHE) golangci-lint run
 	npm --prefix frontend run lint
 	npm --prefix frontend run typecheck
 
-security:
+security: frontend-build
 	GOCACHE=$(GOCACHE) govulncheck ./...
 	GOCACHE=$(GOCACHE) gosec -quiet ./...
 	gitleaks detect --no-banner --redact
@@ -47,7 +49,7 @@ security:
 
 test: test-go test-ui
 
-test-go:
+test-go: frontend-build
 	GOCACHE=$(GOCACHE) go test $(GO_PACKAGES)
 
 test-ui:

@@ -40,7 +40,7 @@ func NewDetector() Detector {
 	return Detector{
 		lookPath: exec.LookPath,
 		run: func(ctx context.Context, path string, args ...string) ([]byte, error) {
-			return exec.CommandContext(ctx, path, args...).CombinedOutput()
+			return exec.CommandContext(ctx, path, args...).CombinedOutput() // #nosec G204 -- path comes from exec.LookPath for fixed tool specs; args are fixed version flags
 		},
 	}
 }
