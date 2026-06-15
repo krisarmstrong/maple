@@ -8,7 +8,23 @@
       "changelog-path": "CHANGELOG.md",
       "initial-version": "0.0.1",
       "versioning": "default",
-      "extra-files": ["frontend/package.json", "frontend/package-lock.json"]
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "frontend/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "frontend/package-lock.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "frontend/package-lock.json",
+          "jsonpath": "$.packages[''].version"
+        }
+      ]
     }
   },
   "changelog-sections": [

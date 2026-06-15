@@ -1,7 +1,7 @@
 {
   "name": "maple-frontend",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.4",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -35,5 +35,10 @@
     "jsdom": "29.1.1",
     "vite": "8.0.16",
     "vitest": "4.1.8"
-  }
+  },
+  "engines": {
+    "node": "26.3.0",
+    "npm": "11.17.0"
+  },
+  "packageManager": "npm@11.17.0"
 }
