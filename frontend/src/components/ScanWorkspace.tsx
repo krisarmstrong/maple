@@ -36,7 +36,6 @@ import {
   type TargetModeID,
   targetModeAcceptedSyntax,
   targetModeHelp,
-  targetModeInputLabel,
   targetModePlaceholder,
   targetModes,
 } from "../core/target-modes";
@@ -404,27 +403,13 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
           <div className="scan-grid">
             <div className="target-input">
               <div>
-                <h3>Target Builder</h3>
+                <h3>Targets</h3>
                 <p className="target-mode-help">
-                  Choose the target shape first so Maple can validate the syntax before Nmap runs.
+                  Enter a host, range, subnet, or list. The shape selector only changes validation
+                  and examples.
                 </p>
               </div>
-              <fieldset className="target-mode-picker">
-                <legend>Target type</legend>
-                {targetModes.map((mode) => (
-                  <label key={mode.id}>
-                    <input
-                      checked={targetModeId === mode.id}
-                      name="target-mode"
-                      onChange={() => updateTargetMode(mode.id)}
-                      type="radio"
-                    />
-                    <span>{mode.label}</span>
-                  </label>
-                ))}
-              </fieldset>
-              <label>
-                <span>{targetModeInputLabel(targetModeId)}</span>
+              <div className="target-entry-grid">
                 <textarea
                   aria-label="Targets"
                   className={
@@ -435,11 +420,32 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                   rows={targetModeId === "list" ? 7 : 2}
                   value={targets}
                 />
-              </label>
-              <p className="target-mode-help">{targetModeHelp(targetModeId)}</p>
-              <p className="target-mode-example">
-                Example: <code>{targetModePlaceholder(targetModeId)}</code>
-              </p>
+                <label>
+                  <span>Target shape</span>
+                  <select
+                    aria-label="Target shape"
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      if (isTargetModeID(value)) {
+                        updateTargetMode(value);
+                      }
+                    }}
+                    value={targetModeId}
+                  >
+                    {targetModes.map((mode) => (
+                      <option key={mode.id} value={mode.id}>
+                        {mode.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <div className="target-mode-note">
+                <p>{targetModeHelp(targetModeId)}</p>
+                <p>
+                  Example: <code>{targetModePlaceholder(targetModeId)}</code>
+                </p>
+              </div>
               <div className="target-builder-summary">
                 <div>
                   <strong>Accepted syntax</strong>
@@ -1436,70 +1442,13 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
               typing raw shell commands.
             </p>
           </div>
-          <fieldset className="script-category-picker">
-            <legend>Categories</legend>
-            {nseCategories.map((category) => (
-              <label key={category}>
-                <input
-                  checked={scriptCategories.includes(category)}
-                  onChange={(event) => updateScriptCategory(category, event.target.checked)}
-                  type="checkbox"
-                />
-                <span>{category}</span>
-                {isRiskyNSECategory(category) ? (
-                  <small className="script-risk-label">Use carefully</small>
-                ) : null}
-              </label>
-            ))}
-          </fieldset>
-          <p className="target-mode-help">
-            Category selections pass the category name to Nmap. The script browser below adds
-            individual scripts.
-          </p>
-          <p className="target-mode-help">May be intrusive, exploit-oriented, or disruptive.</p>
-          <label className="custom-script-paths">
-            <span>Search built-in scripts</span>
-            <input
-              onChange={(event) => setScriptSearch(event.target.value)}
-              placeholder="http, ssl, smb"
-              type="search"
-              value={scriptSearch}
-            />
-          </label>
-          <fieldset className="script-category-picker">
-            <legend>Script browser</legend>
-            {visibleScripts.map((script) => (
-              <label key={script}>
-                <input
-                  checked={selectedScriptNames.includes(script)}
-                  onChange={(event) => updateNamedScript(script, event.target.checked)}
-                  type="checkbox"
-                />
-                <span>{script}</span>
-              </label>
-            ))}
-          </fieldset>
-          {scriptSearch.trim() === "" && scriptCategories.length > 0 ? (
-            <p className="target-mode-help">
-              Showing scripts commonly used with selected categories.
-            </p>
-          ) : null}
-          <label className="custom-script-paths">
-            <span>Built-in script names</span>
-            <textarea
-              onChange={(event) => {
-                setScriptNames(event.target.value);
-                setSelectedPresetID("");
-                setPreview([]);
-              }}
-              placeholder="http-title&#10;ssl-enum-ciphers"
-              rows={3}
-              value={scriptNames}
-            />
-          </label>
-          {selectedScriptValues.length === 0 ? null : (
-            <div className="selected-script-list">
-              <strong>Selected scripts</strong>
+          <section className="script-workspace-section selected-script-list">
+            <h4>Selected scripts</h4>
+            {selectedScriptValues.length === 0 ? (
+              <p className="target-mode-help">
+                No script categories, names, files, or directories selected.
+              </p>
+            ) : (
               <div>
                 {selectedScriptValues.map((script) => (
                   <button
@@ -1513,64 +1462,133 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                   </button>
                 ))}
               </div>
-            </div>
-          )}
-          <label className="custom-script-paths">
-            <span>Custom .nse script files</span>
-            <textarea
-              onChange={(event) => {
-                setCustomScriptPaths(event.target.value);
-                setSelectedPresetID("");
-                setPreview([]);
-              }}
-              placeholder="/Users/you/nmap-scripts/custom-check.nse"
-              rows={3}
-              value={customScriptPaths}
-            />
-          </label>
-          <label className="custom-script-paths">
-            <span>Custom script directories</span>
-            <textarea
-              onChange={(event) => {
-                setCustomScriptDirectories(event.target.value);
-                setSelectedPresetID("");
-                setPreview([]);
-              }}
-              placeholder="/Users/you/nmap-scripts"
-              rows={3}
-              value={customScriptDirectories}
-            />
-          </label>
-          <label className="custom-script-paths">
-            <span>Script arguments</span>
-            <input
-              onChange={(event) => {
-                setScriptArgs(event.target.value);
-                setSelectedPresetID("");
-                setPreview([]);
-              }}
-              placeholder="http.useragent=Maple,creds.global=/Users/you/creds.txt"
-              type="text"
-              value={scriptArgs}
-            />
-          </label>
-          <label className="custom-script-paths">
-            <span>Script arguments file</span>
-            <input
-              onChange={(event) => {
-                setScriptArgsFile(event.target.value);
-                setSelectedPresetID("");
-                setPreview([]);
-              }}
-              placeholder="/Users/you/nmap-scripts/script-args.txt"
-              type="text"
-              value={scriptArgsFile}
-            />
-          </label>
-          <p className="target-mode-help">
-            Add one absolute custom script path per line. Maple passes scripts as argv values and
-            Nmap runs them locally.
-          </p>
+            )}
+          </section>
+          <section className="script-workspace-section">
+            <h4>Browse scripts</h4>
+            <p className="target-mode-help">
+              Categories pass category names to Nmap. Search adds individual built-in scripts.
+            </p>
+            <fieldset className="script-category-picker">
+              <legend>Categories</legend>
+              {nseCategories.map((category) => (
+                <label key={category}>
+                  <input
+                    checked={scriptCategories.includes(category)}
+                    onChange={(event) => updateScriptCategory(category, event.target.checked)}
+                    type="checkbox"
+                  />
+                  <span>{category}</span>
+                  {isRiskyNSECategory(category) ? (
+                    <small className="script-risk-label">Use carefully</small>
+                  ) : null}
+                </label>
+              ))}
+            </fieldset>
+            <p className="target-mode-help">
+              Risky categories can be intrusive, exploit-oriented, or disruptive.
+            </p>
+            <label className="custom-script-paths">
+              <span>Search built-in scripts</span>
+              <input
+                onChange={(event) => setScriptSearch(event.target.value)}
+                placeholder="http, ssl, smb"
+                type="search"
+                value={scriptSearch}
+              />
+            </label>
+            <fieldset className="script-category-picker">
+              <legend>Script browser</legend>
+              {visibleScripts.map((script) => (
+                <label key={script}>
+                  <input
+                    checked={selectedScriptNames.includes(script)}
+                    onChange={(event) => updateNamedScript(script, event.target.checked)}
+                    type="checkbox"
+                  />
+                  <span>{script}</span>
+                </label>
+              ))}
+            </fieldset>
+            {scriptSearch.trim() === "" && scriptCategories.length > 0 ? (
+              <p className="target-mode-help">
+                Showing scripts commonly used with selected categories.
+              </p>
+            ) : null}
+            <label className="custom-script-paths">
+              <span>Manual script names</span>
+              <textarea
+                aria-label="Manual script names"
+                onChange={(event) => {
+                  setScriptNames(event.target.value);
+                  setSelectedPresetID("");
+                  setPreview([]);
+                }}
+                placeholder="http-title&#10;ssl-enum-ciphers"
+                rows={3}
+                value={scriptNames}
+              />
+            </label>
+          </section>
+          <section className="script-workspace-section">
+            <h4>Custom scripts and arguments</h4>
+            <p className="target-mode-help">
+              Add one absolute custom script path per line. Maple passes scripts as argv values and
+              Nmap runs them locally.
+            </p>
+            <label className="custom-script-paths">
+              <span>Custom .nse script files</span>
+              <textarea
+                onChange={(event) => {
+                  setCustomScriptPaths(event.target.value);
+                  setSelectedPresetID("");
+                  setPreview([]);
+                }}
+                placeholder="/Users/you/nmap-scripts/custom-check.nse"
+                rows={3}
+                value={customScriptPaths}
+              />
+            </label>
+            <label className="custom-script-paths">
+              <span>Custom script directories</span>
+              <textarea
+                onChange={(event) => {
+                  setCustomScriptDirectories(event.target.value);
+                  setSelectedPresetID("");
+                  setPreview([]);
+                }}
+                placeholder="/Users/you/nmap-scripts"
+                rows={3}
+                value={customScriptDirectories}
+              />
+            </label>
+            <label className="custom-script-paths">
+              <span>Script arguments</span>
+              <input
+                onChange={(event) => {
+                  setScriptArgs(event.target.value);
+                  setSelectedPresetID("");
+                  setPreview([]);
+                }}
+                placeholder="http.useragent=Maple,creds.global=/Users/you/creds.txt"
+                type="text"
+                value={scriptArgs}
+              />
+            </label>
+            <label className="custom-script-paths">
+              <span>Script arguments file</span>
+              <input
+                onChange={(event) => {
+                  setScriptArgsFile(event.target.value);
+                  setSelectedPresetID("");
+                  setPreview([]);
+                }}
+                placeholder="/Users/you/nmap-scripts/script-args.txt"
+                type="text"
+                value={scriptArgsFile}
+              />
+            </label>
+          </section>
         </div>
       ) : null}
 
@@ -1664,6 +1682,10 @@ function ContextMetric({ label, value }: { label: string; value: string }): Reac
 
 function scriptNameLines(value: string): string[] {
   return lineValues(value);
+}
+
+function isTargetModeID(value: string): value is TargetModeID {
+  return targetModes.some((mode) => mode.id === value);
 }
 
 function clearDiscoveryProbes(options: ScanOptions): ScanOptions {

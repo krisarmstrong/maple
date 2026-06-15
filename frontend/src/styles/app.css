@@ -759,43 +759,11 @@
   gap: var(--space-8);
 }
 
-.target-mode-picker {
-  border: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-7);
-  margin: var(--space-0);
-  padding: var(--space-0);
-}
-
-.target-mode-picker legend {
-  color: var(--muted);
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-heading);
-  margin-bottom: var(--space-7);
-  padding: var(--space-0);
-  width: var(--layout-full);
-}
-
-.target-mode-picker label {
-  align-items: center;
-  background: var(--panel-raised);
-  border: var(--border-width) solid var(--border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  display: flex;
-  min-height: var(--size-target-mode-min);
-  padding: var(--space-0) var(--space-8);
-}
-
-.target-mode-picker label:has(input:checked) {
-  background: var(--color-success-surface);
-  border-color: var(--accent);
-  color: var(--text);
-}
-
-.target-mode-picker input {
-  margin: var(--space-0) var(--space-5) var(--space-0) var(--space-0);
+.target-entry-grid {
+  align-items: start;
+  display: grid;
+  gap: var(--space-8);
+  grid-template-columns: minmax(0, 1fr) minmax(var(--layout-history-filter-width), 0.34fr);
 }
 
 .target-mode-help {
@@ -804,13 +772,21 @@
   margin-bottom: var(--space-0);
 }
 
-.target-mode-example {
+.target-mode-note {
+  align-items: center;
   color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-8);
   font-size: var(--font-size-md);
   margin: var(--space-0);
 }
 
-.target-mode-example code {
+.target-mode-note p {
+  margin: var(--space-0);
+}
+
+.target-mode-note code {
   background: var(--code-bg);
   border-radius: var(--radius-sm);
   color: var(--code-text);
@@ -1055,6 +1031,19 @@ textarea:focus {
   padding: var(--space-5) var(--space-7);
 }
 
+.script-workspace-section {
+  background: var(--panel-subtle);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  display: grid;
+  gap: var(--space-7);
+  padding: var(--space-9);
+}
+
+.script-workspace-section h4 {
+  margin-bottom: var(--space-0);
+}
+
 .script-risk-label {
   background: var(--warn-bg);
   border-radius: var(--radius-pill);
@@ -1073,11 +1062,6 @@ textarea:focus {
 .selected-script-list {
   display: grid;
   gap: var(--space-7);
-}
-
-.selected-script-list > strong {
-  color: var(--muted);
-  font-size: var(--font-size-md);
 }
 
 .selected-script-list > div {
@@ -1625,7 +1609,8 @@ textarea:focus {
     flex-direction: column;
   }
 
-  .scan-grid {
+  .scan-grid,
+  .target-entry-grid {
     grid-template-columns: 1fr;
   }
 
