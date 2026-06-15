@@ -116,6 +116,8 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
   const selectedScriptNames = scriptNameLines(scriptNames);
   const availablePresets = [...savedPresets, ...builtInScanPresets];
   const selectedPreset = availablePresets.find((preset) => preset.id === selectedPresetID);
+  const selectedPresetSummary =
+    selectedPreset === undefined ? undefined : summarizePreset(selectedPreset);
   const selectedScriptValues = [
     ...scriptCategories.map((category) => ({ id: `category:${category}`, label: category })),
     ...selectedScriptNames.map((script) => ({ id: `name:${script}`, label: script })),
@@ -467,40 +469,18 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
               <div>
                 <h3>Scan Recipe</h3>
                 <p className="target-mode-help">
-                  Recipes choose the base profile, options, and scripts. Targets stay separate.
+                  Recipes choose scan defaults, options, and scripts. Targets stay separate.
                 </p>
               </div>
-              <label>
-                <span>Scan recipe</span>
-                <select
-                  aria-label="Scan recipe"
-                  onChange={(event) => applyPreset(event.target.value)}
-                  value={selectedPresetID}
-                >
-                  {selectedPresetID === "" ? <option value="">Custom unsaved recipe</option> : null}
-                  <optgroup label="Built-in recipes">
-                    {builtInScanPresets.map((preset) => (
-                      <option key={preset.id} value={preset.id}>
-                        {preset.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                  {savedPresets.length === 0 ? null : (
-                    <optgroup label="Custom recipes">
-                      {savedPresets.map((preset) => (
-                        <option key={preset.id} value={preset.id}>
-                          {preset.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                </select>
-              </label>
-              <div className="recipe-base-profile">
-                <span>Base profile</span>
-                <strong>{selectedProfile.name}</strong>
+              <div className="recipe-selection">
+                <span>Selected recipe</span>
+                <strong>{selectedPreset?.name ?? "Custom unsaved recipe"}</strong>
+                <p>{selectedPresetSummary?.intentLabel ?? "Current manual scan settings"}</p>
               </div>
-              <ProfileSummary profile={selectedProfile} />
+              <div className="recipe-defaults">
+                <span>Recipe defaults</span>
+                <ProfileSummary profile={selectedProfile} />
+              </div>
               <div className="recipe-save-row">
                 <label>
                   <span>Recipe name</span>
@@ -523,7 +503,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
           </div>
           <section className="preset-library" aria-label="Built-in scan recipes">
             <div>
-              <h3>Built-in recipes</h3>
+              <h3>Choose a recipe</h3>
               <p className="target-mode-help">
                 Common Nmap workflows that save scan shape, options, and scripts, never targets.
               </p>
@@ -1725,14 +1705,18 @@ function PresetCard({
     <article className={`preset-card${active ? " preset-card-active" : ""}`}>
       <div>
         <h4>{preset.name}</h4>
-        <p>{summary.profileLabel}</p>
+        <p>{summary.intentLabel}</p>
       </div>
       <ul>
         <li>{summary.optionsLabel}</li>
         <li>{summary.scriptsLabel}</li>
         <li>{summary.targetPolicyLabel}</li>
       </ul>
-      <button type="button" onClick={() => onApply(preset.id)}>
+      <button
+        aria-label={`${active ? "Selected" : "Apply"} ${preset.name}`}
+        type="button"
+        onClick={() => onApply(preset.id)}
+      >
         {active ? "Applied" : "Apply"}
       </button>
     </article>

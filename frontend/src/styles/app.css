@@ -807,13 +807,23 @@
   padding: var(--space-9);
 }
 
-.recipe-base-profile {
+.recipe-selection,
+.recipe-defaults {
   background: var(--panel-raised);
   border: var(--border-width) solid var(--border);
   border-radius: var(--radius-sm);
   display: grid;
   gap: var(--space-3);
   padding: var(--space-8);
+}
+
+.recipe-selection p {
+  color: var(--muted);
+  margin-bottom: var(--space-0);
+}
+
+.recipe-defaults {
+  gap: var(--space-5);
 }
 
 .recipe-save-row {
