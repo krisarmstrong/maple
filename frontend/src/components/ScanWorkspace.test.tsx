@@ -44,10 +44,12 @@ describe("ScanWorkspace", () => {
     scanEventListener = undefined;
   });
 
-  it("defaults to the TCP connect profile", () => {
+  it("defaults to the Top TCP ports scan recipe", () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
-    expect(screen.getByLabelText("Profile")).toHaveValue("connect");
+    expect(screen.getByLabelText("Scan recipe")).toHaveValue("builtin-top-tcp-ports");
+    expect(screen.getByText("Base profile")).toBeInTheDocument();
+    expect(screen.getAllByText("TCP Connect").length).toBeGreaterThan(0);
   });
 
   it("starts on the Configure tab with script controls out of the primary path", () => {
@@ -67,7 +69,7 @@ describe("ScanWorkspace", () => {
     const context = within(screen.getByLabelText("Scan context"));
 
     expect(context.getByText("Scan context")).toBeInTheDocument();
-    expect(context.getByText(/TCP Connect/u)).toBeInTheDocument();
+    expect(context.getByText(/Top TCP ports/u)).toBeInTheDocument();
     expect(context.getByText(/Single host\/IP/u)).toBeInTheDocument();
     expect(context.getByText(/Ready to preview/u)).toBeInTheDocument();
     expect(context.getByText(/No target set/u)).toBeInTheDocument();
@@ -82,7 +84,7 @@ describe("ScanWorkspace", () => {
 
     expect(
       screen.getAllByText(
-        "Choose a safe profile, validate targets, preview argv, then run Nmap locally.",
+        "Choose a target, pick a scan recipe, refine options or scripts, then preview argv before Nmap runs.",
       ),
     ).toHaveLength(1);
   });
@@ -98,20 +100,33 @@ describe("ScanWorkspace", () => {
     expect(screen.queryByLabelText("Targets")).not.toBeInTheDocument();
   });
 
-  it("shows the selected profile description and profile argv", () => {
+  it("shows the selected recipe description and base profile argv", () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
     expect(screen.getByText("Unprivileged TCP scan for local desktop use.")).toBeInTheDocument();
     expect(screen.getByText("-sT -Pn -T3 --top-ports 100")).toBeInTheDocument();
   });
 
-  it("shows built-in workflow presets before custom presets exist", () => {
+  it("shows built-in scan recipes before custom recipes exist", () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
     expect(screen.getByRole("option", { name: "Fast host discovery" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Built-in presets" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Scan Recipe" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Built-in recipes" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "TLS certificate review" })).toBeInTheDocument();
     expect(screen.getAllByText("No target saved").length).toBeGreaterThan(0);
+  });
+
+  it("puts target setup before scan recipe controls", () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    const configure = screen.getByTestId("configure-panel");
+    const targetBuilder = within(configure).getByRole("heading", { name: "Target Builder" });
+    const recipe = within(configure).getByRole("heading", { name: "Scan Recipe" });
+
+    expect(
+      targetBuilder.compareDocumentPosition(recipe) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it("uses compact target fields except for target lists", async () => {
@@ -126,18 +141,21 @@ describe("ScanWorkspace", () => {
     expect(screen.getByLabelText("Targets")).toHaveAttribute("rows", "7");
   });
 
-  it("saves the current scan configuration as a preset", async () => {
+  it("saves the current scan configuration as a custom recipe", async () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
-    await userEvent.selectOptions(screen.getByLabelText("Profile"), "service");
+    await userEvent.selectOptions(
+      screen.getByLabelText("Scan recipe"),
+      "builtin-service-inventory",
+    );
     await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
     await userEvent.click(screen.getByRole("checkbox", { name: "safe" }));
     await userEvent.click(screen.getByRole("button", { name: "Configure" }));
-    await userEvent.type(screen.getByLabelText("Preset name"), "Web TLS check");
-    await userEvent.click(screen.getByRole("button", { name: "Save Preset" }));
+    await userEvent.type(screen.getByLabelText("Recipe name"), "Web TLS check");
+    await userEvent.click(screen.getByRole("button", { name: "Save Recipe" }));
 
     expect(screen.getByRole("option", { name: "Web TLS check" })).toBeInTheDocument();
-    expect(screen.getByText("Custom presets")).toBeInTheDocument();
+    expect(screen.getByText("Custom recipes")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Web TLS check" })).toBeInTheDocument();
     expect(screen.getAllByText("Service Scan").length).toBeGreaterThan(0);
     expect(screen.getByText("1 script selection")).toBeInTheDocument();
@@ -265,7 +283,10 @@ describe("ScanWorkspace", () => {
     ]);
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
-    await userEvent.selectOptions(screen.getByLabelText("Profile"), "service");
+    await userEvent.selectOptions(
+      screen.getByLabelText("Scan recipe"),
+      "builtin-service-inventory",
+    );
     await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
     await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
     await userEvent.click(screen.getByRole("checkbox", { name: "safe" }));
@@ -298,6 +319,9 @@ describe("ScanWorkspace", () => {
       scriptArgsFile: "/Users/krisarmstrong/nse-args.txt",
       options: {
         ...defaultScanOptions,
+        serviceDetection: true,
+        versionMode: "light",
+        reason: true,
       },
       scripts: [
         { kind: "category", value: "safe" },
@@ -719,7 +743,10 @@ describe("ScanWorkspace", () => {
     ]);
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
-    await userEvent.selectOptions(screen.getByLabelText("Profile"), "ping");
+    await userEvent.selectOptions(
+      screen.getByLabelText("Scan recipe"),
+      "builtin-fast-host-discovery",
+    );
     await userEvent.click(screen.getByRole("button", { name: "Options" }));
     fireEvent.change(screen.getByLabelText("Target input file"), {
       target: { value: "/Users/krisarmstrong/targets.txt" },
@@ -741,6 +768,7 @@ describe("ScanWorkspace", () => {
       scriptArgsFile: "",
       options: {
         ...defaultScanOptions,
+        timingTemplate: "T4",
         targetInputFile: "/Users/krisarmstrong/targets.txt",
         excludeTargets: "192.168.1.10,scanme.nmap.org",
         excludeFile: "/Users/krisarmstrong/excludes.txt",
@@ -838,7 +866,7 @@ describe("ScanWorkspace", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("clears stale command previews when profile changes", async () => {
+  it("clears stale command previews when scan recipe changes", async () => {
     previewScanCommandMock.mockResolvedValue([
       "nmap",
       "-oX",
@@ -852,7 +880,10 @@ describe("ScanWorkspace", () => {
     await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
     await userEvent.click(screen.getByRole("button", { name: "Preview" }));
     await userEvent.click(screen.getByRole("button", { name: "Configure" }));
-    await userEvent.selectOptions(screen.getByLabelText("Profile"), "ping");
+    await userEvent.selectOptions(
+      screen.getByLabelText("Scan recipe"),
+      "builtin-fast-host-discovery",
+    );
 
     expect(
       screen.queryByText("nmap -oX <managed-xml-file> -sn -- scanme.nmap.org"),
@@ -933,7 +964,10 @@ describe("ScanWorkspace", () => {
       ),
     ).toBeInTheDocument();
 
-    await userEvent.selectOptions(screen.getByLabelText("Profile"), "ping");
+    await userEvent.selectOptions(
+      screen.getByLabelText("Scan recipe"),
+      "builtin-fast-host-discovery",
+    );
 
     expect(
       screen.queryByText(

@@ -241,6 +241,53 @@
   padding: var(--space-4) var(--space-8);
 }
 
+.utility-workspace {
+  display: grid;
+  gap: var(--space-12);
+}
+
+.utility-tool-grid {
+  display: grid;
+  gap: var(--space-10);
+  grid-template-columns: repeat(auto-fit, minmax(var(--size-target-summary-min), 1fr));
+}
+
+.utility-tool-card {
+  background: var(--panel-raised);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-inset);
+  display: grid;
+  gap: var(--space-10);
+  min-height: var(--size-tool-card-min);
+  padding: var(--space-11);
+}
+
+.utility-tool-card p {
+  color: var(--muted);
+  margin-bottom: var(--space-0);
+}
+
+.utility-tool-meta {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-7);
+  justify-content: space-between;
+}
+
+.utility-tool-meta span {
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-label);
+  padding: var(--space-4) var(--space-8);
+}
+
+.utility-tool-meta strong {
+  color: var(--muted);
+  font-size: var(--font-size-sm);
+}
+
 .tool-card--installed span {
   background: var(--color-success-surface);
   color: var(--accent-strong);
@@ -709,6 +756,11 @@
   padding: var(--space-9);
 }
 
+.preset-card-active {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-inset);
+}
+
 .preset-card p,
 .preset-card li {
   color: var(--muted);
@@ -738,13 +790,37 @@
 .scan-grid {
   display: grid;
   gap: var(--space-11);
-  grid-template-columns: var(--layout-profile-column-width) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.55fr) minmax(var(--layout-profile-column-width), 0.8fr);
 }
 
-.profile-column {
+.profile-column,
+.recipe-column {
   display: grid;
   gap: var(--space-7);
   align-content: start;
+}
+
+.recipe-column {
+  background: var(--panel-subtle);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-9);
+}
+
+.recipe-base-profile {
+  background: var(--panel-raised);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-sm);
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-8);
+}
+
+.recipe-save-row {
+  align-items: end;
+  display: grid;
+  gap: var(--space-7);
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 
 .scan-grid label {
@@ -852,6 +928,7 @@
 .custom-script-paths input,
 .options-grid input,
 .preset-bar input,
+.recipe-save-row input,
 select,
 textarea {
   background: var(--panel);
@@ -882,6 +959,7 @@ textarea {
 .custom-script-paths input:focus,
 .options-grid input:focus,
 .preset-bar input:focus,
+.recipe-save-row input:focus,
 select:focus,
 textarea:focus {
   border-color: var(--accent);
@@ -1634,7 +1712,8 @@ textarea:focus {
     grid-template-columns: 1fr;
   }
 
-  .preset-bar {
+  .preset-bar,
+  .recipe-save-row {
     grid-template-columns: 1fr;
   }
 
