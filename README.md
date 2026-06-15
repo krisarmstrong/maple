@@ -50,9 +50,10 @@ make build
 
 The local development binary is written to `build/bin/maple`.
 
-Platform package targets:
+Native package targets:
 
 ```bash
+make package
 make package-macos
 make package-windows
 make package-linux
@@ -61,7 +62,7 @@ make package-dryrun
 ```
 
 Run the smoke checklist in `docs/SMOKE_TEST.md` on each target operating system before publishing an artifact.
-Use `make package-dryrun` locally to validate package command generation. Linux packaging must be verified on a Linux host because Wails does not cross-compile Linux packages from macOS.
+Local `make` package targets only build for the host operating system and architecture. Use `make package-dryrun` locally to validate native package command generation. The GitHub release matrix builds each release artifact on a matching native runner.
 
 The GitHub release workflow builds unsigned artifacts for macOS ARM, Linux ARM/x86, and Windows ARM/x86. See `docs/RELEASE_CANDIDATE.md` and `docs/CROSS_PLATFORM.md` for current release and packaging notes.
 

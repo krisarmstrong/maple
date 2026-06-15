@@ -28,8 +28,8 @@ Expected result:
 - Browser smoke passes for desktop and mobile Chromium.
 - `govulncheck` reports no vulnerabilities.
 - `build/bin/maple` is produced.
-- macOS ARM and Windows x86/ARM package command dry-runs are valid.
-- Linux x86/ARM dry-runs document Wails' macOS cross-compilation limitation.
+- `make package-dryrun` validates native package command generation for the host.
+- The GitHub release matrix builds macOS ARM, Windows x86/ARM, and Linux x86/ARM artifacts on matching native runners.
 
 ## Native Smoke
 
