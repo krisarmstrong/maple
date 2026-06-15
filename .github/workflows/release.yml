@@ -208,7 +208,11 @@ jobs:
         run: |
           (
             cd dist
-            shasum -a 256 -- * | sort -k 2 > "${ARTIFACT_NAME}-SHA256SUMS.txt"
+            if command -v shasum >/dev/null 2>&1; then
+              shasum -a 256 -- * | sort -k 2 > "${ARTIFACT_NAME}-SHA256SUMS.txt"
+            else
+              sha256sum -- * | sort -k 2 > "${ARTIFACT_NAME}-SHA256SUMS.txt"
+            fi
           )
 
       - name: Verify release artifacts

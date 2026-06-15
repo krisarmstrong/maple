@@ -30,7 +30,9 @@ require_glob() {
   # compgen -G expands the pathname glob to one match per line without relying
   # on word-splitting, so paths containing spaces are handled and the array is
   # empty when nothing matches.
-  mapfile -t matches < <(compgen -G "$pattern" || true)
+  while IFS= read -r path; do
+    matches+=("$path")
+  done < <(compgen -G "$pattern" || true)
   if [[ "${#matches[@]}" -eq 0 ]]; then
     echo "missing release artifact matching: $pattern" >&2
     exit 1
