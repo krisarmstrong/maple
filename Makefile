@@ -17,17 +17,19 @@ WAILS_BASE_LDFLAGS ?= -w -s
 WAILS_LDFLAGS ?= $(WAILS_BASE_LDFLAGS) $(VERSION_LDFLAGS)
 PACKAGE_BUILD_TAGS ?= $(GO_BUILD_TAGS)
 WAILS_BUILD_FLAGS ?= -clean -trimpath -tags "$(PACKAGE_BUILD_TAGS)"
-PACKAGE_PLATFORM ?= darwin/arm64
+HOST_GOOS := $(shell go env GOOS)
+HOST_GOARCH := $(shell go env GOARCH)
+HOST_PLATFORM := $(HOST_GOOS)/$(HOST_GOARCH)
+PACKAGE_PLATFORM ?= $(HOST_PLATFORM)
 PACKAGE_LDFLAGS ?= $(WAILS_BASE_LDFLAGS)
 WAILS_PLATFORM_FLAGS ?=
 PACKAGE_VERSION ?= $(patsubst v%,%,$(VERSION))
 PACKAGE_RELEASE ?= 1
-PACKAGE_ARCH ?= amd64
+PACKAGE_ARCH ?= $(HOST_GOARCH)
 PACKAGE_DEB_WEBKIT_DEP ?= libwebkit2gtk-4.1-0
 PACKAGE_RPM_WEBKIT_DEP ?= webkit2gtk4.1
-LINUX_PACKAGE_PLATFORM ?= linux/$(PACKAGE_ARCH)
 
-.PHONY: build dev fmt fmt-check frontend-build lint package-all package-dryrun package-linux package-linux-amd64-dryrun package-linux-arm64-dryrun package-linux-deb package-linux-dryrun package-linux-installers package-linux-rpm package-macos package-macos-dryrun package-macos-installer package-macos-pkg package-platform package-windows package-windows-amd64-dryrun package-windows-arm64-dryrun package-windows-dryrun rc-check security test test-e2e test-go test-ui tidy
+.PHONY: assert-native-platform build dev fmt fmt-check frontend-build lint package package-all package-dryrun package-linux package-linux-deb package-linux-dryrun package-linux-installers package-linux-rpm package-macos package-macos-dryrun package-macos-installer package-macos-pkg package-platform package-windows package-windows-dryrun rc-check security test test-e2e test-go test-ui tidy
 
 frontend-build:
 	npm --prefix frontend run build
@@ -72,54 +74,63 @@ test-e2e:
 tidy:
 	GOCACHE=$(GOCACHE) go mod tidy
 
-package-platform: frontend-build
+assert-native-platform:
+	@if [ "$(PACKAGE_PLATFORM)" != "$(HOST_PLATFORM)" ]; then \
+		echo "Refusing non-native local build: PACKAGE_PLATFORM=$(PACKAGE_PLATFORM), host=$(HOST_PLATFORM)."; \
+		echo "Use a runner or machine that matches the requested platform."; \
+		exit 1; \
+	fi
+
+package: package-platform
+
+package-platform: assert-native-platform frontend-build
 	GOCACHE=$(GOCACHE) $(WAILS) build $(WAILS_BUILD_FLAGS) -ldflags "$(PACKAGE_LDFLAGS) $(VERSION_LDFLAGS)" -platform $(PACKAGE_PLATFORM) $(WAILS_PLATFORM_FLAGS)
 
 package-macos: frontend-build
-	GOCACHE=$(GOCACHE) $(WAILS) build $(WAILS_BUILD_FLAGS) -ldflags "$(GO_LDFLAGS)" -platform darwin/arm64
+	@if [ "$(HOST_GOOS)" != "darwin" ]; then echo "package-macos is only available on macOS."; exit 1; fi
+	GOCACHE=$(GOCACHE) $(WAILS) build $(WAILS_BUILD_FLAGS) -ldflags "$(GO_LDFLAGS)" -platform $(HOST_PLATFORM)
 
 package-macos-pkg:
+	@if [ "$(HOST_GOOS)" != "darwin" ]; then echo "package-macos-pkg is only available on macOS."; exit 1; fi
 	scripts/package-macos-pkg.sh "$(PACKAGE_VERSION)" "$(PACKAGE_ARCH)"
 
 package-macos-installer: package-macos package-macos-pkg
 
 package-macos-dryrun:
-	GOCACHE=$(GOCACHE) $(WAILS) build -dryrun $(WAILS_BUILD_FLAGS) -ldflags "$(GO_LDFLAGS)" -platform darwin/arm64
+	@if [ "$(HOST_GOOS)" != "darwin" ]; then echo "package-macos-dryrun is only available on macOS."; exit 1; fi
+	GOCACHE=$(GOCACHE) $(WAILS) build -dryrun $(WAILS_BUILD_FLAGS) -ldflags "$(GO_LDFLAGS)" -platform $(HOST_PLATFORM)
 
 package-windows: frontend-build
-	GOCACHE=$(GOCACHE) $(WAILS) build $(WAILS_BUILD_FLAGS) -ldflags "$(WAILS_LDFLAGS)" -platform windows/amd64 -webview2 download
+	@if [ "$(HOST_GOOS)" != "windows" ]; then echo "package-windows is only available on Windows."; exit 1; fi
+	GOCACHE=$(GOCACHE) $(WAILS) build $(WAILS_BUILD_FLAGS) -ldflags "$(WAILS_LDFLAGS)" -platform $(HOST_PLATFORM) -webview2 download
 
-package-windows-dryrun: package-windows-amd64-dryrun
-
-package-windows-amd64-dryrun:
-	GOCACHE=$(GOCACHE) $(WAILS) build -dryrun $(WAILS_BUILD_FLAGS) -ldflags "$(WAILS_LDFLAGS)" -platform windows/amd64 -webview2 download
-
-package-windows-arm64-dryrun:
-	GOCACHE=$(GOCACHE) $(WAILS) build -dryrun $(WAILS_BUILD_FLAGS) -ldflags "$(WAILS_LDFLAGS)" -platform windows/arm64 -webview2 download
+package-windows-dryrun:
+	@if [ "$(HOST_GOOS)" != "windows" ]; then echo "package-windows-dryrun is only available on Windows."; exit 1; fi
+	GOCACHE=$(GOCACHE) $(WAILS) build -dryrun $(WAILS_BUILD_FLAGS) -ldflags "$(WAILS_LDFLAGS)" -platform $(HOST_PLATFORM) -webview2 download
 
 package-linux: frontend-build
-	GOCACHE=$(GOCACHE) $(WAILS) build $(WAILS_BUILD_FLAGS) -ldflags "$(WAILS_LDFLAGS)" -platform $(LINUX_PACKAGE_PLATFORM)
+	@if [ "$(HOST_GOOS)" != "linux" ]; then echo "package-linux is only available on Linux."; exit 1; fi
+	GOCACHE=$(GOCACHE) $(WAILS) build $(WAILS_BUILD_FLAGS) -ldflags "$(WAILS_LDFLAGS)" -platform $(HOST_PLATFORM)
 
 package-linux-deb:
+	@if [ "$(HOST_GOOS)" != "linux" ]; then echo "package-linux-deb is only available on Linux."; exit 1; fi
 	mkdir -p dist
 	MAPLE_DEB_WEBKIT_DEP=$(PACKAGE_DEB_WEBKIT_DEP) MAPLE_RPM_WEBKIT_DEP=$(PACKAGE_RPM_WEBKIT_DEP) MAPLE_PACKAGE_ARCH=$(PACKAGE_ARCH) MAPLE_PACKAGE_VERSION=$(PACKAGE_VERSION) MAPLE_PACKAGE_RELEASE=$(PACKAGE_RELEASE) nfpm package --config packaging/linux/nfpm.yaml --packager deb --target dist
 
 package-linux-rpm:
+	@if [ "$(HOST_GOOS)" != "linux" ]; then echo "package-linux-rpm is only available on Linux."; exit 1; fi
 	mkdir -p dist
 	MAPLE_DEB_WEBKIT_DEP=$(PACKAGE_DEB_WEBKIT_DEP) MAPLE_RPM_WEBKIT_DEP=$(PACKAGE_RPM_WEBKIT_DEP) MAPLE_PACKAGE_ARCH=$(PACKAGE_ARCH) MAPLE_PACKAGE_VERSION=$(PACKAGE_VERSION) MAPLE_PACKAGE_RELEASE=$(PACKAGE_RELEASE) nfpm package --config packaging/linux/nfpm.yaml --packager rpm --target dist
 
 package-linux-installers: package-linux package-linux-deb package-linux-rpm
 
-package-linux-dryrun: package-linux-amd64-dryrun
+package-linux-dryrun:
+	@if [ "$(HOST_GOOS)" != "linux" ]; then echo "package-linux-dryrun is only available on Linux."; exit 1; fi
+	GOCACHE=$(GOCACHE) $(WAILS) build -dryrun $(WAILS_BUILD_FLAGS) -ldflags "$(WAILS_LDFLAGS)" -platform $(HOST_PLATFORM)
 
-package-linux-amd64-dryrun:
-	GOCACHE=$(GOCACHE) $(WAILS) build -dryrun $(WAILS_BUILD_FLAGS) -ldflags "$(WAILS_LDFLAGS)" -platform linux/amd64
+package-all: package
 
-package-linux-arm64-dryrun:
-	GOCACHE=$(GOCACHE) $(WAILS) build -dryrun $(WAILS_BUILD_FLAGS) -ldflags "$(WAILS_LDFLAGS)" -platform linux/arm64
-
-package-all: package-macos package-windows package-linux
-
-package-dryrun: package-macos-dryrun package-windows-amd64-dryrun package-windows-arm64-dryrun package-linux-amd64-dryrun package-linux-arm64-dryrun
+package-dryrun:
+	GOCACHE=$(GOCACHE) $(WAILS) build -dryrun $(WAILS_BUILD_FLAGS) -ldflags "$(WAILS_LDFLAGS)" -platform $(HOST_PLATFORM)
 
 rc-check: fmt-check lint test test-e2e security build package-dryrun

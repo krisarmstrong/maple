@@ -2,9 +2,10 @@
 
 Maple is a Wails desktop app. The frontend is React, but the deliverable is a native desktop application.
 
-## Build Targets
+## Local Build Targets
 
 ```bash
+make package
 make package-macos
 make package-macos-installer
 make package-windows
@@ -13,20 +14,21 @@ make package-linux-installers
 make package-all
 ```
 
+Local package targets are native-only: they build for the operating system and
+architecture reported by `go env GOOS GOARCH`. `make package-platform` refuses a
+non-native `PACKAGE_PLATFORM`, which keeps cross-platform artifacts in the
+GitHub release matrix instead of local developer builds.
+
 The targets use Wails v2.12 and pinned frontend tooling from `frontend/package-lock.json`.
 Linux `.deb` and `.rpm` artifacts are built with nFPM from the Wails Linux binary; Nmap remains a separately installed user dependency.
 
-Command-generation checks that do not require the target OS packaging toolchain:
+Native command-generation checks:
 
 ```bash
 make package-dryrun
 make package-macos-dryrun
 make package-windows-dryrun
-make package-windows-amd64-dryrun
-make package-windows-arm64-dryrun
 make package-linux-dryrun
-make package-linux-amd64-dryrun
-make package-linux-arm64-dryrun
 ```
 
 ## Platform Notes
@@ -56,7 +58,7 @@ make package-linux-arm64-dryrun
 - CI baseline: Ubuntu 24.04 with Wails' `webkit2_41` build tag and WebKitGTK 4.1 runtime dependencies.
 - Nmap must be installed separately through the distribution package manager or the Nmap Project packages.
 - Maple must not ship Nmap, Ndiff, Ncat, or Nping binaries.
-- Wails v2.12 reports that cross-compiling to Linux is not supported from macOS; run `make package-linux` on a Linux packaging host.
+- Run `make package-linux` on a Linux packaging host. Local package targets do not cross-compile.
 - CI artifacts: compressed Wails output plus `.deb` and `.rpm` packages built by nFPM on native Linux runners.
 
 ## GitHub Release Workflow
@@ -75,7 +77,7 @@ The workflow runs on version tags and can also be started manually. Tag builds p
 
 ## Release Gate
 
-Before publishing an artifact:
+Before publishing an artifact on the current host:
 
 ```bash
 make rc-check
@@ -100,4 +102,4 @@ Signed and notarized installers require platform signing credentials. Unsigned C
 
 On macOS 26 SDK with Wails v2.12.0, `make build` succeeds and produces a runnable desktop binary, but `wails build` package mode currently reports `exit status 1` during the Wails compile wrapper even when the equivalent `go build` command succeeds. Keep `make build` as the validated local binary path until this Wails/SDK packaging issue is resolved on the packaging host.
 
-`make package-dryrun` validates macOS ARM, Windows x86/ARM, and Linux x86/ARM package command generation on macOS. Linux dry-runs report Wails' cross-compilation limitation and should be treated as a reminder to package Linux on Linux or in CI.
+`make package-dryrun` validates native package command generation only. The GitHub release workflow builds macOS ARM, Windows x86/ARM, and Linux x86/ARM artifacts on matching native runners.
