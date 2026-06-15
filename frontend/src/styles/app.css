@@ -571,7 +571,7 @@
   align-items: end;
   display: grid;
   gap: var(--space-8);
-  grid-template-columns: minmax(0, 1.4fr) minmax(var(--size-preset-select-min), 0.8fr) auto;
+  grid-template-columns: minmax(0, 1.4fr) minmax(var(--layout-history-filter-width), 0.8fr) auto;
 }
 
 .option-coverage-controls label {
@@ -694,97 +694,6 @@
   color: var(--muted);
   font-size: var(--font-size-base);
   margin: var(--space-0) var(--space-0) var(--space-9);
-}
-
-.preset-bar {
-  align-items: end;
-  background: var(--panel-subtle);
-  border: var(--border-width) solid var(--border);
-  border-radius: var(--radius-md);
-  display: grid;
-  gap: var(--space-7);
-  grid-template-columns: minmax(var(--size-preset-select-min), 1fr) minmax(
-      var(--size-preset-name-min),
-      1fr
-    ) auto;
-  padding: var(--space-9);
-}
-
-.preset-bar label {
-  display: grid;
-  gap: var(--space-4);
-  min-width: var(--space-0);
-}
-
-.preset-bar span {
-  color: var(--muted);
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-heading);
-}
-
-.preset-library {
-  background: var(--panel-subtle);
-  border: var(--border-width) solid var(--border);
-  border-radius: var(--radius-md);
-  display: grid;
-  gap: var(--space-8);
-  padding: var(--space-9);
-}
-
-.preset-library h3,
-.preset-card h4 {
-  margin-bottom: var(--space-3);
-}
-
-.preset-card-grid {
-  display: grid;
-  gap: var(--space-8);
-  grid-template-columns: repeat(auto-fit, minmax(var(--size-target-summary-min), 1fr));
-}
-
-.preset-card-grid-compact {
-  gap: var(--space-6);
-  grid-template-columns: repeat(auto-fit, minmax(var(--size-preset-card-min), 1fr));
-}
-
-.preset-card {
-  background: var(--panel-raised);
-  border: var(--border-width) solid var(--border);
-  border-radius: var(--radius-sm);
-  display: grid;
-  gap: var(--space-7);
-  padding: var(--space-9);
-}
-
-.preset-card-active {
-  border-color: var(--accent);
-  box-shadow: var(--shadow-inset);
-}
-
-.preset-card p,
-.preset-card li {
-  color: var(--muted);
-  margin-bottom: var(--space-0);
-}
-
-.preset-card ul {
-  display: grid;
-  gap: var(--space-4);
-  margin: var(--space-0);
-  padding-left: var(--space-12);
-}
-
-.preset-card button {
-  justify-self: start;
-}
-
-.preset-card-grid-compact .preset-card {
-  gap: var(--space-5);
-  padding: var(--space-7);
-}
-
-.preset-card-grid-compact .preset-card ul {
-  display: none;
 }
 
 .scan-grid {
@@ -937,7 +846,6 @@
 .history-result-search input,
 .custom-script-paths input,
 .options-grid input,
-.preset-bar input,
 .recipe-save-row input,
 select,
 textarea {
@@ -968,7 +876,6 @@ textarea {
 .history-result-search input:focus,
 .custom-script-paths input:focus,
 .options-grid input:focus,
-.preset-bar input:focus,
 .recipe-save-row input:focus,
 select:focus,
 textarea:focus {
@@ -1722,7 +1629,6 @@ textarea:focus {
     grid-template-columns: 1fr;
   }
 
-  .preset-bar,
   .recipe-save-row {
     grid-template-columns: 1fr;
   }
