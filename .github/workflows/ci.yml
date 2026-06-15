@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       GO_BUILD_TAGS: desktop,wv2runtime.download,production,webkit2_41
-      GO_LDFLAGS: -w -s
+      GO_BASE_LDFLAGS: -w -s
     steps:
       - uses: actions/checkout@v6.0.3
 

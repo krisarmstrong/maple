@@ -10,6 +10,7 @@ import (
 	"github.com/krisarmstrong/maple/internal/reports"
 	"github.com/krisarmstrong/maple/internal/scanner"
 	"github.com/krisarmstrong/maple/internal/store"
+	"github.com/krisarmstrong/maple/internal/version"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -44,6 +45,10 @@ func (a *App) startup(ctx context.Context) {
 
 func (a *App) DetectTools() []platform.ToolDetection {
 	return a.detector.Detect(a.context(), platform.DefaultToolSpecs())
+}
+
+func (a *App) AppVersion() version.Info {
+	return version.Current()
 }
 
 func (a *App) OpenNmapDownloads() {

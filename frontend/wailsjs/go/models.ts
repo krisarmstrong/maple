@@ -43,6 +43,29 @@ export namespace platform {
 
 }
 
+export namespace version {
+
+	export class Info {
+	    version: string;
+	    commit: string;
+	    buildTime: string;
+	    uiBuildHash: string;
+
+	    static createFrom(source: any = {}) {
+	        return new Info(source);
+	    }
+
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.version = source["version"];
+	        this.commit = source["commit"];
+	        this.buildTime = source["buildTime"];
+	        this.uiBuildHash = source["uiBuildHash"];
+	    }
+	}
+
+}
+
 export namespace reports {
 
 	export class ExtraPorts {

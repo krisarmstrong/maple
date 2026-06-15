@@ -65,6 +65,10 @@ Use `make package-dryrun` locally to validate package command generation. Linux 
 
 The GitHub release workflow builds unsigned artifacts for macOS ARM, Linux ARM/x86, and Windows ARM/x86. See `docs/RELEASE_CANDIDATE.md` and `docs/CROSS_PLATFORM.md` for current release and packaging notes.
 
+## Versioning
+
+Maple versions are tag-driven. Conventional commits merged to `main` feed release-please, which maintains `CHANGELOG.md`, opens release PRs, and creates `v*` tags. Release builds stamp the product from that git tag through the Go `internal/version` package; package versions strip the leading `v` only where installer tooling requires plain semver.
+
 ## Platform Notes
 
 - macOS users install Nmap separately.

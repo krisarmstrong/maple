@@ -4,6 +4,7 @@ import { ScanHistoryList } from "./components/ScanHistoryList";
 import { ScanWorkspace } from "./components/ScanWorkspace";
 import { ThemeModePicker } from "./components/ThemeModePicker";
 import { ToolStatusList } from "./components/ToolStatusList";
+import type { BuildVersionInfo } from "./core/build-version";
 import { summarizeTools, type ToolDetection } from "./core/tool-detection";
 import {
   clearScanHistory,
@@ -11,7 +12,7 @@ import {
   type ScanHistoryRecord,
 } from "./services/history-service";
 import { useThemeMode } from "./services/theme-service";
-import { detectTools } from "./services/tool-service";
+import { appVersion, detectTools } from "./services/tool-service";
 import "./styles/app.css";
 
 type LoadState =
@@ -32,6 +33,12 @@ export default function App(): React.JSX.Element {
   const [confirmClearHistory, setConfirmClearHistory] = useState(false);
   const [toolActionError, setToolActionError] = useState("");
   const [activeView, setActiveView] = useState<AppView>("scan");
+  const [versionInfo, setVersionInfo] = useState<BuildVersionInfo>({
+    version: "dev",
+    commit: "unknown",
+    buildTime: "unknown",
+    uiBuildHash: "unknown",
+  });
   const [themeMode, setThemeMode] = useThemeMode();
 
   useEffect(() => {
@@ -49,6 +56,19 @@ export default function App(): React.JSX.Element {
 
   useEffect(() => {
     void refreshHistory(setHistoryState);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void appVersion().then((info) => {
+      if (!cancelled) {
+        setVersionInfo(info);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -84,7 +104,7 @@ export default function App(): React.JSX.Element {
           <NavButton activeView={activeView} id="help" label="Help" onSelect={setActiveView} />
         </nav>
         <div className="sidebar-footer">
-          <span>Theme</span>
+          <span>Maple {versionInfo.version}</span>
           <ThemeModePicker mode={themeMode} onChange={setThemeMode} />
         </div>
       </aside>

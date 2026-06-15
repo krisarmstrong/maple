@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  AppVersion,
   DetectTools,
   LoadNmapHelp,
   OpenNmapDownloads,
@@ -7,6 +8,7 @@ import {
   OpenNmapReferenceGuide,
 } from "../../wailsjs/go/main/App";
 import {
+  appVersion,
   detectTools,
   loadNmapHelp,
   openNmapDownloads,
@@ -15,6 +17,7 @@ import {
 } from "./tool-service";
 
 vi.mock("../../wailsjs/go/main/App", () => ({
+  AppVersion: vi.fn(),
   DetectTools: vi.fn(),
   LoadNmapHelp: vi.fn(),
   OpenNmapDownloads: vi.fn(),
@@ -22,6 +25,7 @@ vi.mock("../../wailsjs/go/main/App", () => ({
   OpenNmapReferenceGuide: vi.fn(),
 }));
 
+const appVersionMock = vi.mocked(AppVersion);
 const detectToolsMock = vi.mocked(DetectTools);
 const loadNmapHelpMock = vi.mocked(LoadNmapHelp);
 const openNmapDownloadsMock = vi.mocked(OpenNmapDownloads);
@@ -30,12 +34,41 @@ const openNmapReferenceGuideMock = vi.mocked(OpenNmapReferenceGuide);
 
 describe("tool-service", () => {
   beforeEach(() => {
+    appVersionMock.mockReset();
     detectToolsMock.mockReset();
     loadNmapHelpMock.mockReset();
     openNmapDownloadsMock.mockReset();
     openNmapNSEDocsMock.mockReset();
     openNmapReferenceGuideMock.mockReset();
     setBackendBridge({ main: { App: {} } });
+  });
+
+  it("loads app version metadata from the Wails backend", async () => {
+    appVersionMock.mockResolvedValue({
+      version: "v0.2.0",
+      commit: "abc1234",
+      buildTime: "2026-06-15T14:00:00Z",
+      uiBuildHash: "uihash",
+    });
+
+    await expect(appVersion()).resolves.toEqual({
+      version: "v0.2.0",
+      commit: "abc1234",
+      buildTime: "2026-06-15T14:00:00Z",
+      uiBuildHash: "uihash",
+    });
+  });
+
+  it("returns development version metadata without the Wails backend", async () => {
+    setBackendBridge(undefined);
+
+    await expect(appVersion()).resolves.toEqual({
+      version: "dev",
+      commit: "unknown",
+      buildTime: "unknown",
+      uiBuildHash: "unknown",
+    });
+    expect(appVersionMock).not.toHaveBeenCalled();
   });
 
   it("loads tool detections from the Wails backend", async () => {
