@@ -6,7 +6,7 @@ import { ScanWorkspace } from "./components/ScanWorkspace";
 import { ThemeModePicker } from "./components/ThemeModePicker";
 import { ToolStatusList } from "./components/ToolStatusList";
 import type { BuildVersionInfo } from "./core/build-version";
-import { summarizeTools, type ToolDetection } from "./core/tool-detection";
+import { getToolStatus, summarizeTools, type ToolDetection } from "./core/tool-detection";
 import {
   clearScanHistory,
   loadScanHistory,
@@ -26,7 +26,7 @@ type HistoryState =
   | { status: "ready"; records: ScanHistoryRecord[] }
   | { status: "failed"; message: string };
 
-type AppView = "scan" | "history" | "environment" | "help";
+type AppView = "scan" | "history" | "tools" | "environment" | "help";
 
 const nmapPathStorageKey = "maple.nmapPath";
 
@@ -98,6 +98,7 @@ export default function App(): React.JSX.Element {
             meta={historyMeta(historyState)}
             onSelect={setActiveView}
           />
+          <NavButton activeView={activeView} id="tools" label="Tools" onSelect={setActiveView} />
           <NavButton
             activeView={activeView}
             id="environment"
@@ -173,6 +174,8 @@ export default function App(): React.JSX.Element {
             ) : null}
           </section>
         ) : null}
+
+        {activeView === "tools" ? <UtilityToolsWorkspace state={state} /> : null}
 
         {activeView === "environment" ? (
           <section className="workspace">
@@ -330,8 +333,83 @@ function viewTitle(view: AppView): string {
   if (view === "history") {
     return "History and exports";
   }
+  if (view === "tools") {
+    return "Utility tools";
+  }
   if (view === "environment") {
     return "Environment";
   }
   return "Help and references";
+}
+
+function UtilityToolsWorkspace({ state }: { state: LoadState }): React.JSX.Element {
+  const tools = state.status === "ready" ? utilityTools(state.tools) : [];
+  return (
+    <section className="workspace utility-workspace">
+      <div className="workspace-header">
+        <div>
+          <h2>Utility Tools</h2>
+          <p>These tools stay separate from Nmap scan recipes and keep argv-only execution.</p>
+        </div>
+      </div>
+      {state.status === "loading" ? <p className="muted">Detecting local tools...</p> : null}
+      {state.status === "failed" ? <p className="error">{state.message}</p> : null}
+      {state.status === "ready" ? (
+        <div className="utility-tool-grid">
+          {tools.map((tool) => (
+            <UtilityToolCard key={tool.name} tool={tool} />
+          ))}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function UtilityToolCard({ tool }: { tool: ToolDetection }): React.JSX.Element {
+  const status = getToolStatus(tool);
+  return (
+    <article className={`utility-tool-card tool-card--${status}`}>
+      <div>
+        <h3>{tool.displayName}</h3>
+        <p>{tool.version ?? tool.path ?? tool.error ?? "Not detected"}</p>
+      </div>
+      <div className="utility-tool-meta">
+        <span>{labelForToolStatus(status)}</span>
+        <strong>Command builder planned</strong>
+      </div>
+    </article>
+  );
+}
+
+function utilityTools(tools: readonly ToolDetection[]): ToolDetection[] {
+  const byName = new Map(tools.map((tool) => [tool.name, tool]));
+  return ["ncat", "ndiff", "nping"].map(
+    (name) =>
+      byName.get(name) ?? {
+        name,
+        displayName: utilityToolDisplayName(name),
+        required: false,
+        installed: false,
+      },
+  );
+}
+
+function utilityToolDisplayName(name: string): string {
+  if (name === "ncat") {
+    return "Ncat";
+  }
+  if (name === "ndiff") {
+    return "Ndiff";
+  }
+  return "Nping";
+}
+
+function labelForToolStatus(status: ReturnType<typeof getToolStatus>): string {
+  if (status === "installed") {
+    return "Detected";
+  }
+  if (status === "missing-required") {
+    return "Required";
+  }
+  return "Optional";
 }

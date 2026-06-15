@@ -119,6 +119,56 @@ describe("App", () => {
     );
   });
 
+  it("surfaces Ncat, Ndiff, and Nping as separate utility workspaces", async () => {
+    detectToolsMock.mockResolvedValue([
+      {
+        name: "nmap",
+        displayName: "Nmap",
+        required: true,
+        installed: true,
+        version: "Nmap version 7.96",
+      },
+      {
+        name: "ncat",
+        displayName: "Ncat",
+        required: false,
+        installed: true,
+        version: "Ncat: Version 7.96",
+      },
+      {
+        name: "ndiff",
+        displayName: "Ndiff",
+        required: false,
+        installed: false,
+      },
+      {
+        name: "nping",
+        displayName: "Nping",
+        required: false,
+        installed: true,
+        version: "Nping version 7.96",
+      },
+    ]);
+
+    render(<App />);
+
+    await userEvent.click(await screen.findByRole("button", { name: /Tools/u }));
+
+    expect(screen.getByRole("heading", { name: "Utility Tools" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Ncat" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Ndiff" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Nping" })).toBeInTheDocument();
+    expect(screen.getByText("Ncat: Version 7.96")).toBeInTheDocument();
+    expect(screen.getAllByText("Command builder planned")).toHaveLength(3);
+    expect(screen.getAllByText("Detected").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText("Not detected")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "These tools stay separate from Nmap scan recipes and keep argv-only execution.",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("renders a desktop workbench shell with live status metadata", async () => {
     detectToolsMock.mockResolvedValue([
       {

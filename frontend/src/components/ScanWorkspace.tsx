@@ -30,7 +30,7 @@ import {
   type ScanPreset,
   savePreset,
 } from "../core/scan-presets";
-import { findProfile, type ScanProfileID, scanProfiles } from "../core/scan-profiles";
+import { findProfile, type ScanProfileID } from "../core/scan-profiles";
 import { scanScope } from "../core/scan-scope";
 import {
   type TargetModeID,
@@ -65,7 +65,6 @@ import {
   messageForInvalidTargets,
   type ScanStatus,
   scanStatusLabel,
-  updateProfile,
   updateTargets,
 } from "./scan-workspace-state";
 
@@ -91,6 +90,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
   const [scriptArgsFile, setScriptArgsFile] = useState("");
   const [savedPresets, setSavedPresets] = useState<ScanPreset[]>(() => loadPresetsFromStorage());
   const [presetName, setPresetName] = useState("");
+  const [selectedPresetID, setSelectedPresetID] = useState("builtin-top-tcp-ports");
   const [activePanel, setActivePanel] = useState<ScanPanel>("configure");
   const [activeOptionGroup, setActiveOptionGroup] = useState<OptionGroup>("shape");
   const [error, setError] = useState("");
@@ -115,6 +115,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
       : searchNSEScripts(scriptSearch);
   const selectedScriptNames = scriptNameLines(scriptNames);
   const availablePresets = [...savedPresets, ...builtInScanPresets];
+  const selectedPreset = availablePresets.find((preset) => preset.id === selectedPresetID);
   const selectedScriptValues = [
     ...scriptCategories.map((category) => ({ id: `category:${category}`, label: category })),
     ...selectedScriptNames.map((script) => ({ id: `name:${script}`, label: script })),
@@ -230,11 +231,13 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
         ? [...current, category].sort()
         : current.filter((candidate) => candidate !== category),
     );
+    setSelectedPresetID("");
     setPreview([]);
   }
 
   function updateScanOptions(updater: (options: ScanOptions) => ScanOptions): void {
     setScanOptions((current) => updater(current));
+    setSelectedPresetID("");
     setPreview([]);
   }
 
@@ -262,6 +265,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
       }
       return savePreset(storage, current, preset);
     });
+    setSelectedPresetID(preset.id);
     setPresetName("");
   }
 
@@ -278,6 +282,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
     setCustomScriptDirectories(preset.customScriptDirectories);
     setScriptArgs(preset.scriptArgs);
     setScriptArgsFile(preset.scriptArgsFile);
+    setSelectedPresetID(preset.id);
     setPreview([]);
     setError("");
   }
@@ -290,6 +295,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
       current.delete(name);
     }
     setScriptNames([...current].sort().join("\n"));
+    setSelectedPresetID("");
     setPreview([]);
   }
 
@@ -319,6 +325,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
           .join("\n"),
       );
     }
+    setSelectedPresetID("");
     setPreview([]);
   }
 
@@ -327,7 +334,10 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
       <div className="workspace-header">
         <div>
           <h2>New Scan</h2>
-          <p>Choose a safe profile, validate targets, preview argv, then run Nmap locally.</p>
+          <p>
+            Choose a target, pick a scan recipe, refine options or scripts, then preview argv before
+            Nmap runs.
+          </p>
         </div>
         <div className="scan-actions">
           <button
@@ -352,7 +362,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
 
       <section aria-label="Scan context" className="scan-context-strip">
         <h3>Scan context</h3>
-        <ContextMetric label="Profile" value={selectedProfile.name} />
+        <ContextMetric label="Recipe" value={selectedPreset?.name ?? "Custom scan"} />
         <ContextMetric label="Target type" value={targetModeContextLabel(targetModeId)} />
         <ContextMetric label="Targets" value={parsedTargetSummary.parsedTargets} />
         <ContextMetric label="Status" value={scanStatusLabel(status)} />
@@ -388,64 +398,8 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
       {error === "" ? null : <p className="error">{error}</p>}
 
       {activePanel === "configure" ? (
-        <div className="scan-panel">
-          <div className="preset-bar">
-            <label>
-              <span>Preset</span>
-              <select
-                aria-label="Preset"
-                onChange={(event) => applyPreset(event.target.value)}
-                value=""
-              >
-                <option value="">Choose preset</option>
-                <optgroup label="Built-in presets">
-                  {builtInScanPresets.map((preset) => (
-                    <option key={preset.id} value={preset.id}>
-                      {preset.name}
-                    </option>
-                  ))}
-                </optgroup>
-                {savedPresets.length === 0 ? null : (
-                  <optgroup label="Custom presets">
-                    {savedPresets.map((preset) => (
-                      <option key={preset.id} value={preset.id}>
-                        {preset.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-              </select>
-            </label>
-            <label>
-              <span>Preset name</span>
-              <input
-                onChange={(event) => setPresetName(event.target.value)}
-                placeholder="Web TLS check"
-                type="text"
-                value={presetName}
-              />
-            </label>
-            <button disabled={presetName.trim() === ""} onClick={saveCurrentPreset} type="button">
-              Save Preset
-            </button>
-          </div>
+        <div className="scan-panel" data-testid="configure-panel">
           <div className="scan-grid">
-            <div className="profile-column">
-              <label>
-                <span>Profile</span>
-                <select
-                  value={profileId}
-                  onChange={(event) => updateProfile(event.target.value, setProfileId, setPreview)}
-                >
-                  {scanProfiles.map((profile) => (
-                    <option key={profile.id} value={profile.id}>
-                      {profile.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <ProfileSummary profile={selectedProfile} />
-            </div>
             <div className="target-input">
               <div>
                 <h3>Target Builder</h3>
@@ -509,31 +463,98 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
                 </div>
               </div>
             </div>
+            <section className="recipe-column" aria-label="Scan recipe setup">
+              <div>
+                <h3>Scan Recipe</h3>
+                <p className="target-mode-help">
+                  Recipes choose the base profile, options, and scripts. Targets stay separate.
+                </p>
+              </div>
+              <label>
+                <span>Scan recipe</span>
+                <select
+                  aria-label="Scan recipe"
+                  onChange={(event) => applyPreset(event.target.value)}
+                  value={selectedPresetID}
+                >
+                  {selectedPresetID === "" ? <option value="">Custom unsaved recipe</option> : null}
+                  <optgroup label="Built-in recipes">
+                    {builtInScanPresets.map((preset) => (
+                      <option key={preset.id} value={preset.id}>
+                        {preset.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                  {savedPresets.length === 0 ? null : (
+                    <optgroup label="Custom recipes">
+                      {savedPresets.map((preset) => (
+                        <option key={preset.id} value={preset.id}>
+                          {preset.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                </select>
+              </label>
+              <div className="recipe-base-profile">
+                <span>Base profile</span>
+                <strong>{selectedProfile.name}</strong>
+              </div>
+              <ProfileSummary profile={selectedProfile} />
+              <div className="recipe-save-row">
+                <label>
+                  <span>Recipe name</span>
+                  <input
+                    onChange={(event) => setPresetName(event.target.value)}
+                    placeholder="Web TLS check"
+                    type="text"
+                    value={presetName}
+                  />
+                </label>
+                <button
+                  disabled={presetName.trim() === ""}
+                  onClick={saveCurrentPreset}
+                  type="button"
+                >
+                  Save Recipe
+                </button>
+              </div>
+            </section>
           </div>
-          <section className="preset-library" aria-label="Built-in workflow presets">
+          <section className="preset-library" aria-label="Built-in scan recipes">
             <div>
-              <h3>Built-in presets</h3>
+              <h3>Built-in recipes</h3>
               <p className="target-mode-help">
                 Common Nmap workflows that save scan shape, options, and scripts, never targets.
               </p>
             </div>
             <div className="preset-card-grid preset-card-grid-compact">
               {builtInScanPresets.map((preset) => (
-                <PresetCard key={preset.id} onApply={applyPreset} preset={preset} />
+                <PresetCard
+                  active={selectedPresetID === preset.id}
+                  key={preset.id}
+                  onApply={applyPreset}
+                  preset={preset}
+                />
               ))}
             </div>
           </section>
           {savedPresets.length === 0 ? null : (
-            <section className="preset-library" aria-label="Custom workflow presets">
+            <section className="preset-library" aria-label="Custom scan recipes">
               <div>
-                <h3>Custom presets</h3>
+                <h3>Custom recipes</h3>
                 <p className="target-mode-help">
-                  Your saved presets are local to this desktop and still do not store targets.
+                  Your saved recipes are local to this desktop and still do not store targets.
                 </p>
               </div>
               <div className="preset-card-grid">
                 {savedPresets.map((preset) => (
-                  <PresetCard key={preset.id} onApply={applyPreset} preset={preset} />
+                  <PresetCard
+                    active={selectedPresetID === preset.id}
+                    key={preset.id}
+                    onApply={applyPreset}
+                    preset={preset}
+                  />
                 ))}
               </div>
             </section>
@@ -1500,6 +1521,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
             <textarea
               onChange={(event) => {
                 setScriptNames(event.target.value);
+                setSelectedPresetID("");
                 setPreview([]);
               }}
               placeholder="http-title&#10;ssl-enum-ciphers"
@@ -1530,6 +1552,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
             <textarea
               onChange={(event) => {
                 setCustomScriptPaths(event.target.value);
+                setSelectedPresetID("");
                 setPreview([]);
               }}
               placeholder="/Users/you/nmap-scripts/custom-check.nse"
@@ -1542,6 +1565,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
             <textarea
               onChange={(event) => {
                 setCustomScriptDirectories(event.target.value);
+                setSelectedPresetID("");
                 setPreview([]);
               }}
               placeholder="/Users/you/nmap-scripts"
@@ -1554,6 +1578,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
             <input
               onChange={(event) => {
                 setScriptArgs(event.target.value);
+                setSelectedPresetID("");
                 setPreview([]);
               }}
               placeholder="http.useragent=Maple,creds.global=/Users/you/creds.txt"
@@ -1566,6 +1591,7 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
             <input
               onChange={(event) => {
                 setScriptArgsFile(event.target.value);
+                setSelectedPresetID("");
                 setPreview([]);
               }}
               placeholder="/Users/you/nmap-scripts/script-args.txt"
@@ -1686,15 +1712,17 @@ function clearDiscoveryProbes(options: ScanOptions): ScanOptions {
 }
 
 function PresetCard({
+  active,
   onApply,
   preset,
 }: {
+  active: boolean;
   onApply: (presetID: string) => void;
   preset: ScanPreset;
 }): React.JSX.Element {
   const summary = summarizePreset(preset);
   return (
-    <article className="preset-card">
+    <article className={`preset-card${active ? " preset-card-active" : ""}`}>
       <div>
         <h4>{preset.name}</h4>
         <p>{summary.profileLabel}</p>
@@ -1705,7 +1733,7 @@ function PresetCard({
         <li>{summary.targetPolicyLabel}</li>
       </ul>
       <button type="button" onClick={() => onApply(preset.id)}>
-        Apply
+        {active ? "Applied" : "Apply"}
       </button>
     </article>
   );
