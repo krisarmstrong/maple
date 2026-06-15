@@ -73,7 +73,7 @@ function scopeWarning(profileId: ScanProfileID, estimate: number | undefined): s
     return undefined;
   }
   if (profileId === "service") {
-    return "Service scans across many addresses can take a while. Run a Ping Sweep first if you only need host discovery.";
+    return "Service scans across many addresses can take a while. Use the Fast host discovery recipe first if you only need host discovery.";
   }
-  return "Port scans across many addresses can take a while. Run a Ping Sweep first if you only need host discovery.";
+  return "Port scans across many addresses can take a while. Use the Fast host discovery recipe first if you only need host discovery.";
 }

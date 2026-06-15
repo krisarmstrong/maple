@@ -36,10 +36,10 @@ describe("scanScope", () => {
 
   it("warns before larger port and service scans", () => {
     expect(scanScope("connect", "192.168.1.0/24")?.warning).toBe(
-      "Port scans across many addresses can take a while. Run a Ping Sweep first if you only need host discovery.",
+      "Port scans across many addresses can take a while. Use the Fast host discovery recipe first if you only need host discovery.",
     );
     expect(scanScope("service", "192.168.1.0/24")?.warning).toBe(
-      "Service scans across many addresses can take a while. Run a Ping Sweep first if you only need host discovery.",
+      "Service scans across many addresses can take a while. Use the Fast host discovery recipe first if you only need host discovery.",
     );
     expect(scanScope("ping", "192.168.1.0/24")?.warning).toBeUndefined();
   });

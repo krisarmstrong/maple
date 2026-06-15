@@ -37,7 +37,10 @@ export function HelpWorkspace(): React.JSX.Element {
           <h3>Maple Guide</h3>
           <ul className="help-list">
             <li>Choose a target mode first: single host, range, subnet, or a pasted list.</li>
-            <li>Use Ping Sweep before deeper scans when you are mapping an unfamiliar subnet.</li>
+            <li>
+              Use the Fast host discovery recipe before deeper scans when you are mapping an
+              unfamiliar subnet.
+            </li>
             <li>Add NSE categories or absolute custom script paths without typing raw commands.</li>
             <li>Export reports from completed scans when you need to share findings cleanly.</li>
           </ul>
@@ -47,7 +50,7 @@ export function HelpWorkspace(): React.JSX.Element {
           <h3>Workflow Tips</h3>
           <ul className="help-list">
             <li>Preview every scan to inspect the exact argv before execution.</li>
-            <li>Save presets for repeated option and script combinations, not target lists.</li>
+            <li>Save recipes for repeated option and script combinations, not target lists.</li>
             <li>Use stats intervals on long scans so progress is visible in Output.</li>
             <li>Use structured controls first, then NSE escape hatches for specialized work.</li>
           </ul>

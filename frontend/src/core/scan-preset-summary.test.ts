@@ -14,7 +14,7 @@ describe("scan-preset-summary", () => {
         scriptNames: "http-title\nssl-cert",
       }),
     ).toEqual({
-      profileLabel: "Service Scan",
+      intentLabel: "Custom saved recipe",
       optionsLabel: "2 option changes",
       scriptsLabel: "3 script selections",
       targetPolicyLabel: "No target saved",
@@ -23,11 +23,17 @@ describe("scan-preset-summary", () => {
 
   it("uses quiet labels for presets with default options and no scripts", () => {
     expect(summarizePreset(presetBase)).toEqual({
-      profileLabel: "TCP Connect",
-      optionsLabel: "Profile defaults",
+      intentLabel: "Custom saved recipe",
+      optionsLabel: "Recipe defaults",
       scriptsLabel: "No scripts",
       targetPolicyLabel: "No target saved",
     });
+  });
+
+  it("uses clear intent labels for built-in recipes", () => {
+    expect(summarizePreset({ ...presetBase, id: "builtin-web-quick-look" }).intentLabel).toBe(
+      "HTTP/HTTPS headers and titles",
+    );
   });
 });
 
