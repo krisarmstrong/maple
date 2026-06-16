@@ -1040,7 +1040,7 @@ describe("ScanWorkspace", () => {
     expect(within(phases).getByText("Launching Nmap")).toBeInTheDocument();
     expect(within(phases).getByText("Starting local Nmap process.")).toBeInTheDocument();
     expect(within(phases).getByText("Parsing XML")).toBeInTheDocument();
-    expect(screen.getByTestId("scan-log")).not.toHaveTextContent("Starting local Nmap process.");
+    expect(screen.getByTestId("log-output")).not.toHaveTextContent("Starting local Nmap process.");
   });
 
   it("shows cancellation immediately when cancel is accepted", async () => {
@@ -1054,7 +1054,7 @@ describe("ScanWorkspace", () => {
 
     expect(cancelScanMock).toHaveBeenCalledTimes(1);
     expect(screen.getAllByText("Scan cancelled").length).toBeGreaterThan(0);
-    expect(screen.getByTestId("scan-log")).toHaveTextContent("Cancel requested.");
+    expect(screen.getByTestId("log-output")).toHaveTextContent("Cancel requested.");
   });
 
   it("shows final diagnostics without mixing them into the XML-free live log", () => {
@@ -1075,7 +1075,7 @@ describe("ScanWorkspace", () => {
 
     expect(screen.getByText("Parser notes and stderr diagnostics")).toBeInTheDocument();
     expect(screen.getByText("Parser recovered incomplete host metadata.")).toBeInTheDocument();
-    expect(screen.getByTestId("scan-log")).not.toHaveTextContent(
+    expect(screen.getByTestId("log-output")).not.toHaveTextContent(
       "Parser recovered incomplete host metadata.",
     );
   });
@@ -1255,7 +1255,7 @@ describe("ScanWorkspace", () => {
       });
     });
 
-    const log = screen.getByTestId("scan-log");
+    const log = screen.getByTestId("log-output");
     expect(log).not.toHaveTextContent("<nmaprun");
     expect(log).toHaveTextContent("Stats: 0:00:01 elapsed");
     expect(log).toHaveTextContent("Scan finished: exit 0. XML captured for history and reports.");
@@ -1449,5 +1449,124 @@ describe("ScanWorkspace", () => {
     });
 
     expect(onScanStarted).toHaveBeenCalledWith("run-73");
+  });
+
+  // #74 — Live scan log improvements
+  it("filters visible log lines by the log-filter input (case-insensitive)", () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    act(() => {
+      scanEventListener?.({ type: "started", runId: "filter-1" });
+      scanEventListener?.({
+        type: "output",
+        output: { runId: "filter-1", stream: "stdout", text: "Discovered open port 22/tcp" },
+      });
+      scanEventListener?.({
+        type: "output",
+        output: { runId: "filter-1", stream: "stdout", text: "Discovered open port 80/tcp" },
+      });
+      scanEventListener?.({
+        type: "output",
+        output: { runId: "filter-1", stream: "stderr", text: "Stats: 0:00:01 elapsed" },
+      });
+    });
+
+    const logOutput = screen.getByTestId("log-output");
+    expect(logOutput).toHaveTextContent("Discovered open port 22/tcp");
+    expect(logOutput).toHaveTextContent("Discovered open port 80/tcp");
+    expect(logOutput).toHaveTextContent("Stats: 0:00:01 elapsed");
+
+    fireEvent.change(screen.getByTestId("log-filter"), { target: { value: "22/tcp" } });
+
+    expect(screen.getByTestId("log-output")).toHaveTextContent("Discovered open port 22/tcp");
+    expect(screen.getByTestId("log-output")).not.toHaveTextContent("Discovered open port 80/tcp");
+    expect(screen.getByTestId("log-output")).not.toHaveTextContent("Stats: 0:00:01 elapsed");
+  });
+
+  it("shows all log lines when the filter is cleared", () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    act(() => {
+      scanEventListener?.({ type: "started", runId: "filter-2" });
+      scanEventListener?.({
+        type: "output",
+        output: { runId: "filter-2", stream: "stdout", text: "Line alpha" },
+      });
+      scanEventListener?.({
+        type: "output",
+        output: { runId: "filter-2", stream: "stdout", text: "Line beta" },
+      });
+    });
+
+    fireEvent.change(screen.getByTestId("log-filter"), { target: { value: "alpha" } });
+    expect(screen.getByTestId("log-output")).not.toHaveTextContent("Line beta");
+
+    fireEvent.change(screen.getByTestId("log-filter"), { target: { value: "" } });
+    expect(screen.getByTestId("log-output")).toHaveTextContent("Line alpha");
+    expect(screen.getByTestId("log-output")).toHaveTextContent("Line beta");
+  });
+
+  // #78 — argv token affordances
+  it("copies a single token when an argv token chip is clicked", async () => {
+    previewScanCommandMock.mockResolvedValue([
+      "nmap",
+      "-oX",
+      "<managed-xml-file>",
+      "-sn",
+      "--",
+      "scanme.nmap.org",
+    ]);
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
+    await userEvent.click(screen.getByRole("button", { name: "Preview" }));
+
+    // Click the "-sn" token chip — it should copy just "-sn"
+    const snToken = await screen.findByRole("button", {
+      name: "-sn — Ping scan only — no port scan",
+    });
+    await userEvent.click(snToken);
+
+    expect(copyTextMock).toHaveBeenCalledWith("-sn");
+  });
+
+  it("shows a flag description as accessible name on known argv token chips", async () => {
+    previewScanCommandMock.mockResolvedValue([
+      "nmap",
+      "-oX",
+      "<managed-xml-file>",
+      "-T4",
+      "--",
+      "scanme.nmap.org",
+    ]);
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
+    await userEvent.click(screen.getByRole("button", { name: "Preview" }));
+
+    const t4Token = await screen.findByRole("button", {
+      name: "-T4 — Timing template: Aggressive",
+    });
+    expect(t4Token).toBeInTheDocument();
+    expect(t4Token).toHaveAttribute("title", "Timing template: Aggressive");
+  });
+
+  it("renders unknown argv tokens as clickable chips without a description", async () => {
+    previewScanCommandMock.mockResolvedValue([
+      "nmap",
+      "-oX",
+      "<managed-xml-file>",
+      "--",
+      "scanme.nmap.org",
+    ]);
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
+    await userEvent.click(screen.getByRole("button", { name: "Preview" }));
+
+    // "scanme.nmap.org" is not a known flag — no description in aria-label
+    const targetToken = await screen.findByRole("button", { name: "scanme.nmap.org" });
+    expect(targetToken).toBeInTheDocument();
+    expect(targetToken).not.toHaveAttribute("title");
   });
 });

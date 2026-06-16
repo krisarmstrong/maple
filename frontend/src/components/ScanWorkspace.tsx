@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { argvTokenDescription } from "../core/argv-token-info";
 import {
   buildScanScripts,
   type NSECategory,
@@ -20,6 +21,7 @@ import {
   savePreset,
 } from "../core/scan-presets";
 import { findProfile, type ScanProfileID } from "../core/scan-profiles";
+import { parseScanProgressLine } from "../core/scan-progress";
 import { scanScope } from "../core/scan-scope";
 import {
   type TargetModeID,
@@ -108,6 +110,9 @@ export function ScanWorkspace({
   const [diagnostics, setDiagnostics] = useState("");
   const [running, setRunning] = useState(false);
   const [status, setStatus] = useState<ScanStatus>("idle");
+  const [logFilter, setLogFilter] = useState("");
+  const logContainerRef = useRef<HTMLOutputElement>(null);
+  const isPinnedToBottom = useRef(true);
   const selectedProfile = findProfile(profileId);
   const scope = scanScope(profileId, targets);
   const parsedTargetSummary = targetBuilderSummary(targets);
@@ -144,6 +149,12 @@ export function ScanWorkspace({
   const optionsBadgeCount = changedOptionCount(scanOptions);
   const scriptsBadgeCount = selectedScriptValues.length;
   const previewTokens = commandTokens(preview);
+  const logFilterTrimmed = logFilter.trim().toLowerCase();
+  const filteredLog =
+    logFilterTrimmed === ""
+      ? log
+      : log.filter((entry) => entry.text.toLowerCase().includes(logFilterTrimmed));
+  const scanProgress = deriveScanProgress(log);
   const safetyWarnings = scanSafetyWarnings({
     options: scanOptions,
     scopeWarning: scope?.warning,
@@ -169,6 +180,19 @@ export function ScanWorkspace({
       }),
     [onScanFinished, onScanStarted],
   );
+
+  // Auto-scroll log to bottom when new lines arrive, unless the user scrolled up.
+  // `log` is listed so this effect re-runs on each new entry.
+  useEffect(() => {
+    if (log.length === 0) {
+      return;
+    }
+    const container = logContainerRef.current;
+    if (container === null || !isPinnedToBottom.current) {
+      return;
+    }
+    container.scrollTop = container.scrollHeight;
+  }, [log]);
 
   async function previewCommand(): Promise<void> {
     const request = makeRequest(
@@ -230,6 +254,8 @@ export function ScanWorkspace({
     setPhases([]);
     setDiagnostics("");
     setStatus("running");
+    setLogFilter("");
+    isPinnedToBottom.current = true;
     setActivePanel("output");
     try {
       await startScan(request);
@@ -966,9 +992,7 @@ export function ScanWorkspace({
               <>
                 <ul className="argv-token-list" aria-label="Preview argv tokens">
                   {previewTokens.map((token) => (
-                    <li className="argv-token" key={token.id}>
-                      {token.value}
-                    </li>
+                    <ArgvTokenChip key={token.id} token={token.value} />
                   ))}
                 </ul>
                 <code className="command-preview">{preview.join(" ")}</code>
@@ -993,9 +1017,56 @@ export function ScanWorkspace({
           </section>
           <section className="output-section">
             <h3>Live log</h3>
-            <output className="scan-log" data-testid="scan-log">
+            {scanProgress !== undefined ? (
+              <section className="scan-progress" aria-label="Scan progress">
+                <div
+                  className="scan-progress-bar"
+                  role="progressbar"
+                  aria-valuenow={Math.round(scanProgress.percent)}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  style={{ width: `${scanProgress.percent.toFixed(1)}%` }}
+                />
+                <span className="scan-progress-label">
+                  {scanProgress.percent.toFixed(1)}%
+                  {scanProgress.remaining !== "" ? ` — ${scanProgress.remaining} remaining` : ""}
+                </span>
+              </section>
+            ) : null}
+            <div className="log-filter-row">
+              <input
+                aria-label="Filter log lines"
+                className="log-filter-input"
+                data-testid="log-filter"
+                onChange={(event) => setLogFilter(event.target.value)}
+                placeholder="Filter log…"
+                type="search"
+                value={logFilter}
+              />
+              {logFilter !== "" ? (
+                <span className="log-filter-count">
+                  {filteredLog.length} / {log.length} lines
+                </span>
+              ) : null}
+            </div>
+            <output
+              className="scan-log"
+              data-testid="log-output"
+              ref={logContainerRef}
+              onScroll={() => {
+                const el = logContainerRef.current;
+                if (el === null) {
+                  return;
+                }
+                const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 8;
+                isPinnedToBottom.current = atBottom;
+              }}
+            >
               {log.length === 0 ? <span>No live log lines yet.</span> : null}
-              {log.map((entry) => (
+              {filteredLog.length === 0 && log.length > 0 ? (
+                <span>No log lines match the filter.</span>
+              ) : null}
+              {filteredLog.map((entry) => (
                 <span key={entry.id}>{entry.text}</span>
               ))}
             </output>
@@ -1136,6 +1207,52 @@ function scanReadiness(
     message: "Maple can preview the exact argv before it starts Nmap.",
     title: "Ready to preview",
   };
+}
+
+interface ArgvTokenChipProps {
+  token: string;
+}
+
+function ArgvTokenChip({ token }: ArgvTokenChipProps): React.JSX.Element {
+  const description = argvTokenDescription(token);
+  const [justCopied, setJustCopied] = useState(false);
+
+  async function handleCopy(): Promise<void> {
+    try {
+      await copyText(token);
+      setJustCopied(true);
+      setTimeout(() => {
+        setJustCopied(false);
+      }, 1200);
+    } catch {
+      // Silently ignore per-token copy failures — global copy button handles errors.
+    }
+  }
+
+  return (
+    <li>
+      <button
+        className={`argv-token${justCopied ? " argv-token--copied" : ""}`}
+        onClick={() => void handleCopy()}
+        title={description}
+        type="button"
+        aria-label={description !== undefined ? `${token} — ${description}` : token}
+      >
+        {token}
+      </button>
+    </li>
+  );
+}
+
+function deriveScanProgress(log: LogEntry[]): { percent: number; remaining: string } | undefined {
+  // Walk the log in reverse to find the most recent progress line.
+  for (let i = log.length - 1; i >= 0; i--) {
+    const progress = parseScanProgressLine(log[i].text);
+    if (progress !== undefined) {
+      return progress;
+    }
+  }
+  return undefined;
 }
 
 function ScriptRiskBadge({ risk }: { risk: NSERiskLevel }): React.JSX.Element | null {
