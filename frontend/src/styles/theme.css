@@ -76,6 +76,7 @@
   --shadow-inset: inset 0 1px 0 rgb(255 255 255 / 70%);
 
   --size-control-min: 44px;
+  --size-control-height-sm: 36px;
   --size-tab-min: 42px;
   --size-nav-min: 58px;
   --size-nav-min-compact: 52px;
