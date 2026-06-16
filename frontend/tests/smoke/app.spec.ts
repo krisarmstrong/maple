@@ -26,6 +26,18 @@ test.describe("Maple browser smoke", () => {
     await assertNoHorizontalOverflow(page);
   });
 
+  test("keeps target setup usable at tablet width", async ({ page }) => {
+    await page.setViewportSize({ width: 820, height: 1180 });
+    await page.goto("/");
+
+    await assertNoHorizontalOverflow(page);
+    await expect(page.getByRole("heading", { name: "Targets" })).toBeVisible();
+    const targetWidth = await page
+      .getByLabel("Targets")
+      .evaluate((element) => element.getBoundingClientRect().width);
+    expect(targetWidth).toBeGreaterThan(300);
+  });
+
   test("shows target summaries for every target shape", async ({ page }) => {
     await page.goto("/");
 

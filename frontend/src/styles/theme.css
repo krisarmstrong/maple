@@ -88,12 +88,12 @@
   --size-target-textarea-compact: 76px;
   --size-target-textarea-list: 180px;
   --size-local-help-max: 460px;
-  --size-chip-min: 32px;
+  --size-chip-min: 40px;
   --size-app-viewport: 100vh;
 
   --layout-sidebar-width: 306px;
   --layout-mobile-min-width: 320px;
-  --layout-breakpoint-compact: 760px;
+  --layout-breakpoint-compact: 980px;
   --layout-full-span: 1 / -1;
   --layout-history-filter-width: 180px;
   --layout-profile-column-width: 240px;
