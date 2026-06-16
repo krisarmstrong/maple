@@ -20,9 +20,19 @@ const nmapDownloadsURL = "https://nmap.org/download.html"
 const nmapReferenceURL = "https://nmap.org/book/man.html"
 const nmapNSEDocsURL = "https://nmap.org/nsedoc/"
 
+// toolDetector is the subset of platform.Detector the App depends on. Keeping
+// it as an interface lets tests inject a fake detector without a real Nmap
+// binary on PATH; platform.Detector satisfies it directly.
+type toolDetector interface {
+	Detect(context.Context, []platform.ToolSpec) []platform.ToolDetection
+	DetectOne(context.Context, platform.ToolSpec) platform.ToolDetection
+	DetectPath(context.Context, platform.ToolSpec, string) platform.ToolDetection
+	Help(context.Context, platform.ToolSpec, string) (platform.ToolHelp, error)
+}
+
 type App struct {
 	ctx         context.Context
-	detector    platform.Detector
+	detector    toolDetector
 	history     *store.HistoryStore
 	scanManager *nmap.Manager
 }
