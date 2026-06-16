@@ -1084,6 +1084,12 @@ textarea {
   resize: vertical;
 }
 
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+  opacity: var(--opacity-placeholder);
+}
+
 .target-textarea-compact {
   min-height: var(--size-target-textarea-compact);
 }
