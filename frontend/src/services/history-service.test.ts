@@ -75,6 +75,7 @@ describe("history-service", () => {
           ],
         },
         exitCode: 0,
+        xmlPath: "/Users/you/.config/Maple/records/scan-1.xml",
         diagnostics: "Strange read error from 127.0.0.1",
       },
     ] as unknown as Awaited<ReturnType<typeof ScanHistory>>;
@@ -84,6 +85,7 @@ describe("history-service", () => {
 
     expect(records[0]?.profileName).toBe("TCP Connect");
     expect(records[0]?.elapsedTime).toBe("0.05");
+    expect(records[0]?.xmlPath).toBe("/Users/you/.config/Maple/records/scan-1.xml");
     expect(records[0]?.diagnostics).toBe("Strange read error from 127.0.0.1");
     expect(records[0]?.targets).toEqual([{ value: "127.0.0.1", kind: "ip" }]);
     expect(records[0]?.hosts[0]?.scripts).toEqual([

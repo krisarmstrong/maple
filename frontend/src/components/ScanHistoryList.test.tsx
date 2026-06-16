@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -38,6 +38,39 @@ describe("ScanHistoryList", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("1 target, scanme.nmap.org, 5.00s, exit 0")).toBeInTheDocument();
     expect(screen.getByText("Showing 1 of 1 scans")).toBeInTheDocument();
+  });
+
+  it("previews an Ndiff argv for two saved XML records", async () => {
+    render(
+      <ScanHistoryList
+        records={[
+          scanRecord("scan-current", {
+            finishedAt: "2026-06-12T11:00:00Z",
+            xmlPath: "/Users/you/.config/Maple/records/scan-current.xml",
+          }),
+          scanRecord("scan-baseline", {
+            finishedAt: "2026-06-12T10:00:00Z",
+            xmlPath: "/Users/you/.config/Maple/records/scan-baseline.xml",
+          }),
+        ]}
+      />,
+    );
+
+    const compare = screen.getByLabelText("Ndiff compare preview");
+    expect(within(compare).getByText("Compare saved XML")).toBeInTheDocument();
+    expect(within(compare).getByText("ndiff")).toBeInTheDocument();
+    expect(
+      within(compare).getByText("/Users/you/.config/Maple/records/scan-baseline.xml"),
+    ).toBeInTheDocument();
+    expect(
+      within(compare).getByText("/Users/you/.config/Maple/records/scan-current.xml"),
+    ).toBeInTheDocument();
+
+    await userEvent.selectOptions(within(compare).getByLabelText("Current"), "scan-baseline");
+
+    expect(
+      within(compare).getByText("Choose two different scans to preview an Ndiff comparison."),
+    ).toBeInTheDocument();
   });
 
   it("filters history by search text", async () => {

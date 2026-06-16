@@ -610,6 +610,7 @@ export namespace store {
 	    summary: reports.Summary;
 	    exitCode: number;
 	    xml: string;
+	    xmlPath?: string;
 	    diagnostics?: string;
 	    error?: string;
 
@@ -626,6 +627,7 @@ export namespace store {
 	        this.summary = this.convertValues(source["summary"], reports.Summary);
 	        this.exitCode = source["exitCode"];
 	        this.xml = source["xml"];
+	        this.xmlPath = source["xmlPath"];
 	        this.diagnostics = source["diagnostics"];
 	        this.error = source["error"];
 	    }

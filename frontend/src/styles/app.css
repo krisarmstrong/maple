@@ -898,6 +898,46 @@
   margin: var(--space-0) var(--space-0) var(--space-9);
 }
 
+.history-ndiff-panel {
+  background: var(--panel-subtle);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  display: grid;
+  gap: var(--space-9);
+  grid-template-columns: minmax(0, 1fr) minmax(var(--layout-history-filter-width), 0.35fr) minmax(
+      var(--layout-history-filter-width),
+      0.35fr
+    );
+  margin-bottom: var(--space-9);
+  padding: var(--space-9);
+}
+
+.history-ndiff-panel h3 {
+  font-size: var(--font-size-body);
+  margin-bottom: var(--space-4);
+}
+
+.history-ndiff-panel p {
+  color: var(--muted);
+  margin-bottom: var(--space-0);
+}
+
+.history-ndiff-panel label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.history-ndiff-panel label span {
+  color: var(--muted);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-heading);
+}
+
+.history-ndiff-argv {
+  grid-column: 1 / -1;
+}
+
 .scan-grid {
   align-items: start;
   display: grid;
@@ -1905,6 +1945,10 @@ textarea:focus {
   }
 
   .history-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .history-ndiff-panel {
     grid-template-columns: 1fr;
   }
 
