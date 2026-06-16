@@ -1,4 +1,9 @@
-import { type NSECategory, nseCategories } from "../core/nse-scripts";
+import {
+  type NSECategory,
+  nseCategories,
+  nseCategoryRisk,
+  nseScriptDetails,
+} from "../core/nse-scripts";
 import type { ScanOptions } from "../core/scan-options";
 import { scanScope } from "../core/scan-scope";
 import { parseTargets } from "../core/scan-targets";
@@ -124,6 +129,47 @@ export function hasIdentityOptions(options: ScanOptions): boolean {
   );
 }
 
+export function scanSafetyWarnings(input: {
+  options: ScanOptions;
+  scopeWarning?: string;
+  scriptCategories: readonly NSECategory[];
+  scriptNames: string;
+}): string[] {
+  const warnings: string[] = [];
+  addWarning(warnings, input.scopeWarning);
+  if (input.options.osDetection) {
+    addWarning(warnings, "OS detection often requires elevated privileges.");
+  }
+  if (input.options.scanTechnique === "syn") {
+    addWarning(warnings, "TCP SYN scans usually require elevated privileges.");
+  }
+  if (input.options.scanTechnique === "udp") {
+    addWarning(warnings, "UDP scans can be slow and may need elevated privileges.");
+  }
+  if (isSpecializedScanTechnique(input.options.scanTechnique)) {
+    addWarning(warnings, "Advanced scan techniques need careful authorization.");
+  }
+  if (input.options.discoveryMode === "skip") {
+    addWarning(warnings, "Skipping host discovery treats every target as online.");
+  }
+  if (input.options.minRate > 0) {
+    addWarning(warnings, "Minimum packet rate can reduce accuracy when set aggressively.");
+  }
+  if (hasPacketShapingOptions(input.options)) {
+    addWarning(warnings, "Packet shaping can violate network policy without authorization.");
+  }
+  if (hasIdentityOptions(input.options)) {
+    addWarning(warnings, "Decoys and spoofing can impersonate traffic.");
+  }
+  if (input.options.packetTrace) {
+    addWarning(warnings, "Packet trace can produce noisy diagnostic output.");
+  }
+  if (hasRiskyNSESelection(input.scriptCategories, input.scriptNames)) {
+    addWarning(warnings, "Selected NSE scripts include noisy or intrusive checks.");
+  }
+  return warnings;
+}
+
 export function messageForInvalidScanOptions(options: ScanOptions): string {
   if (options.dnsMode === "skip" && options.dnsServers.trim() !== "") {
     return "DNS servers cannot be used when DNS lookup is skipped.";
@@ -154,6 +200,24 @@ export function messageForInvalidScanOptions(options: ScanOptions): string {
     return "Custom MTU must be a multiple of 8 between 8 and 1500.";
   }
   return "";
+}
+
+function addWarning(warnings: string[], warning: string | undefined): void {
+  if (warning !== undefined && warning !== "" && !warnings.includes(warning)) {
+    warnings.push(warning);
+  }
+}
+
+function hasRiskyNSESelection(
+  scriptCategories: readonly NSECategory[],
+  scriptNames: string,
+): boolean {
+  if (scriptCategories.some((category) => nseCategoryRisk(category) !== "normal")) {
+    return true;
+  }
+  return lineValues(scriptNames).some(
+    (scriptName) => nseScriptDetails(scriptName).risk !== "normal",
+  );
 }
 
 function isValidVersionIntensity(value: string): boolean {

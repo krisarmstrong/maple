@@ -55,6 +55,7 @@ import {
   isSpecializedScanTechnique,
   lineValues,
   messageForInvalidScanOptions,
+  scanSafetyWarnings,
   splitSelectedScriptID,
   targetBuilderSummary,
   targetModeContextLabel,
@@ -142,6 +143,12 @@ export function ScanWorkspace({
     })),
   ];
   const previewTokens = commandTokens(preview);
+  const safetyWarnings = scanSafetyWarnings({
+    options: scanOptions,
+    scopeWarning: scope?.warning,
+    scriptCategories,
+    scriptNames,
+  });
 
   useEffect(
     () =>
@@ -407,6 +414,17 @@ export function ScanWorkspace({
           </button>
         ) : null}
       </section>
+
+      {safetyWarnings.length === 0 ? null : (
+        <section className="scan-safety-notes" aria-label="Scan safety notes">
+          <h3>Safety notes</h3>
+          <ul>
+            {safetyWarnings.map((warning) => (
+              <li key={warning}>{warning}</li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section aria-label="Scan context" className="scan-context-strip">
         <h3>Scan context</h3>

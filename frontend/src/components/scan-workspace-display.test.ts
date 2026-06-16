@@ -5,6 +5,7 @@ import {
   isRiskyNSECategory,
   isSpecializedScanTechnique,
   messageForInvalidScanOptions,
+  scanSafetyWarnings,
   splitSelectedScriptID,
   targetBuilderSummary,
   targetModeContextLabel,
@@ -60,6 +61,44 @@ describe("scan workspace display helpers", () => {
   it("flags specialized scan techniques", () => {
     expect(isSpecializedScanTechnique("ack")).toBe(true);
     expect(isSpecializedScanTechnique("connect")).toBe(false);
+  });
+
+  it("summarizes scan safety warnings across scope, options, and scripts", () => {
+    expect(
+      scanSafetyWarnings({
+        options: {
+          ...defaultScanOptions,
+          scanTechnique: "udp",
+          discoveryMode: "skip",
+          osDetection: true,
+          minRate: 500,
+          decoys: "ME,RND:2",
+          packetTrace: true,
+        },
+        scopeWarning: "Port scans across many addresses can take a while.",
+        scriptCategories: ["vuln"],
+        scriptNames: "ssl-cert",
+      }),
+    ).toEqual([
+      "Port scans across many addresses can take a while.",
+      "OS detection often requires elevated privileges.",
+      "UDP scans can be slow and may need elevated privileges.",
+      "Skipping host discovery treats every target as online.",
+      "Minimum packet rate can reduce accuracy when set aggressively.",
+      "Decoys and spoofing can impersonate traffic.",
+      "Packet trace can produce noisy diagnostic output.",
+      "Selected NSE scripts include noisy or intrusive checks.",
+    ]);
+  });
+
+  it("recognizes risky named NSE scripts in safety warnings", () => {
+    expect(
+      scanSafetyWarnings({
+        options: defaultScanOptions,
+        scriptCategories: [],
+        scriptNames: "smb-vuln-ms17-010",
+      }),
+    ).toEqual(["Selected NSE scripts include noisy or intrusive checks."]);
   });
 
   it("returns plain-language validation messages for option conflicts", () => {

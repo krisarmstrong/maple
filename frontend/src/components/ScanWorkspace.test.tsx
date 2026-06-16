@@ -872,6 +872,35 @@ describe("ScanWorkspace", () => {
     ).toBeInTheDocument();
   });
 
+  it("summarizes safety notes near scan readiness", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.selectOptions(screen.getByLabelText("Target shape"), "subnet");
+    await userEvent.type(screen.getByLabelText("Targets"), "192.168.1.0/24");
+    await userEvent.click(screen.getByRole("button", { name: "Options" }));
+    fireEvent.change(screen.getByLabelText("Scan technique"), { target: { value: "udp" } });
+    await userEvent.click(screen.getByRole("button", { name: "Behavior" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "OS detection" }));
+    await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "vuln" }));
+
+    expect(screen.getByRole("region", { name: "Scan safety notes" })).toBeInTheDocument();
+    expect(
+      screen.getByText("OS detection often requires elevated privileges."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("UDP scans can be slow and may need elevated privileges."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Selected NSE scripts include noisy or intrusive checks."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getAllByText(
+        "Port scans across many addresses can take a while. Use the Fast host discovery recipe first if you only need host discovery.",
+      ).length,
+    ).toBeGreaterThan(0);
+  });
+
   it("warns that OS detection may need elevated privileges", async () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
@@ -1049,18 +1078,18 @@ describe("ScanWorkspace", () => {
 
     expect(screen.getByText("1 target expression, up to 256 addresses")).toBeInTheDocument();
     expect(
-      screen.getByText(
+      screen.getAllByText(
         "Port scans across many addresses can take a while. Use the Fast host discovery recipe first if you only need host discovery.",
-      ),
-    ).toBeInTheDocument();
+      ).length,
+    ).toBeGreaterThan(0);
 
     await selectRecipe("builtin-fast-host-discovery");
 
     expect(
-      screen.queryByText(
+      screen.queryAllByText(
         "Port scans across many addresses can take a while. Use the Fast host discovery recipe first if you only need host discovery.",
       ),
-    ).not.toBeInTheDocument();
+    ).toHaveLength(0);
   });
 
   it("switches target intent without writing an example into the scan field", async () => {

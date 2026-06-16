@@ -70,6 +70,8 @@ and Linux.
      privileged scan modes.
    - Keep warnings plain-language and action-oriented.
    - Preserve argv-only execution throughout.
+   - Status: centralized Safety notes summary added for broad scope, privileged/slow scan modes,
+     spoofing/packet shaping, packet trace, and risky NSE selections.
 
 9. **Release Automation**
    - Keep local `make build` host-only.
