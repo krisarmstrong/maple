@@ -43,6 +43,8 @@ jobs:
           echo "$HOME/go/bin" >> "$GITHUB_PATH"
 
       - name: Install security scanners
+        env:
+          HOMEBREW_NO_REQUIRE_TAP_TRUST: "1"
         run: |
           brew install shellcheck
           go install github.com/securego/gosec/v2/cmd/gosec@v2.27.1
