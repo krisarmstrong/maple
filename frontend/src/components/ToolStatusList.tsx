@@ -21,6 +21,13 @@ export function ToolStatusList({ tools, onError }: ToolStatusListProps): React.J
               tool.installHint === "" ? null : (
                 <p className="tool-hint">{tool.installHint}</p>
               )}
+              {tool.belowMinVersion === true &&
+              tool.version !== undefined &&
+              tool.minVersion !== undefined ? (
+                <p className="tool-hint tool-hint--warning" data-testid="nmap-version-warning">
+                  {`${tool.version} is older than the recommended minimum ${tool.minVersion}; some scan options or scripts may not work.`}
+                </p>
+              ) : null}
               {shouldShowDownloadButton(tool) ? (
                 <button
                   className="link-button"
