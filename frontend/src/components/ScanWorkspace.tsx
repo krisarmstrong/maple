@@ -66,7 +66,9 @@ import {
   type LogEntry,
   makeRequest,
   messageForInvalidTargets,
+  type PhaseEntry,
   type ScanStatus,
+  scanPhaseLabel,
   scanStatusDetail,
   scanStatusLabel,
   updateTargets,
@@ -106,6 +108,7 @@ export function ScanWorkspace({
   const [copyMessage, setCopyMessage] = useState("");
   const [preview, setPreview] = useState<string[]>([]);
   const [log, setLog] = useState<LogEntry[]>([]);
+  const [phases, setPhases] = useState<PhaseEntry[]>([]);
   const [diagnostics, setDiagnostics] = useState("");
   const [running, setRunning] = useState(false);
   const [status, setStatus] = useState<ScanStatus>("idle");
@@ -156,7 +159,14 @@ export function ScanWorkspace({
         if (event.type === "started") {
           setActivePanel("output");
         }
-        handleScanEvent(event, { setRunning, setLog, setDiagnostics, setStatus, onScanFinished });
+        handleScanEvent(event, {
+          setRunning,
+          setLog,
+          setPhases,
+          setDiagnostics,
+          setStatus,
+          onScanFinished,
+        });
       }),
     [onScanFinished],
   );
@@ -218,6 +228,7 @@ export function ScanWorkspace({
     setError("");
     setCopyMessage("");
     setLog([]);
+    setPhases([]);
     setDiagnostics("");
     setStatus("running");
     setActivePanel("output");
@@ -1676,6 +1687,16 @@ export function ScanWorkspace({
             <p className="scan-status">{scanStatusLabel(status)}</p>
             <p className="muted">{scanStatusDetail(status)}</p>
             <p className="muted">Raw XML is captured for History exports, not shown here.</p>
+            {phases.length === 0 ? null : (
+              <ol className="scan-phase-list" aria-label="Scan phases">
+                {phases.map((phase) => (
+                  <li key={phase.id}>
+                    <strong>{scanPhaseLabel(phase.phase)}</strong>
+                    <span>{phase.message}</span>
+                  </li>
+                ))}
+              </ol>
+            )}
           </section>
           <section className="output-section">
             <h3>Preview argv</h3>

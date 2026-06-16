@@ -1014,6 +1014,36 @@ describe("ScanWorkspace", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows backend scan phase progress without mixing it into the live log", () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    act(() => {
+      scanEventListener?.({ type: "started", runId: "scan-1" });
+      scanEventListener?.({
+        type: "phase",
+        phase: {
+          runId: "scan-1",
+          phase: "launching",
+          message: "Starting local Nmap process.",
+        },
+      });
+      scanEventListener?.({
+        type: "phase",
+        phase: {
+          runId: "scan-1",
+          phase: "parsing",
+          message: "Reading Nmap XML output.",
+        },
+      });
+    });
+
+    const phases = screen.getByLabelText("Scan phases");
+    expect(within(phases).getByText("Launching Nmap")).toBeInTheDocument();
+    expect(within(phases).getByText("Starting local Nmap process.")).toBeInTheDocument();
+    expect(within(phases).getByText("Parsing XML")).toBeInTheDocument();
+    expect(screen.getByTestId("scan-log")).not.toHaveTextContent("Starting local Nmap process.");
+  });
+
   it("shows cancellation immediately when cancel is accepted", async () => {
     cancelScanMock.mockResolvedValue(true);
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);

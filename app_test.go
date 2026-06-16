@@ -41,6 +41,47 @@ func TestHistoryEmitterStoresXMLParseErrors(t *testing.T) {
 	}
 }
 
+func TestHistoryEmitterEmitsSavePhasesBeforeFinished(t *testing.T) {
+	app := &App{history: store.NewHistoryStore(t.TempDir() + "/history.json")}
+	events := []string{}
+	emit := app.historyEmitter(func(event string, payload interface{}) {
+		if event == nmap.EventScanPhase {
+			if phase, ok := payload.(scanner.ScanPhase); ok {
+				events = append(events, phase.Phase)
+			}
+			return
+		}
+		if event == nmap.EventScanFinished {
+			events = append(events, "finished")
+		}
+	})
+
+	emit(nmap.EventScanStarted, scanner.ScanStarted{
+		RunID: "scan-1",
+		Preview: scanner.CommandPreview{
+			Executable: "nmap",
+			Args:       []string{"-oX", "<managed-xml-file>", "-sn", "--", "127.0.0.1"},
+			Targets:    []scanner.Target{{Value: "127.0.0.1", Kind: scanner.TargetIP}},
+			Profile:    scanner.Profile{Name: "Ping Sweep"},
+		},
+	})
+	emit(nmap.EventScanFinished, scanner.ScanFinished{
+		RunID:    "scan-1",
+		ExitCode: 0,
+		XML:      "<nmaprun></nmaprun>",
+	})
+
+	want := []string{"saving-history", "history-saved", "finished"}
+	if len(events) != len(want) {
+		t.Fatalf("events = %v, want %v", events, want)
+	}
+	for index, event := range want {
+		if events[index] != event {
+			t.Fatalf("events = %v, want %v", events, want)
+		}
+	}
+}
+
 func TestNmapDownloadsURLUsesOfficialProjectPage(t *testing.T) {
 	if nmapDownloadsURL != "https://nmap.org/download.html" {
 		t.Fatalf("nmapDownloadsURL = %q", nmapDownloadsURL)

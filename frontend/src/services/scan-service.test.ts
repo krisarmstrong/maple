@@ -29,6 +29,28 @@ describe("onScanEvent", () => {
     expect(eventsOnMock).not.toHaveBeenCalled();
     setRuntimeBridge(originalRuntime);
   });
+
+  it("subscribes to typed scan phase events", () => {
+    const listener = vi.fn();
+
+    const unsubscribe = onScanEvent(listener);
+    const phaseSubscription = eventsOnMock.mock.calls.find((call) => call[0] === "scan:phase");
+    phaseSubscription?.[1]({
+      runId: "scan-1",
+      phase: "launching",
+      message: "Starting local Nmap process.",
+    });
+    unsubscribe();
+
+    expect(listener).toHaveBeenCalledWith({
+      type: "phase",
+      phase: {
+        runId: "scan-1",
+        phase: "launching",
+        message: "Starting local Nmap process.",
+      },
+    });
+  });
 });
 
 function runtimeBridge(): unknown {

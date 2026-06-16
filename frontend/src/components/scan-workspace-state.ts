@@ -15,11 +15,18 @@ export interface LogEntry {
   text: string;
 }
 
+export interface PhaseEntry {
+  id: number;
+  phase: string;
+  message: string;
+}
+
 export type ScanStatus = "idle" | "previewed" | "running" | "complete" | "failed" | "cancelled";
 
 export interface ScanEventHandlers {
   setRunning: (running: boolean) => void;
   setLog: Dispatch<SetStateAction<LogEntry[]>>;
+  setPhases: Dispatch<SetStateAction<PhaseEntry[]>>;
   setDiagnostics: (diagnostics: string) => void;
   setStatus: (status: ScanStatus) => void;
   onScanFinished?: () => void;
@@ -91,6 +98,7 @@ export function handleScanEvent(event: ScanEvent, handlers: ScanEventHandlers): 
     handlers.setRunning(runningState);
   }
   updateStatus(event, handlers.setStatus);
+  appendPhase(event, handlers.setPhases);
   appendLogLine(event, handlers.setLog);
   updateDiagnostics(event, handlers.setDiagnostics);
   if (scanEventIsFinished(event)) {
@@ -133,6 +141,28 @@ export function scanStatusDetail(status: ScanStatus): string {
   return "The run completed. Results are parsed into History and raw XML remains export-only.";
 }
 
+export function scanPhaseLabel(phase: string): string {
+  if (phase === "validating") {
+    return "Validating";
+  }
+  if (phase === "launching") {
+    return "Launching Nmap";
+  }
+  if (phase === "running") {
+    return "Running";
+  }
+  if (phase === "parsing") {
+    return "Parsing XML";
+  }
+  if (phase === "saving-history") {
+    return "Saving history";
+  }
+  if (phase === "history-saved") {
+    return "History saved";
+  }
+  return phase;
+}
+
 function updateStatus(event: ScanEvent, setStatus: (status: ScanStatus) => void): void {
   if (event.type === "started") {
     setStatus("running");
@@ -140,6 +170,20 @@ function updateStatus(event: ScanEvent, setStatus: (status: ScanStatus) => void)
   if (event.type === "finished") {
     setStatus(scanEventFinishKind(event) ?? "failed");
   }
+}
+
+function appendPhase(event: ScanEvent, setPhases: Dispatch<SetStateAction<PhaseEntry[]>>): void {
+  if (event.type !== "phase") {
+    return;
+  }
+  setPhases((current) => [
+    ...current,
+    {
+      id: nextPhaseID(current),
+      phase: event.phase.phase,
+      message: event.phase.message,
+    },
+  ]);
 }
 
 function appendLogLine(event: ScanEvent, setLog: Dispatch<SetStateAction<LogEntry[]>>): void {
@@ -160,6 +204,11 @@ export function updateDiagnostics(
 }
 
 function nextLogID(current: LogEntry[]): number {
+  const last = current.at(-1);
+  return last === undefined ? 1 : last.id + 1;
+}
+
+function nextPhaseID(current: PhaseEntry[]): number {
   const last = current.at(-1);
   return last === undefined ? 1 : last.id + 1;
 }
