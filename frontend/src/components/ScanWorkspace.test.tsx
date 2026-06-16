@@ -1846,4 +1846,64 @@ describe("ScanWorkspace — privilege error", () => {
     expect(screen.getByText("Parser notes and stderr diagnostics")).toBeInTheDocument();
     expect(screen.getByText("See nmap --help for more info.")).toBeInTheDocument();
   });
+
+  // ---------------------------------------------------------------------------
+  // Import from command UI
+  // ---------------------------------------------------------------------------
+  describe("Import from command", () => {
+    it("renders the import textarea and button on the Configure tab", async () => {
+      render(<ScanWorkspace nmapPath="/usr/bin/nmap" />);
+      // The summary is collapsed by default — open it
+      const summary = screen.getByText("Import from command");
+      await userEvent.click(summary);
+      expect(screen.getByTestId("import-command-input")).toBeInTheDocument();
+      expect(screen.getByTestId("import-command-apply")).toBeInTheDocument();
+    });
+
+    it("Import button is disabled when textarea is empty", async () => {
+      render(<ScanWorkspace nmapPath="/usr/bin/nmap" />);
+      const summary = screen.getByText("Import from command");
+      await userEvent.click(summary);
+      expect(screen.getByTestId("import-command-apply")).toBeDisabled();
+    });
+
+    it("shows success note after importing a valid command", async () => {
+      render(<ScanWorkspace nmapPath="/usr/bin/nmap" />);
+      const summary = screen.getByText("Import from command");
+      await userEvent.click(summary);
+      await userEvent.type(screen.getByTestId("import-command-input"), "nmap -sT -T4 10.0.0.1");
+      await userEvent.click(screen.getByTestId("import-command-apply"));
+      expect(screen.getByText(/Command imported/i)).toBeInTheDocument();
+    });
+
+    it("shows error list and does NOT change form when import is rejected", async () => {
+      render(<ScanWorkspace nmapPath="/usr/bin/nmap" />);
+      const summary = screen.getByText("Import from command");
+      await userEvent.click(summary);
+      // Targets heading must still be present after a rejected import
+      expect(screen.getByRole("heading", { name: "Targets" })).toBeInTheDocument();
+      await userEvent.type(screen.getByTestId("import-command-input"), "nmap --bogus 10.0.0.1");
+      await userEvent.click(screen.getByTestId("import-command-apply"));
+      // Error displayed
+      expect(screen.getByText(/Import rejected/i)).toBeInTheDocument();
+      // Targets heading still present (form not broken)
+      expect(screen.getByRole("heading", { name: "Targets" })).toBeInTheDocument();
+    });
+
+    it("rejects shell metacharacters and shows error without changing form", async () => {
+      render(<ScanWorkspace nmapPath="/usr/bin/nmap" />);
+      const summary = screen.getByText("Import from command");
+      await userEvent.click(summary);
+      await userEvent.type(
+        screen.getByTestId("import-command-input"),
+        // userEvent does not expand shell; the literal chars arrive in the textarea
+        "nmap 10.0.0.1 ",
+      );
+      // type the semicolon and rest normally
+      const textarea = screen.getByTestId("import-command-input") as HTMLTextAreaElement;
+      fireEvent.change(textarea, { target: { value: "nmap 10.0.0.1; rm -rf /" } });
+      await userEvent.click(screen.getByTestId("import-command-apply"));
+      expect(screen.getByText(/Import rejected/i)).toBeInTheDocument();
+    });
+  });
 });

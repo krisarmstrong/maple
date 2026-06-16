@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { argvTokenDescription } from "../core/argv-token-info";
+import { importNmapCommand } from "../core/nmap-command-import";
 import {
   buildScanScripts,
   type NSECategory,
@@ -113,6 +114,10 @@ export function ScanWorkspace({
     loadTargetGroupsFromStorage(),
   );
   const [targetGroupName, setTargetGroupName] = useState("");
+  const [importCommand, setImportCommand] = useState("");
+  const [importResult, setImportResult] = useState<
+    { ok: true; note: string } | { ok: false; errors: string[] } | null
+  >(null);
   const [selectedPresetID, setSelectedPresetID] = useState("builtin-top-tcp-ports");
   const [activePanel, setActivePanel] = useState<ScanPanel>("configure");
   const [activeOptionGroup, setActiveOptionGroup] = useState<OptionGroup>("shape");
@@ -404,6 +409,31 @@ export function ScanWorkspace({
       }
       return deleteTargetGroup(storage, current, id);
     });
+  }
+
+  function applyImportedCommand(): void {
+    const result = importNmapCommand(importCommand);
+    if (!result.ok) {
+      setImportResult({ ok: false, errors: result.errors });
+      return;
+    }
+    // Apply options
+    setScanOptions((current) => ({ ...current, ...result.options }));
+    // Apply scripts (names)
+    if (result.scripts.length > 0) {
+      setScriptNames(result.scripts.join("\n"));
+    }
+    // Apply targets
+    if (result.targets.length > 0) {
+      updateTargets(result.targets.join("\n"), setTargets, setPreview);
+    }
+    setSelectedPresetID("");
+    setPreview([]);
+    setImportResult({
+      ok: true,
+      note: "Command imported. Review options and preview before scanning.",
+    });
+    setImportCommand("");
   }
 
   function applyPreset(presetID: string): void {
@@ -771,6 +801,51 @@ export function ScanWorkspace({
             </section>
           </div>
           {scope?.warning === undefined ? null : <p className="scan-scope">{scope.warning}</p>}
+          <section className="import-command-section" aria-label="Import from command">
+            <details>
+              <summary>
+                <h3 className="import-command-heading">Import from command</h3>
+              </summary>
+              <p className="target-mode-help">
+                Paste an <code>nmap</code> command to populate the structured form. Unrecognized
+                flags are rejected; no command string is stored or executed.
+              </p>
+              <div className="import-command-row">
+                <textarea
+                  aria-label="Paste nmap command to import"
+                  data-testid="import-command-input"
+                  onChange={(event) => {
+                    setImportCommand(event.target.value);
+                    setImportResult(null);
+                  }}
+                  placeholder="nmap -sS -p 80,443 -T4 -sV 10.0.0.0/24"
+                  rows={3}
+                  value={importCommand}
+                />
+                <button
+                  data-testid="import-command-apply"
+                  disabled={importCommand.trim() === ""}
+                  onClick={applyImportedCommand}
+                  type="button"
+                >
+                  Import
+                </button>
+              </div>
+              {importResult?.ok ? (
+                <p className="import-command-success">{importResult.note}</p>
+              ) : null}
+              {importResult !== null && !importResult.ok ? (
+                <div className="import-command-errors">
+                  <p className="error">Import rejected — fix the following issues and try again:</p>
+                  <ul>
+                    {importResult.errors.map((err) => (
+                      <li key={err}>{err}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </details>
+          </section>
         </div>
       ) : null}
 
