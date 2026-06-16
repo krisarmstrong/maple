@@ -21,7 +21,14 @@ export interface PhaseEntry {
   message: string;
 }
 
-export type ScanStatus = "idle" | "previewed" | "running" | "complete" | "failed" | "cancelled";
+export type ScanStatus =
+  | "idle"
+  | "previewed"
+  | "running"
+  | "complete"
+  | "failed"
+  | "cancelled"
+  | "privilege";
 
 export interface ScanEventHandlers {
   setRunning: (running: boolean) => void;
@@ -119,6 +126,9 @@ export function scanStatusLabel(status: ScanStatus): string {
   if (status === "cancelled") {
     return "Scan cancelled";
   }
+  if (status === "privilege") {
+    return "Scan failed: privileges required";
+  }
   return status === "failed" ? "Scan failed" : "Scan complete";
 }
 
@@ -134,6 +144,9 @@ export function scanStatusDetail(status: ScanStatus): string {
   }
   if (status === "cancelled") {
     return "Cancellation was requested. Any partial XML stays available only if Nmap produced it.";
+  }
+  if (status === "privilege") {
+    return "Nmap requires elevated privileges for this scan type. Run as root or switch to TCP connect scan.";
   }
   if (status === "failed") {
     return "The run did not finish cleanly. Check diagnostics and stderr for the exact cause.";
