@@ -41,3 +41,73 @@ func TestParseTargetsRejectsInvalidTargets(t *testing.T) {
 		}
 	}
 }
+
+func TestIsIPv4Range(t *testing.T) {
+	cases := []struct {
+		input string
+		want  bool
+	}{
+		{"192.168.1.1-20", true},
+		{"10.0.0-255.1-100", true},
+		{"10-20.0.0.1", true},
+		{"192.168.1.*", true},
+		{"*.*.*.*", true},
+		{"10-200.0-255.0-255.1-254", true},
+		{"192.168.1.20-1", false}, // reversed range
+		{"10.0.255-0.1", false},   // reversed multi-octet
+		{"192.168.1.256", false},  // out of bounds, not a range
+		{"192.168.1", false},      // missing octet
+		{"1.2.3.4.5", false},      // too many parts
+		{"192.168..1-5", false},   // empty part
+	}
+	for _, tc := range cases {
+		got := isIPv4Range(tc.input)
+		if got != tc.want {
+			t.Errorf("isIPv4Range(%q) = %v, want %v", tc.input, got, tc.want)
+		}
+	}
+}
+
+func TestParseTargetsAcceptsHyphenatedHostnames(t *testing.T) {
+	cases := []struct {
+		input string
+		want  TargetKind
+	}{
+		{"my-host", TargetHostname},
+		{"web-01.example.com", TargetHostname},
+		{"intranet-gw", TargetHostname},
+	}
+	for _, tc := range cases {
+		targets, err := ParseTargets(tc.input)
+		if err != nil {
+			t.Fatalf("ParseTargets(%q) returned error: %v", tc.input, err)
+		}
+		if len(targets) != 1 || targets[0].Kind != tc.want {
+			t.Fatalf("ParseTargets(%q) = %+v, want one %q", tc.input, targets, tc.want)
+		}
+	}
+}
+
+func TestParseTargetsRejectsMalformedNumericRanges(t *testing.T) {
+	for _, input := range []string{"192.168.1.20-1", "10-20", "10.0.255-0.1"} {
+		if _, err := ParseTargets(input); err == nil {
+			t.Fatalf("ParseTargets(%q) accepted a malformed range", input)
+		}
+	}
+}
+
+func TestParseTargetsAcceptsMultiOctetRange(t *testing.T) {
+	targets, err := ParseTargets("10.0.0-255.1-100")
+	if err != nil {
+		t.Fatalf("ParseTargets returned error: %v", err)
+	}
+	if len(targets) != 1 {
+		t.Fatalf("expected 1 target, got %d", len(targets))
+	}
+	if targets[0].Kind != TargetRange {
+		t.Fatalf("Kind = %q, want TargetRange", targets[0].Kind)
+	}
+	if targets[0].Value != "10.0.0-255.1-100" {
+		t.Fatalf("Value = %q, want 10.0.0-255.1-100", targets[0].Value)
+	}
+}

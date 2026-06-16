@@ -3,6 +3,7 @@ package nmap
 import (
 	"context"
 	"errors"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -203,4 +204,21 @@ func (r *recordingSink) finished(t *testing.T, runID string) scanner.ScanFinishe
 	}
 	t.Fatalf("no finished event for run %s", runID)
 	return scanner.ScanFinished{}
+}
+
+func TestCreateXMLOutputPathHasRestrictedMode(t *testing.T) {
+	path, err := createXMLOutputPath()
+	if err != nil {
+		t.Fatalf("createXMLOutputPath returned error: %v", err)
+	}
+	defer func() {
+		_ = os.Remove(path)
+	}()
+	stat, err := os.Stat(path)
+	if err != nil {
+		t.Fatalf("Stat returned error: %v", err)
+	}
+	if stat.Mode().Perm() != 0o600 {
+		t.Fatalf("file mode = %04o, want 0600", stat.Mode().Perm())
+	}
 }

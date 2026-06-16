@@ -6,6 +6,8 @@ run:
 
 linters:
   default: standard
+  enable:
+    - errcheck
   exclusions:
     paths:
       - frontend/node_modules

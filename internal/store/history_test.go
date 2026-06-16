@@ -3,6 +3,7 @@ package store
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -186,5 +187,74 @@ func scanRecord(runID string) ScanRecord {
 		},
 		ExitCode: 0,
 		XML:      "<nmaprun></nmaprun>",
+	}
+}
+
+func TestHistoryStoreCapEnforcesMaxAndRemovesSidecars(t *testing.T) {
+	s := NewHistoryStore(filepath.Join(t.TempDir(), "history.json"))
+
+	// Add maxHistoryRecords+1 records; the oldest (scan-0) should be trimmed.
+	for i := 0; i <= maxHistoryRecords; i++ {
+		r := scanRecord(fmt.Sprintf("scan-%d", i))
+		if err := s.Add(r); err != nil {
+			t.Fatalf("Add scan-%d returned error: %v", i, err)
+		}
+	}
+
+	records, err := s.List()
+	if err != nil {
+		t.Fatalf("List returned error: %v", err)
+	}
+	if len(records) != maxHistoryRecords {
+		t.Fatalf("len(records) = %d, want %d", len(records), maxHistoryRecords)
+	}
+
+	// The oldest record (scan-0) sidecar should be gone.
+	sidecarPath := filepath.Join(filepath.Dir(s.path), "records", "scan-0.xml")
+	if _, err := os.Stat(sidecarPath); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("trimmed sidecar stat error = %v, want not exist", err)
+	}
+}
+
+func TestHistoryStoreDeleteOlderThanRemovesMatchingRecords(t *testing.T) {
+	s := NewHistoryStore(filepath.Join(t.TempDir(), "history.json"))
+	now := time.Date(2026, 6, 16, 12, 0, 0, 0, time.UTC)
+
+	old1 := scanRecord("scan-old1")
+	old1.FinishedAt = now.Add(-2 * time.Hour)
+
+	old2 := scanRecord("scan-old2")
+	old2.FinishedAt = now.Add(-1 * time.Hour)
+
+	future := scanRecord("scan-future")
+	future.FinishedAt = now.Add(1 * time.Hour)
+
+	for _, r := range []ScanRecord{old1, old2, future} {
+		if err := s.Add(r); err != nil {
+			t.Fatalf("Add %s returned error: %v", r.RunID, err)
+		}
+	}
+
+	if err := s.DeleteOlderThan(now); err != nil {
+		t.Fatalf("DeleteOlderThan returned error: %v", err)
+	}
+
+	records, err := s.List()
+	if err != nil {
+		t.Fatalf("List returned error: %v", err)
+	}
+	if len(records) != 1 {
+		t.Fatalf("len(records) = %d, want 1", len(records))
+	}
+	if records[0].RunID != "scan-future" {
+		t.Fatalf("remaining RunID = %q, want scan-future", records[0].RunID)
+	}
+
+	// Sidecars for removed records should be gone.
+	for _, runID := range []string{"scan-old1", "scan-old2"} {
+		sidecarPath := filepath.Join(filepath.Dir(s.path), "records", runID+".xml")
+		if _, err := os.Stat(sidecarPath); !errors.Is(err, os.ErrNotExist) {
+			t.Fatalf("removed sidecar %s stat error = %v, want not exist", runID, err)
+		}
 	}
 }
