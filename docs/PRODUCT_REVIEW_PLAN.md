@@ -62,6 +62,8 @@ and Linux.
    - Add richer filtering and sorting for hosts, ports, services, and findings.
    - Add report preview/export affordances that confirm filenames and saved paths.
    - Add comparison groundwork for future Ndiff integration.
+   - Status: history sorting by newest, oldest, open ports, hosts up, and review-needed scans
+     implemented; Ndiff comparison groundwork remains.
 
 8. **Safety Guardrails**
    - Add warnings for broad subnets, intrusive NSE categories, UDP scans, spoofing/evasion, and

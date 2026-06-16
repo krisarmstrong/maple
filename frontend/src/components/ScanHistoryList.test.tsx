@@ -77,6 +77,35 @@ describe("ScanHistoryList", () => {
     expect(screen.getByText("Showing 1 of 2 scans")).toBeInTheDocument();
   });
 
+  it("sorts visible scans by findings and review state", async () => {
+    render(
+      <ScanHistoryList
+        records={[
+          scanRecord("scan-1", {
+            finishedAt: "2026-06-12T10:00:00Z",
+            openPortCount: 1,
+          }),
+          scanRecord("scan-2", {
+            error: "Unable to parse Nmap XML: unexpected EOF",
+            finishedAt: "2026-06-12T11:00:00Z",
+          }),
+          scanRecord("scan-3", {
+            finishedAt: "2026-06-12T09:00:00Z",
+            openPortCount: 9,
+          }),
+        ]}
+      />,
+    );
+
+    await userEvent.selectOptions(screen.getByLabelText("Sort"), "open-ports");
+
+    expect(visibleRunOrder()).toEqual(["scan-3", "scan-1", "scan-2"]);
+
+    await userEvent.selectOptions(screen.getByLabelText("Sort"), "needs-review");
+
+    expect(visibleRunOrder()).toEqual(["scan-2", "scan-1", "scan-3"]);
+  });
+
   it("shows an empty filtered history state", async () => {
     render(<ScanHistoryList records={[scanRecord("scan-1")]} />);
 
@@ -216,4 +245,8 @@ function scanRecord(runId: string, overrides: Partial<ScanHistoryRecord> = {}): 
     diagnostics: "",
     ...overrides,
   };
+}
+
+function visibleRunOrder(): string[] {
+  return screen.getAllByRole("article").map((article) => article.getAttribute("data-run-id") ?? "");
 }
