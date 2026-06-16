@@ -78,6 +78,10 @@ and Linux.
    - Use GitHub Actions for platform release artifacts: macOS arm64, Linux arm64/x86_64, Windows
      arm64/x86_64.
    - Continue versioning through tags/release-please and one canonical version source.
+   - Status: release-please versioning, host-native local packaging guards, the GitHub release
+     matrix, artifact checksums, and release artifact verification are implemented. Signed and
+     notarized installers plus real Windows/Linux target-host smoke remain outside the unsigned
+     release-candidate gate until signing credentials and tester machines are available.
 
 10. **Release-Candidate Polish**
     - Add a repeatable screenshot review artifact set.
