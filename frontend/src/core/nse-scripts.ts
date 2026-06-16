@@ -174,6 +174,58 @@ export function nseScriptDetails(script: string): NSEScriptDetails {
   };
 }
 
+/**
+ * Categories that require an explicit confirmation before a scan may start.
+ * Includes denial-of-service, exploit-oriented, intrusive, brute-force,
+ * malware-detection, and fuzzing categories.
+ */
+export const disruptiveNSECategories = [
+  "dos",
+  "exploit",
+  "intrusive",
+  "brute",
+  "malware",
+  "fuzzer",
+] as const satisfies readonly NSECategory[];
+
+export type DisruptiveNSECategory = (typeof disruptiveNSECategories)[number];
+
+/**
+ * Returns the set of disruptive categories engaged by the current selection
+ * — either because the category itself is selected, or because a selected
+ * script by name is known to belong to a disruptive category.
+ *
+ * A non-empty result means the user must acknowledge the risk before
+ * a scan can start.
+ */
+export function selectionRequiresConfirmation(
+  selectedCategories: readonly NSECategory[],
+  selectedScriptNames: readonly string[],
+): readonly DisruptiveNSECategory[] {
+  const engaged = new Set<DisruptiveNSECategory>();
+
+  for (const category of selectedCategories) {
+    if (isDisruptiveCategory(category)) {
+      engaged.add(category);
+    }
+  }
+
+  for (const scriptName of selectedScriptNames) {
+    const scriptCats = categoriesForScript(scriptName);
+    for (const category of scriptCats) {
+      if (isDisruptiveCategory(category)) {
+        engaged.add(category);
+      }
+    }
+  }
+
+  return [...engaged].sort((a, b) => a.localeCompare(b));
+}
+
+function isDisruptiveCategory(category: NSECategory): category is DisruptiveNSECategory {
+  return (disruptiveNSECategories as readonly string[]).includes(category);
+}
+
 export function buildScanScripts(
   categories: readonly NSECategory[],
   scriptNames: string,

@@ -9,6 +9,7 @@ import {
   nseCategoryRisk,
   nseScriptDetails,
   searchNSEScripts,
+  selectionRequiresConfirmation,
   suggestedScriptsForSelection,
 } from "../core/nse-scripts";
 import { defaultScanOptions, type ScanOptions } from "../core/scan-options";
@@ -102,6 +103,7 @@ export function ScanWorkspace({
   const [selectedPresetID, setSelectedPresetID] = useState("builtin-top-tcp-ports");
   const [activePanel, setActivePanel] = useState<ScanPanel>("configure");
   const [activeOptionGroup, setActiveOptionGroup] = useState<OptionGroup>("shape");
+  const [nseRiskConfirmed, setNseRiskConfirmed] = useState(false);
   const [error, setError] = useState("");
   const [copyMessage, setCopyMessage] = useState("");
   const [preview, setPreview] = useState<string[]>([]);
@@ -120,8 +122,13 @@ export function ScanWorkspace({
   const optionsMessage = messageForInvalidScanOptions(scanOptions);
   const targetsReady =
     targetValidation.valid || (scanOptions.targetInputFile.trim() !== "" && targets.trim() === "");
+  const disruptiveCategories = selectionRequiresConfirmation(
+    scriptCategories,
+    scriptNameLines(scriptNames),
+  );
+  const nseRiskRequired = disruptiveCategories.length > 0;
   const readiness = scanReadiness(nmapPath, targetsReady, optionsMessage);
-  const scanReady = readiness.level === "ready";
+  const scanReady = readiness.level === "ready" && (!nseRiskRequired || nseRiskConfirmed);
   const scripts = buildScanScripts(
     scriptCategories,
     scriptNames,
@@ -306,6 +313,7 @@ export function ScanWorkspace({
     );
     setSelectedPresetID("");
     setPreview([]);
+    setNseRiskConfirmed(false);
   }
 
   function updateScanOptions(updater: (options: ScanOptions) => ScanOptions): void {
@@ -358,6 +366,7 @@ export function ScanWorkspace({
     setSelectedPresetID(preset.id);
     setPreview([]);
     setError("");
+    setNseRiskConfirmed(false);
   }
 
   function updateNamedScript(name: string, checked: boolean): void {
@@ -370,6 +379,7 @@ export function ScanWorkspace({
     setScriptNames([...current].sort().join("\n"));
     setSelectedPresetID("");
     setPreview([]);
+    setNseRiskConfirmed(false);
   }
 
   function removeSelectedScript(id: string): void {
@@ -891,6 +901,7 @@ export function ScanWorkspace({
                   setScriptNames(event.target.value);
                   setSelectedPresetID("");
                   setPreview([]);
+                  setNseRiskConfirmed(false);
                 }}
                 placeholder="http-title&#10;ssl-enum-ciphers"
                 rows={3}
@@ -898,6 +909,31 @@ export function ScanWorkspace({
               />
             </label>
           </section>
+          {nseRiskRequired ? (
+            <section
+              className="scan-safety-notes nse-risk-confirm-section"
+              aria-label="NSE risk confirmation"
+            >
+              <h4>Disruptive scripts require confirmation</h4>
+              <p>
+                The selected scripts include categories that can disrupt or attack the target:{" "}
+                <strong>{disruptiveCategories.join(", ")}</strong>. These may cause service
+                interruptions, attempt credential guessing, or exploit vulnerabilities. Only run
+                these against systems you are explicitly authorized to test.
+              </p>
+              <label className="nse-risk-confirm-label">
+                <input
+                  checked={nseRiskConfirmed}
+                  data-testid="nse-risk-confirm"
+                  onChange={(event) => setNseRiskConfirmed(event.target.checked)}
+                  type="checkbox"
+                />
+                <span>
+                  I confirm I am authorized to run disruptive NSE scripts against these targets.
+                </span>
+              </label>
+            </section>
+          ) : null}
           <section className="script-workspace-section">
             <h4>Custom scripts and arguments</h4>
             <p className="target-mode-help">
