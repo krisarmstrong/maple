@@ -55,15 +55,15 @@ and Linux.
    - Add clearer live run phases: validating, launching, running, parsing, saving history.
    - Improve cancelled/failed/partial-result language.
    - Keep raw XML out of live output while preserving XML/JSON/Markdown exports.
-   - Status: Output status copy, cancellation feedback, diagnostics details, and tab contrast
-     improved; backend phase events remain to be added.
+   - Status: Output status copy, cancellation feedback, diagnostics details, tab contrast, and
+     backend scan phase events are implemented.
 
 7. **History and Reporting**
    - Add richer filtering and sorting for hosts, ports, services, and findings.
    - Add report preview/export affordances that confirm filenames and saved paths.
    - Add comparison groundwork for future Ndiff integration.
    - Status: history sorting by newest, oldest, open ports, hosts up, and review-needed scans
-     implemented; Ndiff comparison groundwork remains.
+     implemented; saved XML records can now preview an argv-only Ndiff comparison.
 
 8. **Safety Guardrails**
    - Add warnings for broad subnets, intrusive NSE categories, UDP scans, spoofing/evasion, and
