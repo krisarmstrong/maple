@@ -1,5 +1,50 @@
 # Changelog
 
+## [0.1.6](https://github.com/krisarmstrong/maple/compare/v0.1.5...v0.1.6) (2026-06-16)
+
+
+### Features
+
+* add first-run readiness checklist ([#34](https://github.com/krisarmstrong/maple/issues/34)) ([a40b2fb](https://github.com/krisarmstrong/maple/commit/a40b2fb995631b188c9cddb9574d18d395b9da91))
+* add history sort controls ([#39](https://github.com/krisarmstrong/maple/issues/39)) ([7bde16f](https://github.com/krisarmstrong/maple/commit/7bde16f2a82040a21005e56fc4cff673d0ea5cb1))
+* add nse script guidance ([#37](https://github.com/krisarmstrong/maple/issues/37)) ([f93c98f](https://github.com/krisarmstrong/maple/commit/f93c98f01aa786b4e41bbfa0e155476bfd19e600))
+* add utility tool argv builders ([#35](https://github.com/krisarmstrong/maple/issues/35)) ([fa84293](https://github.com/krisarmstrong/maple/commit/fa84293dd3ef6011ff60b12d08c222bb8fcc36fb))
+* clarify scan recipes and utility tools ([#27](https://github.com/krisarmstrong/maple/issues/27)) ([9fe5abe](https://github.com/krisarmstrong/maple/commit/9fe5abef4bc9ebe287e9d634be749be3473dc370))
+* improve scan run feedback ([#38](https://github.com/krisarmstrong/maple/issues/38)) ([4bb11ee](https://github.com/krisarmstrong/maple/commit/4bb11ee860cd4d21d72bf8de386356d5c30bdad8))
+* map option coverage to controls ([#36](https://github.com/krisarmstrong/maple/issues/36)) ([f30adb9](https://github.com/krisarmstrong/maple/commit/f30adb9cc25a746e44d9a045280ca9be409493eb))
+* polish scan presets and scripts ([#25](https://github.com/krisarmstrong/maple/issues/25)) ([94c0bdf](https://github.com/krisarmstrong/maple/commit/94c0bdf1b93e0383193d060bde9e5d305af4efdb))
+* preview ndiff from scan history ([#43](https://github.com/krisarmstrong/maple/issues/43)) ([a743b21](https://github.com/krisarmstrong/maple/commit/a743b215fe80a80a4ed4ed1e1057abf2ae7ef5d0))
+* show scan lifecycle phases ([#42](https://github.com/krisarmstrong/maple/issues/42)) ([c0f7893](https://github.com/krisarmstrong/maple/commit/c0f7893a19df8bf753c308861549bf012074df72))
+* summarize scan safety notes ([#40](https://github.com/krisarmstrong/maple/issues/40)) ([c7d531b](https://github.com/krisarmstrong/maple/commit/c7d531b5f702e3bddb9f765d6675b92d104e4d69))
+
+
+### Bug Fixes
+
+* clarify input placeholder styling ([#45](https://github.com/krisarmstrong/maple/issues/45)) ([e7e4765](https://github.com/krisarmstrong/maple/commit/e7e47656660facd8b196e0533c2f228fae9a1f1e))
+* explain scan readiness blockers ([#33](https://github.com/krisarmstrong/maple/issues/33)) ([145099e](https://github.com/krisarmstrong/maple/commit/145099eb9a638a0f1a941ceb9dae8b39a7439115))
+* improve responsive scan layout ([#32](https://github.com/krisarmstrong/maple/issues/32)) ([a23cf8b](https://github.com/krisarmstrong/maple/commit/a23cf8b3f76083139e6c199edaa87450a83d4210))
+* make scan recipes compact ([#29](https://github.com/krisarmstrong/maple/issues/29)) ([08f14b1](https://github.com/krisarmstrong/maple/commit/08f14b118e0e877b03487e81b757c20a0dd67122))
+* normalize form control target sizing ([#46](https://github.com/krisarmstrong/maple/issues/46)) ([4885ba7](https://github.com/krisarmstrong/maple/commit/4885ba7fc61e292f48e1a628e4635bdc78b8806e))
+* simplify scan recipe selection ([#28](https://github.com/krisarmstrong/maple/issues/28)) ([53316bd](https://github.com/krisarmstrong/maple/commit/53316bded94f83a403a81c5b2ee60f8a61037547))
+* simplify target and script setup ([#30](https://github.com/krisarmstrong/maple/issues/30)) ([1c37604](https://github.com/krisarmstrong/maple/commit/1c376042ee126ee364294e50884ae97f0f1e3210))
+* tighten target configure layout ([#31](https://github.com/krisarmstrong/maple/issues/31)) ([fd1fd0b](https://github.com/krisarmstrong/maple/commit/fd1fd0bb78eda18a17574afd9bb1996b1442c4fc))
+
+
+### Documentation
+
+* update rc workstream status ([#44](https://github.com/krisarmstrong/maple/issues/44)) ([2aa1916](https://github.com/krisarmstrong/maple/commit/2aa1916050bc5c0cef3dc48dfc571d87a3553207))
+* update release automation status ([#41](https://github.com/krisarmstrong/maple/issues/41)) ([bc7533c](https://github.com/krisarmstrong/maple/commit/bc7533c78c0343ac97e94e0db9ccd973a484539d))
+
+
+### Continuous Integration
+
+* unblock release automation checks ([#49](https://github.com/krisarmstrong/maple/issues/49)) ([2f2dd39](https://github.com/krisarmstrong/maple/commit/2f2dd391eb64ad6b0bc55012b21d09e8b7bb7a36))
+
+
+### Miscellaneous
+
+* **github:** standardize repo governance ([17a89d6](https://github.com/krisarmstrong/maple/commit/17a89d63e8ceb79001d1537f6d6f5a772c3cebf2))
+
 ## [0.1.5](https://github.com/krisarmstrong/maple/compare/v0.1.4...v0.1.5) (2026-06-15)
 
 
