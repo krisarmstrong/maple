@@ -30,6 +30,8 @@ func TestExportFiltersMatchFormat(t *testing.T) {
 		{exporter.FormatXML, "*.xml"},
 		{exporter.FormatMarkdown, "*.md"},
 		{exporter.FormatJSON, "*.json"},
+		{exporter.FormatCSV, "*.csv"},
+		{exporter.FormatGrepable, "*.gnmap"},
 		{exporter.Format("unknown"), "*.json"},
 	}
 	for _, tc := range cases {
