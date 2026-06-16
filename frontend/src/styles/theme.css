@@ -107,6 +107,7 @@
   --layout-scan-panel-columns: 4;
 
   --opacity-disabled: 0.55;
+  --opacity-placeholder: 0.62;
 
   --bg: var(--color-canvas);
   --panel: var(--color-surface);
