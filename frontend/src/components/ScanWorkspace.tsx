@@ -29,8 +29,10 @@ import {
   targetModes,
 } from "../core/target-modes";
 import { copyText } from "../services/clipboard-service";
+import type { ScanHistoryRecord } from "../services/history-service";
 import { cancelScan, onScanEvent, previewScanCommand, startScan } from "../services/scan-service";
 import { ProfileSummary } from "./ProfileSummary";
+import { ScanHistoryDetails } from "./ScanHistoryDetails";
 import { BehaviorOptions } from "./scan-options/BehaviorOptions";
 import { EvasionOptions } from "./scan-options/EvasionOptions";
 import { PortsOptions } from "./scan-options/PortsOptions";
@@ -67,7 +69,9 @@ import {
 interface ScanWorkspaceProps {
   nmapPath?: string;
   onOpenEnvironment?: () => void;
+  onScanStarted?: (runId: string) => void;
   onScanFinished?: () => void;
+  completedRecord?: ScanHistoryRecord;
 }
 
 type ScanPanel = "configure" | "options" | "scripts" | "output";
@@ -76,7 +80,9 @@ type OptionGroup = "shape" | "ports" | "timing" | "evasion" | "behavior";
 export function ScanWorkspace({
   nmapPath,
   onOpenEnvironment,
+  onScanStarted,
   onScanFinished,
+  completedRecord,
 }: ScanWorkspaceProps): React.JSX.Element {
   const [targets, setTargets] = useState("");
   const [targetModeId, setTargetModeId] = useState<TargetModeID>("single");
@@ -150,6 +156,7 @@ export function ScanWorkspace({
       onScanEvent((event) => {
         if (event.type === "started") {
           setActivePanel("output");
+          onScanStarted?.(event.runId);
         }
         handleScanEvent(event, {
           setRunning,
@@ -160,7 +167,7 @@ export function ScanWorkspace({
           onScanFinished,
         });
       }),
-    [onScanFinished],
+    [onScanFinished, onScanStarted],
   );
 
   async function previewCommand(): Promise<void> {
@@ -934,6 +941,7 @@ export function ScanWorkspace({
           role="tabpanel"
           aria-labelledby="scan-tab-output"
         >
+          <OutputResults record={completedRecord} status={status} />
           <section className="output-section">
             <h3>Run status</h3>
             <p className="scan-status">{scanStatusLabel(status)}</p>
@@ -1005,6 +1013,35 @@ export function ScanWorkspace({
           </section>
         </div>
       ) : null}
+    </section>
+  );
+}
+
+interface OutputResultsProps {
+  record: ScanHistoryRecord | undefined;
+  status: ScanStatus;
+}
+
+function OutputResults({ record, status }: OutputResultsProps): React.JSX.Element | null {
+  if (status !== "complete" && status !== "failed" && status !== "cancelled") {
+    return null;
+  }
+  if (status === "failed" || status === "cancelled") {
+    return null;
+  }
+  // Scan completed successfully
+  if (record === undefined) {
+    return (
+      <section className="output-section" data-testid="output-results-summary">
+        <h3>Scan results</h3>
+        <p className="muted">Loading results...</p>
+      </section>
+    );
+  }
+  return (
+    <section className="output-section" data-testid="output-results-summary">
+      <h3>Scan results</h3>
+      <ScanHistoryDetails record={record} />
     </section>
   );
 }

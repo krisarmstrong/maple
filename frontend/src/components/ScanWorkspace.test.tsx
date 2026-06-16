@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { defaultScanOptions } from "../core/scan-options";
 import { builtInScanPresets } from "../core/scan-presets";
 import { copyText } from "../services/clipboard-service";
+import type { ScanHistoryRecord } from "../services/history-service";
 import {
   cancelScan,
   onScanEvent,
@@ -1333,5 +1334,120 @@ describe("ScanWorkspace", () => {
     const shapeTab = screen.getByRole("tab", { name: "Scan shape" });
     expect(shapeTab).toHaveAttribute("aria-selected", "true");
     expect(shapeTab).toHaveAttribute("aria-controls", "option-panel-shape");
+  });
+
+  // #73 — Output tab shows parsed results after a successful scan
+  it("does not show the results panel while the scan is running", () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    act(() => {
+      scanEventListener?.({ type: "started", runId: "run-73" });
+    });
+
+    expect(screen.queryByTestId("output-results-summary")).not.toBeInTheDocument();
+  });
+
+  it("shows a loading hint when scan completes but completedRecord is not yet delivered", () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    act(() => {
+      scanEventListener?.({ type: "started", runId: "run-73" });
+      scanEventListener?.({
+        type: "finished",
+        result: { runId: "run-73", exitCode: 0, xml: "<nmaprun />" },
+      });
+    });
+
+    // completedRecord prop not passed → loading hint
+    expect(screen.getByTestId("output-results-summary")).toBeInTheDocument();
+    expect(screen.getByText("Loading results...")).toBeInTheDocument();
+    // Existing sections still visible
+    expect(screen.getByRole("heading", { name: "Preview argv" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Live log" })).toBeInTheDocument();
+  });
+
+  it("shows parsed result summary and details when completedRecord is provided after a successful scan", () => {
+    const record: ScanHistoryRecord = {
+      runId: "run-73",
+      startedAt: "2024-01-01T00:00:00Z",
+      finishedAt: "2024-01-01T00:00:05Z",
+      command: ["nmap", "-sT", "scanme.nmap.org"],
+      profileName: "Top TCP ports",
+      elapsedTime: "4.23",
+      targets: [{ value: "scanme.nmap.org", kind: "hostname" }],
+      hosts: [
+        {
+          address: "45.33.32.156",
+          hostname: "scanme.nmap.org",
+          state: "up",
+          ports: [
+            { id: "22", protocol: "tcp", state: "open", service: "ssh" },
+            { id: "80", protocol: "tcp", state: "open", service: "http" },
+          ],
+        },
+      ],
+      exitCode: 0,
+      targetCount: 1,
+      hostCount: 1,
+      hostsUp: 1,
+      hostsDown: 0,
+      openPortCount: 2,
+    };
+
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" completedRecord={record} />);
+
+    act(() => {
+      scanEventListener?.({ type: "started", runId: "run-73" });
+      scanEventListener?.({
+        type: "finished",
+        result: { runId: "run-73", exitCode: 0, xml: "<nmaprun />" },
+      });
+    });
+
+    const results = screen.getByTestId("output-results-summary");
+    expect(results).toBeInTheDocument();
+    expect(within(results).getByRole("heading", { name: "Scan results" })).toBeInTheDocument();
+    // ResultSummary metric tiles (from ScanHistoryDetails) — text may appear more than once
+    // because the filter controls also say "Hosts up" / "Open ports"
+    expect(within(results).getAllByText("Hosts up").length).toBeGreaterThan(0);
+    expect(within(results).getAllByText("Open ports").length).toBeGreaterThan(0);
+    // Host detail
+    expect(within(results).getByText("45.33.32.156")).toBeInTheDocument();
+    expect(within(results).getByText("scanme.nmap.org")).toBeInTheDocument();
+    expect(within(results).getByText("22/tcp")).toBeInTheDocument();
+    expect(within(results).getByText("80/tcp")).toBeInTheDocument();
+    // Existing output sections unaffected
+    expect(screen.getByRole("heading", { name: "Preview argv" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Live log" })).toBeInTheDocument();
+  });
+
+  it("does not show the results panel after a failed scan", () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    act(() => {
+      scanEventListener?.({ type: "started", runId: "run-73" });
+      scanEventListener?.({
+        type: "finished",
+        result: {
+          runId: "run-73",
+          exitCode: 1,
+          xml: "",
+          error: "Nmap exited with code 1",
+        },
+      });
+    });
+
+    expect(screen.queryByTestId("output-results-summary")).not.toBeInTheDocument();
+  });
+
+  it("calls onScanStarted with the runId when a scan starts", () => {
+    const onScanStarted = vi.fn();
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" onScanStarted={onScanStarted} />);
+
+    act(() => {
+      scanEventListener?.({ type: "started", runId: "run-73" });
+    });
+
+    expect(onScanStarted).toHaveBeenCalledWith("run-73");
   });
 });
