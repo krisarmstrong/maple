@@ -1099,10 +1099,27 @@ describe("ScanWorkspace", () => {
     await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
 
     expect(screen.getByText("vuln")).toBeInTheDocument();
-    expect(screen.getAllByText("Use carefully")).not.toHaveLength(0);
+    expect(
+      screen.getByText("Vulnerability detection checks; review scope carefully."),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("Noisy")).not.toHaveLength(0);
+    expect(screen.getAllByText("Intrusive")).not.toHaveLength(0);
     expect(
       screen.getByText("Risky categories can be intrusive, exploit-oriented, or disruptive."),
     ).toBeInTheDocument();
+  });
+
+  it("shows NSE script descriptions and category badges", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
+    fireEvent.change(screen.getByLabelText("Search built-in scripts"), {
+      target: { value: "ssl" },
+    });
+
+    expect(screen.getByText("ssl-enum-ciphers")).toBeInTheDocument();
+    expect(screen.getByText("Enumerates TLS protocol and cipher support.")).toBeInTheDocument();
+    expect(screen.getByText("Categories: safe, version")).toBeInTheDocument();
   });
 
   it("blocks scan start for invalid targets", async () => {

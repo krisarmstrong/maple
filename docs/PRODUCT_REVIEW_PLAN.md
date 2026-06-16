@@ -49,6 +49,7 @@ and Linux.
    - Improve script search results with richer descriptions, category badges, and risk badges.
    - Add selected-script details so users understand what a script does before running it.
    - Improve custom script file/directory validation and explain absolute-path requirements inline.
+   - Status: category/script descriptions and noisy/intrusive badges implemented in script browsing.
 
 6. **Scan Run Reliability**
    - Add clearer live run phases: validating, launching, running, parsing, saving history.

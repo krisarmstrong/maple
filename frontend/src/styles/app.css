@@ -1199,13 +1199,28 @@ textarea:focus {
 }
 
 .script-category-picker label {
-  align-items: center;
   background: var(--panel-raised);
   border: var(--border-width) solid var(--border);
   border-radius: var(--radius-sm);
-  display: flex;
+  display: grid;
   gap: var(--space-5);
+  grid-template-columns: auto minmax(0, 1fr);
+  max-width: var(--size-script-choice-max);
   padding: var(--space-5) var(--space-7);
+}
+
+.script-category-picker label > input {
+  margin-top: var(--space-1);
+}
+
+.script-category-picker label > span {
+  font-weight: var(--font-weight-heading);
+}
+
+.script-category-picker label > small {
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+  grid-column: 2;
 }
 
 .script-workspace-section {
@@ -1227,7 +1242,12 @@ textarea:focus {
   color: var(--warn-text);
   font-size: var(--font-size-2xs);
   font-weight: var(--font-weight-heading);
+  justify-self: start;
   padding: var(--space-2) var(--space-5);
+}
+
+.script-risk-label--intrusive {
+  border: var(--border-width) solid var(--warn-border);
 }
 
 .custom-script-paths {

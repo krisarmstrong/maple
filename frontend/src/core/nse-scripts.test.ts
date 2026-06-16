@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   buildScanScripts,
+  nseCategoryDescription,
+  nseCategoryRisk,
+  nseScriptDetails,
   scriptsForCategories,
   searchNSEScripts,
   suggestedScriptsForSelection,
@@ -60,5 +63,19 @@ describe("NSE script helpers", () => {
       "smb-vuln-ms10-054",
       "smb-vuln-ms17-010",
     ]);
+  });
+
+  it("describes categories and script risk", () => {
+    expect(nseCategoryDescription("safe")).toBe("Low-risk informational checks.");
+    expect(nseCategoryRisk("dos")).toBe("intrusive");
+    expect(nseCategoryRisk("vuln")).toBe("noisy");
+
+    expect(nseScriptDetails("ssl-enum-ciphers")).toEqual({
+      categories: ["safe", "version"],
+      description: "Enumerates TLS protocol and cipher support.",
+      name: "ssl-enum-ciphers",
+      risk: "normal",
+    });
+    expect(nseScriptDetails("smb-vuln-ms17-010").risk).toBe("intrusive");
   });
 });

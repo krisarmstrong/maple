@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import {
   buildScanScripts,
   type NSECategory,
+  type NSERiskLevel,
   nseCategories,
+  nseCategoryDescription,
+  nseCategoryRisk,
+  nseScriptDetails,
   searchNSEScripts,
   suggestedScriptsForSelection,
 } from "../core/nse-scripts";
@@ -48,7 +52,6 @@ import {
   hasIdentityOptions,
   hasPacketShapingOptions,
   isNSECategory,
-  isRiskyNSECategory,
   isSpecializedScanTechnique,
   lineValues,
   messageForInvalidScanOptions,
@@ -1503,14 +1506,14 @@ export function ScanWorkspace({
               {nseCategories.map((category) => (
                 <label key={category}>
                   <input
+                    aria-label={category}
                     checked={scriptCategories.includes(category)}
                     onChange={(event) => updateScriptCategory(category, event.target.checked)}
                     type="checkbox"
                   />
                   <span>{category}</span>
-                  {isRiskyNSECategory(category) ? (
-                    <small className="script-risk-label">Use carefully</small>
-                  ) : null}
+                  <small>{nseCategoryDescription(category)}</small>
+                  <ScriptRiskBadge risk={nseCategoryRisk(category)} />
                 </label>
               ))}
             </fieldset>
@@ -1528,16 +1531,25 @@ export function ScanWorkspace({
             </label>
             <fieldset className="script-category-picker">
               <legend>Script browser</legend>
-              {visibleScripts.map((script) => (
-                <label key={script}>
-                  <input
-                    checked={selectedScriptNames.includes(script)}
-                    onChange={(event) => updateNamedScript(script, event.target.checked)}
-                    type="checkbox"
-                  />
-                  <span>{script}</span>
-                </label>
-              ))}
+              {visibleScripts.map((script) => {
+                const details = nseScriptDetails(script);
+                return (
+                  <label key={script}>
+                    <input
+                      aria-label={script}
+                      checked={selectedScriptNames.includes(script)}
+                      onChange={(event) => updateNamedScript(script, event.target.checked)}
+                      type="checkbox"
+                    />
+                    <span>{script}</span>
+                    <small>{details.description}</small>
+                    {details.categories.length === 0 ? null : (
+                      <small>Categories: {details.categories.join(", ")}</small>
+                    )}
+                    <ScriptRiskBadge risk={details.risk} />
+                  </label>
+                );
+              })}
             </fieldset>
             {scriptSearch.trim() === "" && scriptCategories.length > 0 ? (
               <p className="target-mode-help">
@@ -1783,6 +1795,17 @@ function scanReadiness(
     message: "Maple can preview the exact argv before it starts Nmap.",
     title: "Ready to preview",
   };
+}
+
+function ScriptRiskBadge({ risk }: { risk: NSERiskLevel }): React.JSX.Element | null {
+  if (risk === "normal") {
+    return null;
+  }
+  return (
+    <small className={`script-risk-label script-risk-label--${risk}`}>
+      {risk === "intrusive" ? "Intrusive" : "Noisy"}
+    </small>
+  );
 }
 
 interface ScanPanelButtonProps {
