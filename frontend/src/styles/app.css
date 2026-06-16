@@ -497,6 +497,7 @@
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-label);
   gap: var(--space-5);
+  min-height: var(--size-control-height-sm);
   padding: var(--space-5) var(--space-7);
   white-space: nowrap;
 }
@@ -1062,11 +1063,7 @@
   font-size: var(--font-size-base);
 }
 
-.history-controls input,
-.history-result-search input,
-.custom-script-paths input,
-.options-grid input,
-.recipe-save-row input,
+input:not([type="checkbox"]):not([type="radio"]),
 select,
 textarea {
   background: var(--panel);
