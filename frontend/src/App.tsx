@@ -140,6 +140,7 @@ export default function App(): React.JSX.Element {
           <ScanWorkspace
             nmapPath={nmapPathFor(state, customNmapPath)}
             onOpenEnvironment={() => setActiveView("environment")}
+            onOpenCompare={() => setActiveView("compare")}
             onScanStarted={setLastScanRunId}
             onScanFinished={() => refreshHistory(setHistoryState)}
             completedRecord={completedRecordFor(historyState, lastScanRunId)}

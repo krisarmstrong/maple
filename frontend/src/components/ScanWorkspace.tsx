@@ -25,6 +25,13 @@ import { findProfile, type ScanProfileID } from "../core/scan-profiles";
 import { parseScanProgressLine } from "../core/scan-progress";
 import { scanScope } from "../core/scan-scope";
 import {
+  addTargetGroup,
+  deleteTargetGroup,
+  loadTargetGroups,
+  makeTargetGroupID,
+  type TargetGroup,
+} from "../core/target-groups";
+import {
   type TargetModeID,
   targetModeAcceptedSyntax,
   targetModeHelp,
@@ -72,6 +79,7 @@ import {
 interface ScanWorkspaceProps {
   nmapPath?: string;
   onOpenEnvironment?: () => void;
+  onOpenCompare?: () => void;
   onScanStarted?: (runId: string) => void;
   onScanFinished?: () => void;
   completedRecord?: ScanHistoryRecord;
@@ -83,6 +91,7 @@ type OptionGroup = "shape" | "ports" | "timing" | "evasion" | "behavior";
 export function ScanWorkspace({
   nmapPath,
   onOpenEnvironment,
+  onOpenCompare,
   onScanStarted,
   onScanFinished,
   completedRecord,
@@ -100,6 +109,10 @@ export function ScanWorkspace({
   const [scriptArgsFile, setScriptArgsFile] = useState("");
   const [savedPresets, setSavedPresets] = useState<ScanPreset[]>(() => loadPresetsFromStorage());
   const [presetName, setPresetName] = useState("");
+  const [targetGroups, setTargetGroups] = useState<TargetGroup[]>(() =>
+    loadTargetGroupsFromStorage(),
+  );
+  const [targetGroupName, setTargetGroupName] = useState("");
   const [selectedPresetID, setSelectedPresetID] = useState("builtin-top-tcp-ports");
   const [activePanel, setActivePanel] = useState<ScanPanel>("configure");
   const [activeOptionGroup, setActiveOptionGroup] = useState<OptionGroup>("shape");
@@ -350,6 +363,49 @@ export function ScanWorkspace({
     setPresetName("");
   }
 
+  function saveCurrentTargetGroup(): void {
+    const name = targetGroupName.trim();
+    if (name === "" || targets.trim() === "") {
+      return;
+    }
+    const group: TargetGroup = {
+      id: makeTargetGroupID(name),
+      name,
+      targets,
+    };
+    setTargetGroups((current) => {
+      const storage = browserStorage();
+      if (storage === undefined) {
+        return [
+          group,
+          ...current.filter(
+            (candidate) => candidate.id !== group.id && candidate.name !== group.name,
+          ),
+        ];
+      }
+      return addTargetGroup(storage, current, group);
+    });
+    setTargetGroupName("");
+  }
+
+  function applyTargetGroup(id: string): void {
+    const group = targetGroups.find((candidate) => candidate.id === id);
+    if (group === undefined) {
+      return;
+    }
+    updateTargets(group.targets, setTargets, setPreview);
+  }
+
+  function removeTargetGroup(id: string): void {
+    setTargetGroups((current) => {
+      const storage = browserStorage();
+      if (storage === undefined) {
+        return current.filter((candidate) => candidate.id !== id);
+      }
+      return deleteTargetGroup(storage, current, id);
+    });
+  }
+
   function applyPreset(presetID: string): void {
     const preset = availablePresets.find((candidate) => candidate.id === presetID);
     if (preset === undefined) {
@@ -593,6 +649,65 @@ export function ScanWorkspace({
                 </div>
               </div>
             </div>
+            <section className="target-groups-column" aria-label="Target groups">
+              <div>
+                <h3>Target Groups</h3>
+                <p className="target-mode-help">
+                  Save the current targets as a named group to quickly reload them later.
+                </p>
+              </div>
+              <div className="recipe-save-row">
+                <label>
+                  <span>Group name</span>
+                  <input
+                    onChange={(event) => setTargetGroupName(event.target.value)}
+                    placeholder="Lab subnet"
+                    type="text"
+                    value={targetGroupName}
+                  />
+                </label>
+                <button
+                  data-testid="save-target-group"
+                  disabled={targetGroupName.trim() === "" || targets.trim() === ""}
+                  onClick={saveCurrentTargetGroup}
+                  type="button"
+                >
+                  Save Group
+                </button>
+              </div>
+              {targetGroups.length === 0 ? null : (
+                <ul
+                  className="target-group-list"
+                  data-testid="target-group-list"
+                  aria-label="Saved target groups"
+                >
+                  {targetGroups.map((group) => (
+                    <li
+                      className="target-group-item"
+                      data-testid="target-group-item"
+                      key={group.id}
+                    >
+                      <button
+                        aria-label={`Load target group ${group.name}`}
+                        className="target-group-load"
+                        onClick={() => applyTargetGroup(group.id)}
+                        type="button"
+                      >
+                        {group.name}
+                      </button>
+                      <button
+                        aria-label={`Delete target group ${group.name}`}
+                        className="target-group-delete"
+                        onClick={() => removeTargetGroup(group.id)}
+                        type="button"
+                      >
+                        ✕
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
             <section className="recipe-column" aria-label="Scan recipe setup">
               <div>
                 <h3>Scan Recipe</h3>
@@ -1003,7 +1118,7 @@ export function ScanWorkspace({
           role="tabpanel"
           aria-labelledby="scan-tab-output"
         >
-          <OutputResults record={completedRecord} status={status} />
+          <OutputResults record={completedRecord} status={status} onOpenCompare={onOpenCompare} />
           <section className="output-section">
             <h3>Run status</h3>
             <p className="scan-status">{scanStatusLabel(status)}</p>
@@ -1127,9 +1242,14 @@ export function ScanWorkspace({
 interface OutputResultsProps {
   record: ScanHistoryRecord | undefined;
   status: ScanStatus;
+  onOpenCompare?: () => void;
 }
 
-function OutputResults({ record, status }: OutputResultsProps): React.JSX.Element | null {
+function OutputResults({
+  record,
+  status,
+  onOpenCompare,
+}: OutputResultsProps): React.JSX.Element | null {
   if (status !== "complete" && status !== "failed" && status !== "cancelled") {
     return null;
   }
@@ -1149,6 +1269,14 @@ function OutputResults({ record, status }: OutputResultsProps): React.JSX.Elemen
     <section className="output-section" data-testid="output-results-summary">
       <h3>Scan results</h3>
       <ScanHistoryDetails record={record} />
+      {onOpenCompare !== undefined ? (
+        <div className="output-compare-link">
+          <button type="button" onClick={onOpenCompare}>
+            Compare runs
+          </button>
+          <span className="muted">Diff this scan against a previous run.</span>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -1160,6 +1288,18 @@ function loadPresetsFromStorage(): ScanPreset[] {
   }
   try {
     return loadSavedPresets(storage);
+  } catch {
+    return [];
+  }
+}
+
+function loadTargetGroupsFromStorage(): TargetGroup[] {
+  const storage = browserStorage();
+  if (storage === undefined) {
+    return [];
+  }
+  try {
+    return loadTargetGroups(storage);
   } catch {
     return [];
   }
