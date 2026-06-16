@@ -978,6 +978,48 @@ describe("ScanWorkspace", () => {
       });
     });
     expect(screen.getAllByText("Scan complete").length).toBeGreaterThan(0);
+    expect(
+      screen.getByText(
+        "The run completed. Results are parsed into History and raw XML remains export-only.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("shows cancellation immediately when cancel is accepted", async () => {
+    cancelScanMock.mockResolvedValue(true);
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    act(() => {
+      scanEventListener?.({ type: "started", runId: "scan-1" });
+    });
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(cancelScanMock).toHaveBeenCalledTimes(1);
+    expect(screen.getAllByText("Scan cancelled").length).toBeGreaterThan(0);
+    expect(screen.getByTestId("scan-log")).toHaveTextContent("Cancel requested.");
+  });
+
+  it("shows final diagnostics without mixing them into the XML-free live log", () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    act(() => {
+      scanEventListener?.({ type: "started", runId: "scan-1" });
+      scanEventListener?.({
+        type: "finished",
+        result: {
+          diagnostics: "Parser recovered incomplete host metadata.",
+          exitCode: 0,
+          runId: "scan-1",
+          xml: "<nmaprun />",
+        },
+      });
+    });
+
+    expect(screen.getByText("Parser notes and stderr diagnostics")).toBeInTheDocument();
+    expect(screen.getByText("Parser recovered incomplete host metadata.")).toBeInTheDocument();
+    expect(screen.getByTestId("scan-log")).not.toHaveTextContent(
+      "Parser recovered incomplete host metadata.",
+    );
   });
 
   it("summarizes target kinds before running", async () => {

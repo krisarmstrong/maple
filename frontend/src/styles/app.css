@@ -1037,7 +1037,7 @@ textarea:focus {
 }
 
 .scan-panel-tabs {
-  background: var(--color-code-surface);
+  background: var(--panel-subtle);
   border: var(--border-width) solid var(--border);
   border-radius: var(--radius-md);
   display: grid;
@@ -1048,17 +1048,17 @@ textarea:focus {
 }
 
 .scan-panel-tab {
-  background: transparent;
-  border-color: transparent;
-  color: var(--code-text);
+  background: var(--panel);
+  border-color: var(--border);
+  color: var(--text);
   min-height: var(--size-tab-min);
   overflow-wrap: anywhere;
 }
 
 .scan-panel-tab[aria-current="page"] {
-  background: var(--panel-raised);
+  background: var(--accent);
   border-color: var(--accent);
-  color: var(--text);
+  color: var(--accent-contrast);
 }
 
 .option-group-tabs {
@@ -1337,6 +1337,31 @@ textarea:focus {
 .copy-status-success {
   color: var(--accent-strong);
   font-weight: var(--font-weight-strong);
+}
+
+.diagnostics-details {
+  display: grid;
+  gap: var(--space-7);
+}
+
+.diagnostics-details summary {
+  color: var(--text);
+  cursor: pointer;
+  font-weight: var(--font-weight-strong);
+}
+
+.diagnostics-details pre {
+  background: var(--code-bg);
+  border: var(--border-width) solid var(--color-sidebar-border);
+  border-radius: var(--radius-sm);
+  color: var(--code-text);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  margin: var(--space-0);
+  max-height: var(--size-diagnostics-max);
+  overflow: auto;
+  padding: var(--space-8);
+  white-space: pre-wrap;
 }
 
 .target-summary {
