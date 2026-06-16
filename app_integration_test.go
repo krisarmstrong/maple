@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -15,33 +16,57 @@ import (
 	"github.com/krisarmstrong/maple/internal/store"
 )
 
-// fakeNmapScript is a POSIX shell stand-in for nmap: it writes a minimal but
-// valid nmap XML document to the path passed after -oX and prints a couple of
-// stdout lines, exiting 0. It lets the integration test exercise the real
-// exec -> stream -> XML-read path without a real Nmap install.
-const fakeNmapScript = `#!/bin/sh
-out=""
-prev=""
-for a in "$@"; do
-  if [ "$prev" = "-oX" ]; then out="$a"; fi
-  prev="$a"
-done
-echo "Starting Nmap"
-if [ -n "$out" ]; then
-  printf '%s' '<?xml version="1.0"?><nmaprun scanner="nmap"><host><status state="up"/><address addr="127.0.0.1" addrtype="ipv4"/><ports><port protocol="tcp" portid="80"><state state="open"/><service name="http"/></port></ports></host><runstats><finished/><hosts up="1" down="0" total="1"/></runstats></nmaprun>' > "$out"
-fi
-echo "Nmap done"
+// fakeNmapSource is a Go stand-in for nmap: it writes a minimal but valid nmap
+// XML document to the path passed after -oX and prints a couple of stdout
+// lines, exiting 0. It is compiled with `go build` so the toolchain sets the
+// executable bit — no executable-permission file write (and thus no gosec
+// suppression) is required.
+const fakeNmapSource = `package main
+
+import (
+	"fmt"
+	"os"
+)
+
+const xml = "<?xml version=\"1.0\"?><nmaprun scanner=\"nmap\"><host><status state=\"up\"/><address addr=\"127.0.0.1\" addrtype=\"ipv4\"/><ports><port protocol=\"tcp\" portid=\"80\"><state state=\"open\"/><service name=\"http\"/></port></ports></host><runstats><finished/><hosts up=\"1\" down=\"0\" total=\"1\"/></runstats></nmaprun>"
+
+func main() {
+	out := ""
+	for i := 0; i+1 < len(os.Args); i++ {
+		if os.Args[i] == "-oX" {
+			out = os.Args[i+1]
+		}
+	}
+	fmt.Fprintln(os.Stdout, "Starting Nmap")
+	if out != "" {
+		if err := os.WriteFile(out, []byte(xml), 0o600); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+	}
+	fmt.Fprintln(os.Stdout, "Nmap done")
+}
 `
 
-func writeFakeNmap(t *testing.T) string {
+// buildFakeNmap compiles the fake nmap stand-in to a temp binary and returns its
+// path. The toolchain produces an executable, so the test never has to write a
+// file with an executable mode itself.
+func buildFakeNmap(t *testing.T) string {
 	t.Helper()
-	path := filepath.Join(t.TempDir(), "fake-nmap")
-	// The fake nmap must be executable for the runner to exec it; this is a
-	// throwaway script in a per-test temp dir, never shipped.
-	if err := os.WriteFile(path, []byte(fakeNmapScript), 0o755); err != nil { // #nosec G306 -- test-only executable stub in t.TempDir()
-		t.Fatalf("write fake nmap: %v", err)
+	goBin, err := exec.LookPath("go")
+	if err != nil {
+		t.Skipf("go toolchain not available: %v", err)
 	}
-	return path
+	dir := t.TempDir()
+	src := filepath.Join(dir, "fakenmap.go")
+	if err := os.WriteFile(src, []byte(fakeNmapSource), 0o600); err != nil {
+		t.Fatalf("write fake nmap source: %v", err)
+	}
+	bin := filepath.Join(dir, "fakenmap")
+	if out, err := exec.Command(goBin, "build", "-o", bin, src).CombinedOutput(); err != nil {
+		t.Fatalf("build fake nmap: %v\n%s", err, out)
+	}
+	return bin
 }
 
 func TestScanThroughManagerWithFakeNmapPersistsAndReports(t *testing.T) {
@@ -62,7 +87,7 @@ func TestScanThroughManagerWithFakeNmapPersistsAndReports(t *testing.T) {
 	if _, err := manager.Start(context.Background(), scanner.ScanRequest{
 		ProfileID: scanner.ProfileConnect,
 		Targets:   "127.0.0.1",
-		NmapPath:  writeFakeNmap(t),
+		NmapPath:  buildFakeNmap(t),
 	}, emit); err != nil {
 		t.Fatalf("manager.Start returned error: %v", err)
 	}
