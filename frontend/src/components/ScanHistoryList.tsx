@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { historyLabel } from "../core/history-display";
 import { filterHistoryRecords, type HistoryFilterID } from "../core/history-filter";
+import { buildHistoryNdiffArgv, historyNdiffOptions } from "../core/history-ndiff";
 import { type HistorySortID, sortHistoryRecords } from "../core/history-sort";
 import type { ScanHistoryRecord } from "../services/history-service";
 import {
@@ -22,9 +23,19 @@ export function ScanHistoryList({ records, onChanged }: ScanHistoryListProps): R
   const [query, setQuery] = useState("");
   const [filterId, setFilterId] = useState<HistoryFilterID>("all");
   const [sortId, setSortId] = useState<HistorySortID>("newest");
+  const [baselineRunId, setBaselineRunId] = useState("");
+  const [currentRunId, setCurrentRunId] = useState("");
   const [exportPath, setExportPath] = useState("");
   const [error, setError] = useState("");
   const visibleRecords = sortHistoryRecords(filterHistoryRecords(records, query, filterId), sortId);
+  const ndiffOptions = historyNdiffOptions(records);
+  const selectedBaselineRunId = selectedRunId(baselineRunId, ndiffOptions, 1);
+  const selectedCurrentRunId = selectedRunId(currentRunId, ndiffOptions, 0);
+  const ndiffArgv = buildHistoryNdiffArgv({
+    baselineRunId: selectedBaselineRunId,
+    currentRunId: selectedCurrentRunId,
+    options: ndiffOptions,
+  });
 
   if (records.length === 0) {
     return <p className="muted">No completed scans yet.</p>;
@@ -132,6 +143,54 @@ export function ScanHistoryList({ records, onChanged }: ScanHistoryListProps): R
           Saved {filenameFromPath(exportPath)} to {exportPath}
         </p>
       )}
+      {ndiffOptions.length < 2 ? null : (
+        <section className="history-ndiff-panel" aria-label="Ndiff compare preview">
+          <div>
+            <h3>Compare saved XML</h3>
+            <p>
+              Preview an Ndiff argv from two Maple history records. Execution will land in a later
+              tool workflow.
+            </p>
+          </div>
+          <label>
+            <span>Baseline</span>
+            <select
+              onChange={(event) => setBaselineRunId(event.target.value)}
+              value={selectedBaselineRunId}
+            >
+              {ndiffOptions.map((option) => (
+                <option key={option.runId} value={option.runId}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>Current</span>
+            <select
+              onChange={(event) => setCurrentRunId(event.target.value)}
+              value={selectedCurrentRunId}
+            >
+              {ndiffOptions.map((option) => (
+                <option key={option.runId} value={option.runId}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          {ndiffArgv.length === 0 ? (
+            <p className="muted">Choose two different scans to preview an Ndiff comparison.</p>
+          ) : (
+            <ul className="argv-token-list history-ndiff-argv" aria-label="Ndiff argv tokens">
+              {ndiffArgv.map((token) => (
+                <li className="argv-token" key={token}>
+                  {token}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
       {visibleRecords.length === 0 ? (
         <p className="muted">No scans match the current filters.</p>
       ) : null}
@@ -215,6 +274,17 @@ function toHistorySortID(value: string): HistorySortID {
     return value;
   }
   return "newest";
+}
+
+function selectedRunId(
+  candidate: string,
+  options: ReturnType<typeof historyNdiffOptions>,
+  fallbackIndex: number,
+): string {
+  if (options.some((option) => option.runId === candidate)) {
+    return candidate;
+  }
+  return options.at(fallbackIndex)?.runId ?? "";
 }
 
 function formatTimestamp(value: string): string {

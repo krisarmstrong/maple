@@ -23,6 +23,7 @@ export interface ScanHistoryRecord {
   hostsUp: number;
   hostsDown: number;
   openPortCount: number;
+  xmlPath?: string;
   diagnostics?: string;
   error?: string;
 }
@@ -111,6 +112,7 @@ export async function loadScanHistory(): Promise<ScanHistoryRecord[]> {
     hostsUp: record.summary?.hostsUp ?? 0,
     hostsDown: record.summary?.hostsDown ?? 0,
     openPortCount: countOpenPorts(record.summary?.hosts ?? []),
+    xmlPath: record.xmlPath,
     diagnostics: record.diagnostics,
     error: record.error,
   }));
