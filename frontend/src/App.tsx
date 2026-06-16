@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { HelpWorkspace } from "./components/HelpWorkspace";
 import { NmapPathControl } from "./components/NmapPathControl";
+import { ScanCompare } from "./components/ScanCompare";
 import { ScanHistoryList } from "./components/ScanHistoryList";
 import { ScanWorkspace } from "./components/ScanWorkspace";
 import { ThemeModePicker } from "./components/ThemeModePicker";
@@ -27,7 +28,7 @@ type HistoryState =
   | { status: "ready"; records: ScanHistoryRecord[] }
   | { status: "failed"; message: string };
 
-type AppView = "scan" | "history" | "tools" | "environment" | "help";
+type AppView = "scan" | "history" | "compare" | "tools" | "environment" | "help";
 
 const nmapPathStorageKey = "maple.nmapPath";
 
@@ -98,6 +99,12 @@ export default function App(): React.JSX.Element {
             id="history"
             label="History"
             meta={historyMeta(historyState)}
+            onSelect={setActiveView}
+          />
+          <NavButton
+            activeView={activeView}
+            id="compare"
+            label="Compare"
             onSelect={setActiveView}
           />
           <NavButton activeView={activeView} id="tools" label="Tools" onSelect={setActiveView} />
@@ -177,6 +184,29 @@ export default function App(): React.JSX.Element {
                 }}
                 onStartScan={() => setActiveView("scan")}
               />
+            ) : null}
+          </section>
+        ) : null}
+
+        {activeView === "compare" ? (
+          <section className="workspace compare-view-workspace">
+            <div className="workspace-header">
+              <div>
+                <h2>Compare Scans</h2>
+                <p>
+                  Select two completed scans to see which hosts, ports, and services changed between
+                  runs.
+                </p>
+              </div>
+            </div>
+            {historyState.status === "loading" ? (
+              <p className="muted">Loading scan history...</p>
+            ) : null}
+            {historyState.status === "failed" ? (
+              <p className="error">{historyState.message}</p>
+            ) : null}
+            {historyState.status === "ready" ? (
+              <ScanCompare records={historyState.records} />
             ) : null}
           </section>
         ) : null}
@@ -349,6 +379,9 @@ function viewTitle(view: AppView): string {
   }
   if (view === "history") {
     return "History and exports";
+  }
+  if (view === "compare") {
+    return "Compare scans";
   }
   if (view === "tools") {
     return "Utility tools";
