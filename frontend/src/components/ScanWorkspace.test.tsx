@@ -1694,3 +1694,156 @@ describe("ScanWorkspace", () => {
     expect(screen.getByRole("button", { name: "Preview" })).toBeEnabled();
   });
 });
+
+describe("ScanWorkspace — privilege error", () => {
+  beforeEach(() => {
+    cancelScanMock.mockReset();
+    onScanEventMock.mockReset();
+    onScanEventMock.mockImplementation((listener) => {
+      scanEventListener = listener;
+      return vi.fn();
+    });
+    previewScanCommandMock.mockReset();
+    startScanMock.mockReset();
+    copyTextMock.mockReset();
+    copyTextMock.mockResolvedValue(undefined);
+    scanEventListener = undefined;
+  });
+
+  it("shows the privilege-required message when a scan finishes with a raw-socket error", () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    act(() => {
+      scanEventListener?.({ type: "started", runId: "priv-1" });
+      scanEventListener?.({
+        type: "finished",
+        result: {
+          runId: "priv-1",
+          exitCode: 1,
+          xml: "",
+          error: "You requested a scan type which requires root privileges.",
+        },
+      });
+    });
+
+    expect(screen.getByTestId("privilege-required-message")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Elevated privileges required" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/-sT/)).toBeInTheDocument();
+    expect(screen.getByText(/#89/)).toBeInTheDocument();
+  });
+
+  it("shows the privilege-required message for a raw-socket open failure", () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    act(() => {
+      scanEventListener?.({ type: "started", runId: "priv-2" });
+      scanEventListener?.({
+        type: "finished",
+        result: {
+          runId: "priv-2",
+          exitCode: 1,
+          xml: "",
+          error: "nmap: Couldn't open a raw socket.",
+        },
+      });
+    });
+
+    expect(screen.getByTestId("privilege-required-message")).toBeInTheDocument();
+  });
+
+  it("shows the privilege-required message when the phrase is in diagnostics", () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    act(() => {
+      scanEventListener?.({ type: "started", runId: "priv-3" });
+      scanEventListener?.({
+        type: "finished",
+        result: {
+          runId: "priv-3",
+          exitCode: 1,
+          xml: "",
+          error: "nmap exited with code 1",
+          diagnostics: "Couldn't open a raw socket. Root privileges are needed.",
+        },
+      });
+    });
+
+    expect(screen.getByTestId("privilege-required-message")).toBeInTheDocument();
+  });
+
+  it("does NOT show the privilege-required message for an ordinary scan failure", () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    act(() => {
+      scanEventListener?.({ type: "started", runId: "fail-1" });
+      scanEventListener?.({
+        type: "finished",
+        result: {
+          runId: "fail-1",
+          exitCode: 1,
+          xml: "",
+          error: "nmap exited with code 1",
+        },
+      });
+    });
+
+    expect(screen.queryByTestId("privilege-required-message")).not.toBeInTheDocument();
+  });
+
+  it("does NOT show the privilege-required message for a successful scan", () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    act(() => {
+      scanEventListener?.({ type: "started", runId: "ok-1" });
+      scanEventListener?.({
+        type: "finished",
+        result: { runId: "ok-1", exitCode: 0, xml: "<nmaprun />" },
+      });
+    });
+
+    expect(screen.queryByTestId("privilege-required-message")).not.toBeInTheDocument();
+  });
+
+  it("does NOT show the privilege-required message for a cancelled scan", () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    act(() => {
+      scanEventListener?.({ type: "started", runId: "cancel-1" });
+      scanEventListener?.({
+        type: "finished",
+        result: {
+          runId: "cancel-1",
+          exitCode: 1,
+          xml: "",
+          error: "context canceled",
+        },
+      });
+    });
+
+    expect(screen.queryByTestId("privilege-required-message")).not.toBeInTheDocument();
+  });
+
+  it("keeps raw diagnostics visible in the Diagnostics section alongside the privilege message", () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    act(() => {
+      scanEventListener?.({ type: "started", runId: "priv-4" });
+      scanEventListener?.({
+        type: "finished",
+        result: {
+          runId: "priv-4",
+          exitCode: 1,
+          xml: "",
+          error: "requires root privileges",
+          diagnostics: "See nmap --help for more info.",
+        },
+      });
+    });
+
+    expect(screen.getByTestId("privilege-required-message")).toBeInTheDocument();
+    expect(screen.getByText("Parser notes and stderr diagnostics")).toBeInTheDocument();
+    expect(screen.getByText("See nmap --help for more info.")).toBeInTheDocument();
+  });
+});

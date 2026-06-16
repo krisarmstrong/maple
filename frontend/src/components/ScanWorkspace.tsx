@@ -1118,6 +1118,7 @@ export function ScanWorkspace({
           role="tabpanel"
           aria-labelledby="scan-tab-output"
         >
+          {status === "privilege" ? <PrivilegeRequiredMessage /> : null}
           <OutputResults record={completedRecord} status={status} onOpenCompare={onOpenCompare} />
           <section className="output-section">
             <h3>Run status</h3>
@@ -1250,10 +1251,15 @@ function OutputResults({
   status,
   onOpenCompare,
 }: OutputResultsProps): React.JSX.Element | null {
-  if (status !== "complete" && status !== "failed" && status !== "cancelled") {
+  if (
+    status !== "complete" &&
+    status !== "failed" &&
+    status !== "cancelled" &&
+    status !== "privilege"
+  ) {
     return null;
   }
-  if (status === "failed" || status === "cancelled") {
+  if (status === "failed" || status === "cancelled" || status === "privilege") {
     return null;
   }
   // Scan completed successfully
@@ -1277,6 +1283,33 @@ function OutputResults({
           <span className="muted">Diff this scan against a previous run.</span>
         </div>
       ) : null}
+    </section>
+  );
+}
+
+function PrivilegeRequiredMessage(): React.JSX.Element {
+  return (
+    <section
+      className="output-section"
+      data-testid="privilege-required-message"
+      aria-label="Privilege required"
+    >
+      <h3>Elevated privileges required</h3>
+      <p>
+        The scan type you chose (SYN scan, OS detection, or raw-packet scan) requires root
+        privileges on macOS and Linux, or Administrator access on Windows.
+      </p>
+      <p>
+        To run an unprivileged scan, switch to{" "}
+        <strong>
+          TCP connect scan (<code>-sT</code>)
+        </strong>{" "}
+        in the Options panel — it works without elevated access and is the default recipe.
+      </p>
+      <p className="muted">
+        One-click elevation support via sudo/runas is planned for a future release (#89). Until
+        then, run Maple with <code>sudo</code> on macOS/Linux or from an elevated prompt on Windows.
+      </p>
     </section>
   );
 }

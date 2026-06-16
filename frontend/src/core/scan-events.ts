@@ -1,6 +1,6 @@
-import type { ScanEvent } from "../services/scan-service";
+import type { ScanEvent, ScanFinishedEvent } from "../services/scan-service";
 
-export type ScanFinishKind = "complete" | "failed" | "cancelled";
+export type ScanFinishKind = "complete" | "failed" | "cancelled" | "privilege";
 
 export function scanEventRunningState(event: ScanEvent): boolean | undefined {
   if (event.type === "started") {
@@ -19,8 +19,43 @@ export function scanEventFinishKind(event: ScanEvent): ScanFinishKind | undefine
   if (event.result.error === undefined || event.result.error === "") {
     return "complete";
   }
-  return isCancellationError(event.result.error) ? "cancelled" : "failed";
+  if (isCancellationError(event.result.error)) {
+    return "cancelled";
+  }
+  if (isPrivilegeError(event.result)) {
+    return "privilege";
+  }
+  return "failed";
 }
+
+/**
+ * Returns true when the finished event indicates that nmap exited due to
+ * insufficient privileges (raw socket access, SYN scan, OS detection, etc.).
+ *
+ * The check is intentionally anchored to specific privilege-error phrases so
+ * that ordinary failures (host down, name-resolution errors, generic exit
+ * codes) are never misclassified.
+ */
+export function isPrivilegeError(result: ScanFinishedEvent): boolean {
+  const corpus = buildPrivilegeCorpus(result);
+  return PRIVILEGE_PATTERNS.some((pattern) => pattern.test(corpus));
+}
+
+/**
+ * Ordered list of case-insensitive patterns that unambiguously identify a
+ * privilege error in nmap output. Each pattern matches a distinct nmap
+ * phrasing; none overlap with normal failure messages.
+ */
+const PRIVILEGE_PATTERNS: readonly RegExp[] = [
+  /requires root privileges/iu,
+  /you requested a scan type which requires root/iu,
+  /requires r00t/iu,
+  /operation not permitted/iu,
+  /socket troubles/iu,
+  /couldn't open a raw socket/iu,
+  /quitting!.*(?:root|privilege|permission|socket)/isu,
+  /(?:root|privilege|permission|socket).*quitting!/isu,
+] as const;
 
 export function scanEventLogLine(event: ScanEvent): string | undefined {
   if (event.type === "output") {
@@ -66,4 +101,15 @@ function isCancellationError(value: string): boolean {
     normalized.includes("scan canceled") ||
     normalized.includes("scan cancelled")
   );
+}
+
+function buildPrivilegeCorpus(result: ScanFinishedEvent): string {
+  const parts: string[] = [];
+  if (result.error !== undefined && result.error !== "") {
+    parts.push(result.error);
+  }
+  if (result.diagnostics !== undefined && result.diagnostics !== "") {
+    parts.push(result.diagnostics);
+  }
+  return parts.join("\n");
 }
