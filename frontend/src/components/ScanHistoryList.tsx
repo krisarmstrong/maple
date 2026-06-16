@@ -14,9 +14,14 @@ import { ScanHistoryDetails } from "./ScanHistoryDetails";
 interface ScanHistoryListProps {
   records: ScanHistoryRecord[];
   onChanged?: () => void;
+  onStartScan?: () => void;
 }
 
-export function ScanHistoryList({ records, onChanged }: ScanHistoryListProps): React.JSX.Element {
+export function ScanHistoryList({
+  records,
+  onChanged,
+  onStartScan,
+}: ScanHistoryListProps): React.JSX.Element {
   const [report, setReport] = useState<{ runId: string; text: string } | undefined>();
   const [detailsRunId, setDetailsRunId] = useState<string | undefined>();
   const [pendingDeleteRunId, setPendingDeleteRunId] = useState<string | undefined>();
@@ -38,7 +43,16 @@ export function ScanHistoryList({ records, onChanged }: ScanHistoryListProps): R
   });
 
   if (records.length === 0) {
-    return <p className="muted">No completed scans yet.</p>;
+    return (
+      <div className="history-empty-state">
+        <p className="muted">No completed scans yet.</p>
+        {onStartScan !== undefined ? (
+          <button data-testid="history-start-scan" type="button" onClick={onStartScan}>
+            Start a scan
+          </button>
+        ) : null}
+      </div>
+    );
   }
 
   async function showReport(runId: string): Promise<void> {

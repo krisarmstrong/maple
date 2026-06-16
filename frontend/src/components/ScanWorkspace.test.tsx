@@ -64,10 +64,7 @@ describe("ScanWorkspace", () => {
   it("starts on the Configure tab with script controls out of the primary path", () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
-    expect(screen.getByRole("button", { name: "Configure" })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
+    expect(screen.getByRole("tab", { name: "Configure" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("heading", { name: "Targets" })).toBeInTheDocument();
     expect(screen.getByLabelText("Target shape")).toHaveValue("single");
     expect(screen.getByLabelText("Targets")).toBeInTheDocument();
@@ -95,17 +92,14 @@ describe("ScanWorkspace", () => {
   it("explains target blockers and links back to Configure", async () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Options" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Options" }));
 
     expect(screen.getByRole("button", { name: "Preview" })).toBeDisabled();
     expect(screen.getByRole("heading", { name: "Target needs attention" })).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "Fix Target" }));
 
-    expect(screen.getByRole("button", { name: "Configure" })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
+    expect(screen.getByRole("tab", { name: "Configure" })).toHaveAttribute("aria-selected", "true");
   });
 
   it("shows compact command center context above the scan panels", async () => {
@@ -137,9 +131,9 @@ describe("ScanWorkspace", () => {
   it("opens NSE controls from the Scripts tab", async () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Scripts" }));
 
-    expect(screen.getByRole("button", { name: "Scripts" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("tab", { name: "Scripts" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByText("NSE scripts")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Selected scripts" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Browse scripts" })).toBeInTheDocument();
@@ -217,9 +211,9 @@ describe("ScanWorkspace", () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
     await selectRecipe("builtin-service-inventory");
-    await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Scripts" }));
     await userEvent.click(screen.getByRole("checkbox", { name: "safe" }));
-    await userEvent.click(screen.getByRole("button", { name: "Configure" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Configure" }));
     await userEvent.type(screen.getByLabelText("Recipe name"), "Web TLS check");
     await userEvent.click(screen.getByRole("button", { name: "Save Recipe" }));
 
@@ -242,7 +236,7 @@ describe("ScanWorkspace", () => {
     fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
     await userEvent.click(screen.getByRole("button", { name: "Preview" }));
 
-    expect(screen.getByRole("button", { name: "Output" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("tab", { name: "Output" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("heading", { name: "Preview argv" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Run status" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Live log" })).toBeInTheDocument();
@@ -306,10 +300,7 @@ describe("ScanWorkspace", () => {
     await userEvent.click(screen.getByRole("button", { name: "Preview" }));
 
     expect(await screen.findByText("enter valid structured Nmap options")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Configure" })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
+    expect(screen.getByRole("tab", { name: "Configure" })).toHaveAttribute("aria-selected", "true");
   });
 
   it("shows scan start errors from the backend", async () => {
@@ -351,7 +342,7 @@ describe("ScanWorkspace", () => {
 
     await selectRecipe("builtin-service-inventory");
     await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
-    await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Scripts" }));
     await userEvent.click(screen.getByRole("checkbox", { name: "safe" }));
     fireEvent.change(screen.getByLabelText("Manual script names"), {
       target: { value: "http-title" },
@@ -404,7 +395,7 @@ describe("ScanWorkspace", () => {
   it("browses scripts for selected categories without a search query", async () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Scripts" }));
     await userEvent.click(screen.getByRole("checkbox", { name: "discovery" }));
 
     expect(screen.getByRole("group", { name: "Script browser" })).toBeInTheDocument();
@@ -481,7 +472,7 @@ describe("ScanWorkspace", () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
     fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
-    fireEvent.click(screen.getByRole("button", { name: "Options" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Options" }));
     fireEvent.change(screen.getByLabelText("Scan technique"), { target: { value: "udp" } });
     fireEvent.change(screen.getByLabelText("TCP SYN probe ports"), {
       target: { value: "22,80,443" },
@@ -498,14 +489,14 @@ describe("ScanWorkspace", () => {
     fireEvent.change(screen.getByLabelText("Timing"), { target: { value: "T4" } });
     fireEvent.change(screen.getByLabelText("DNS"), { target: { value: "skip" } });
 
-    fireEvent.click(screen.getByRole("button", { name: "Ports" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Ports" }));
     fireEvent.change(screen.getByLabelText("Version detail"), { target: { value: "all" } });
     fireEvent.change(screen.getByRole("textbox", { name: "Ports" }), {
       target: { value: "22,80,443" },
     });
     fireEvent.change(screen.getByLabelText("Output detail"), { target: { value: "debug" } });
 
-    fireEvent.click(screen.getByRole("button", { name: "Timing" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Timing" }));
     fireEvent.change(screen.getByLabelText("Minimum packet rate"), { target: { value: "500" } });
     fireEvent.change(screen.getByLabelText("Maximum packet rate"), { target: { value: "2000" } });
     fireEvent.change(screen.getByLabelText("Maximum retries"), { target: { value: "2" } });
@@ -519,7 +510,7 @@ describe("ScanWorkspace", () => {
     fireEvent.change(screen.getByLabelText("Minimum parallelism"), { target: { value: "4" } });
     fireEvent.change(screen.getByLabelText("Maximum parallelism"), { target: { value: "64" } });
 
-    fireEvent.click(screen.getByRole("button", { name: "Evasion" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Evasion" }));
     fireEvent.change(screen.getByLabelText("Data length"), { target: { value: "24" } });
     fireEvent.change(screen.getByLabelText("Source port"), { target: { value: "53" } });
     fireEvent.change(screen.getByLabelText("Decoys"), {
@@ -533,7 +524,7 @@ describe("ScanWorkspace", () => {
 
     fireEvent.click(screen.getByRole("checkbox", { name: "Fragment packets" }));
 
-    fireEvent.click(screen.getByRole("button", { name: "Behavior" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Behavior" }));
     fireEvent.click(screen.getByRole("checkbox", { name: "ICMP echo probe" }));
     fireEvent.click(screen.getByRole("checkbox", { name: "ICMP timestamp probe" }));
     fireEvent.click(screen.getByRole("checkbox", { name: "ICMP netmask probe" }));
@@ -608,24 +599,24 @@ describe("ScanWorkspace", () => {
   it("preserves option values when switching option groups", async () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Options" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Options" }));
     await userEvent.selectOptions(screen.getByLabelText("Scan technique"), "udp");
 
-    await userEvent.click(screen.getByRole("button", { name: "Ports" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Ports" }));
     fireEvent.change(screen.getByRole("textbox", { name: "Ports" }), {
       target: { value: "22,443" },
     });
 
-    await userEvent.click(screen.getByRole("button", { name: "Timing" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Timing" }));
     fireEvent.change(screen.getByLabelText("Minimum packet rate"), { target: { value: "250" } });
 
-    await userEvent.click(screen.getByRole("button", { name: "Scan shape" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Scan shape" }));
     expect(screen.getByLabelText("Scan technique")).toHaveValue("udp");
 
-    await userEvent.click(screen.getByRole("button", { name: "Ports" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Ports" }));
     expect(screen.getByRole("textbox", { name: "Ports" })).toHaveValue("22,443");
 
-    await userEvent.click(screen.getByRole("button", { name: "Timing" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Timing" }));
     expect(screen.getByLabelText("Minimum packet rate")).toHaveValue(250);
   });
 
@@ -645,11 +636,11 @@ describe("ScanWorkspace", () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
     fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
-    await userEvent.click(screen.getByRole("button", { name: "Options" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Options" }));
     fireEvent.change(screen.getByLabelText("DNS servers"), {
       target: { value: "1.1.1.1,2606:4700:4700::1111" },
     });
-    await userEvent.click(screen.getByRole("button", { name: "Ports" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Ports" }));
     fireEvent.change(screen.getByLabelText("Version intensity"), { target: { value: "7" } });
 
     await userEvent.click(screen.getByRole("button", { name: "Preview" }));
@@ -679,8 +670,8 @@ describe("ScanWorkspace", () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
     fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
-    await userEvent.click(screen.getByRole("button", { name: "Options" }));
-    await userEvent.click(screen.getByRole("button", { name: "Timing" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Options" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Timing" }));
     fireEvent.change(screen.getByLabelText("Minimum packet rate"), { target: { value: "2000" } });
     fireEvent.change(screen.getByLabelText("Maximum packet rate"), { target: { value: "1000" } });
 
@@ -714,8 +705,8 @@ describe("ScanWorkspace", () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
     fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
-    await userEvent.click(screen.getByRole("button", { name: "Options" }));
-    await userEvent.click(screen.getByRole("button", { name: "Evasion" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Options" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Evasion" }));
     const mtuInput = screen.getByLabelText("Custom MTU");
     await userEvent.type(mtuInput, "9");
     await userEvent.click(screen.getByRole("button", { name: "Preview" }));
@@ -745,7 +736,7 @@ describe("ScanWorkspace", () => {
       await screen.findByText("nmap -oX <managed-xml-file> --mtu 24 -- scanme.nmap.org"),
     ).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: "Options" }));
+    await userEvent.click(screen.getByRole("tab", { name: /^Options/ }));
     await userEvent.click(screen.getByRole("checkbox", { name: "Fragment packets" }));
     const clearedMTUInput = screen.getByLabelText("Custom MTU");
     expect(clearedMTUInput).toBeDisabled();
@@ -764,7 +755,7 @@ describe("ScanWorkspace", () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
     fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
-    fireEvent.click(screen.getByRole("button", { name: "Options" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Options" }));
     fireEvent.change(screen.getByLabelText("Scan technique"), { target: { value: "ack" } });
     expect(
       screen.getByText(/ACK, Window, Maimon, NULL, FIN, Xmas, SCTP, and IP protocol scans/),
@@ -805,7 +796,7 @@ describe("ScanWorkspace", () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
     await selectRecipe("builtin-fast-host-discovery");
-    await userEvent.click(screen.getByRole("button", { name: "Options" }));
+    await userEvent.click(screen.getByRole("tab", { name: /^Options/ }));
     fireEvent.change(screen.getByLabelText("Target input file"), {
       target: { value: "/Users/krisarmstrong/targets.txt" },
     });
@@ -842,7 +833,7 @@ describe("ScanWorkspace", () => {
   it("warns when host discovery changes scan semantics", async () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Options" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Options" }));
     await userEvent.selectOptions(screen.getByLabelText("Host discovery"), "skip");
 
     expect(
@@ -863,7 +854,7 @@ describe("ScanWorkspace", () => {
   it("warns when scan technique can require privileges or run slowly", async () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Options" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Options" }));
     await userEvent.selectOptions(screen.getByLabelText("Scan technique"), "syn");
 
     expect(
@@ -884,11 +875,11 @@ describe("ScanWorkspace", () => {
 
     await userEvent.selectOptions(screen.getByLabelText("Target shape"), "subnet");
     await userEvent.type(screen.getByLabelText("Targets"), "192.168.1.0/24");
-    await userEvent.click(screen.getByRole("button", { name: "Options" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Options" }));
     fireEvent.change(screen.getByLabelText("Scan technique"), { target: { value: "udp" } });
-    await userEvent.click(screen.getByRole("button", { name: "Behavior" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Behavior" }));
     fireEvent.click(screen.getByRole("checkbox", { name: "OS detection" }));
-    await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Scripts" }));
     await userEvent.click(screen.getByRole("checkbox", { name: "vuln" }));
 
     expect(screen.getByRole("region", { name: "Scan safety notes" })).toBeInTheDocument();
@@ -911,8 +902,8 @@ describe("ScanWorkspace", () => {
   it("warns that OS detection may need elevated privileges", async () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Options" }));
-    await userEvent.click(screen.getByRole("button", { name: "Behavior" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Options" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Behavior" }));
     expect(
       screen.queryByText(
         "OS detection often requires elevated privileges on macOS, Linux, and Windows.",
@@ -945,7 +936,7 @@ describe("ScanWorkspace", () => {
       await screen.findByText("nmap -oX <managed-xml-file> -sn -- scanme.nmap.org"),
     ).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: "Configure" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Configure" }));
     await userEvent.type(screen.getByLabelText("Targets"), ", 127.0.0.1");
 
     expect(
@@ -966,7 +957,7 @@ describe("ScanWorkspace", () => {
 
     await userEvent.type(screen.getByLabelText("Targets"), "scanme.nmap.org");
     await userEvent.click(screen.getByRole("button", { name: "Preview" }));
-    await userEvent.click(screen.getByRole("button", { name: "Configure" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Configure" }));
     await selectRecipe("builtin-fast-host-discovery");
 
     expect(
@@ -991,7 +982,7 @@ describe("ScanWorkspace", () => {
       await screen.findByText("nmap -oX <managed-xml-file> -sn -- scanme.nmap.org"),
     ).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Scripts" }));
     await userEvent.click(screen.getByRole("checkbox", { name: "safe" }));
 
     expect(
@@ -1189,7 +1180,7 @@ describe("ScanWorkspace", () => {
   it("shows selected script chips and removes one without editing textarea text", async () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Scripts" }));
     await userEvent.type(screen.getByLabelText("Manual script names"), "http-title\nssl-cert");
 
     expect(screen.getByRole("heading", { name: "Selected scripts" })).toBeInTheDocument();
@@ -1204,7 +1195,7 @@ describe("ScanWorkspace", () => {
   it("labels risky NSE categories", async () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Scripts" }));
 
     expect(screen.getByText("vuln")).toBeInTheDocument();
     expect(
@@ -1220,7 +1211,7 @@ describe("ScanWorkspace", () => {
   it("shows NSE script descriptions and category badges", async () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Scripts" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Scripts" }));
     fireEvent.change(screen.getByLabelText("Search built-in scripts"), {
       target: { value: "ssl" },
     });
@@ -1267,5 +1258,80 @@ describe("ScanWorkspace", () => {
     expect(log).not.toHaveTextContent("<nmaprun");
     expect(log).toHaveTextContent("Stats: 0:00:01 elapsed");
     expect(log).toHaveTextContent("Scan finished: exit 0. XML captured for history and reports.");
+  });
+
+  // #75 — Option/Script change-count badges on the Scan tabs
+  it("hides badges on Options and Scripts tabs when counts are zero", () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    const optionsTab = screen.getByRole("tab", { name: "Options" });
+    const scriptsTab = screen.getByRole("tab", { name: "Scripts" });
+
+    expect(optionsTab.querySelector(".tab-badge")).toBeNull();
+    expect(scriptsTab.querySelector(".tab-badge")).toBeNull();
+  });
+
+  it("shows an Options badge when scan options differ from defaults", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.click(screen.getByRole("tab", { name: "Options" }));
+    await userEvent.click(screen.getByRole("tab", { name: "Behavior" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "OS detection" }));
+
+    // OS detection = 1 changed option → badge should show 1
+    const optionsTab = screen.getByRole("tab", { name: "Options, 1 change" });
+    const badge = optionsTab.querySelector(".tab-badge");
+    expect(badge).not.toBeNull();
+    expect(badge?.textContent).toBe("1");
+  });
+
+  it("shows a Scripts badge when script selections are non-empty", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.click(screen.getByRole("tab", { name: "Scripts" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "safe" }));
+
+    // 1 category selected → badge shows 1
+    const scriptsTab = screen.getByRole("tab", { name: "Scripts, 1 change" });
+    const badge = scriptsTab.querySelector(".tab-badge");
+    expect(badge).not.toBeNull();
+    expect(badge?.textContent).toBe("1");
+  });
+
+  // #76 — Correct tab ARIA roles
+  it("uses the tablist/tab/tabpanel ARIA pattern for scan panel tabs", () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    const tablist = screen.getByRole("tablist", { name: "Scan setup sections" });
+    expect(tablist).toBeInTheDocument();
+
+    const configureTab = screen.getByRole("tab", { name: "Configure" });
+    expect(configureTab).toHaveAttribute("aria-selected", "true");
+    expect(configureTab).toHaveAttribute("aria-controls", "scan-panel-configure");
+
+    const optionsTab = screen.getByRole("tab", { name: "Options" });
+    expect(optionsTab).toHaveAttribute("aria-selected", "false");
+    expect(optionsTab).toHaveAttribute("aria-controls", "scan-panel-options");
+  });
+
+  it("sets tabpanel role and aria-labelledby on the active scan panel", () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    const panel = screen.getByRole("tabpanel");
+    expect(panel).toHaveAttribute("id", "scan-panel-configure");
+    expect(panel).toHaveAttribute("aria-labelledby", "scan-tab-configure");
+  });
+
+  it("uses the tablist/tab/tabpanel ARIA pattern for option group sub-tabs", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.click(screen.getByRole("tab", { name: "Options" }));
+
+    const optionTablist = screen.getByRole("tablist", { name: "Option groups" });
+    expect(optionTablist).toBeInTheDocument();
+
+    const shapeTab = screen.getByRole("tab", { name: "Scan shape" });
+    expect(shapeTab).toHaveAttribute("aria-selected", "true");
+    expect(shapeTab).toHaveAttribute("aria-controls", "option-panel-shape");
   });
 });

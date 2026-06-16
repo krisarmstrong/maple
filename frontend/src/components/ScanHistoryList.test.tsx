@@ -257,6 +257,32 @@ describe("ScanHistoryList", () => {
 
     expect(screen.getByRole("button", { name: "Delete" })).toBeInTheDocument();
   });
+
+  // #79 — Jump-to-scan from empty History
+  it("shows a Start a scan button in the empty state when onStartScan is provided", () => {
+    const onStartScan = vi.fn();
+    render(<ScanHistoryList records={[]} onStartScan={onStartScan} />);
+
+    expect(screen.getByText("No completed scans yet.")).toBeInTheDocument();
+    expect(screen.getByTestId("history-start-scan")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Start a scan" })).toBeInTheDocument();
+  });
+
+  it("does not show the Start a scan button when onStartScan is not provided", () => {
+    render(<ScanHistoryList records={[]} />);
+
+    expect(screen.getByText("No completed scans yet.")).toBeInTheDocument();
+    expect(screen.queryByTestId("history-start-scan")).not.toBeInTheDocument();
+  });
+
+  it("calls onStartScan when the Start a scan button is clicked", async () => {
+    const onStartScan = vi.fn();
+    render(<ScanHistoryList records={[]} onStartScan={onStartScan} />);
+
+    await userEvent.click(screen.getByTestId("history-start-scan"));
+
+    expect(onStartScan).toHaveBeenCalledOnce();
+  });
 });
 
 function scanRecord(runId: string, overrides: Partial<ScanHistoryRecord> = {}): ScanHistoryRecord {
