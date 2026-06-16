@@ -38,6 +38,7 @@ export default function App(): React.JSX.Element {
   const [toolActionError, setToolActionError] = useState("");
   const [activeView, setActiveView] = useState<AppView>("scan");
   const [customNmapPath, setCustomNmapPath] = useState(readCustomNmapPath);
+  const [lastScanRunId, setLastScanRunId] = useState<string | undefined>(undefined);
   const [versionInfo, setVersionInfo] = useState<BuildVersionInfo>({
     version: "dev",
     commit: "unknown",
@@ -132,7 +133,9 @@ export default function App(): React.JSX.Element {
           <ScanWorkspace
             nmapPath={nmapPathFor(state, customNmapPath)}
             onOpenEnvironment={() => setActiveView("environment")}
+            onScanStarted={setLastScanRunId}
             onScanFinished={() => refreshHistory(setHistoryState)}
+            completedRecord={completedRecordFor(historyState, lastScanRunId)}
           />
         ) : null}
 
@@ -285,6 +288,16 @@ function nmapPathFor(state: LoadState, customNmapPath: string): string | undefin
     return undefined;
   }
   return state.tools.find((tool) => tool.name === "nmap" && tool.installed)?.path;
+}
+
+function completedRecordFor(
+  historyState: HistoryState,
+  runId: string | undefined,
+): ScanHistoryRecord | undefined {
+  if (historyState.status !== "ready" || runId === undefined) {
+    return undefined;
+  }
+  return historyState.records.find((record) => record.runId === runId);
 }
 
 function readCustomNmapPath(): string {
