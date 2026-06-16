@@ -130,6 +130,7 @@ export default function App(): React.JSX.Element {
         {activeView === "scan" ? (
           <ScanWorkspace
             nmapPath={nmapPathFor(state, customNmapPath)}
+            onOpenEnvironment={() => setActiveView("environment")}
             onScanFinished={() => refreshHistory(setHistoryState)}
           />
         ) : null}

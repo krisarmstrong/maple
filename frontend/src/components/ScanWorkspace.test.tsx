@@ -73,6 +73,40 @@ describe("ScanWorkspace", () => {
     expect(screen.queryByLabelText("Custom .nse script files")).not.toBeInTheDocument();
   });
 
+  it("explains missing Nmap before enabling scan actions", async () => {
+    const onOpenEnvironment = vi.fn();
+    render(<ScanWorkspace onOpenEnvironment={onOpenEnvironment} />);
+
+    expect(screen.getByRole("button", { name: "Preview" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Run Scan" })).toBeDisabled();
+    expect(screen.getByRole("heading", { name: "Nmap is missing" })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Maple needs a locally installed Nmap binary before it can preview or run scans.",
+      ),
+    ).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Configure Nmap" }));
+
+    expect(onOpenEnvironment).toHaveBeenCalledOnce();
+  });
+
+  it("explains target blockers and links back to Configure", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Options" }));
+
+    expect(screen.getByRole("button", { name: "Preview" })).toBeDisabled();
+    expect(screen.getByRole("heading", { name: "Target needs attention" })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Fix Target" }));
+
+    expect(screen.getByRole("button", { name: "Configure" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+  });
+
   it("shows compact command center context above the scan panels", async () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
     const context = within(screen.getByLabelText("Scan context"));
@@ -80,12 +114,13 @@ describe("ScanWorkspace", () => {
     expect(context.getByText("Scan context")).toBeInTheDocument();
     expect(context.getByText(/Top TCP ports/u)).toBeInTheDocument();
     expect(context.getByText(/Single host\/IP/u)).toBeInTheDocument();
-    expect(context.getByText(/Ready to preview/u)).toBeInTheDocument();
+    expect(context.getByText(/Target needs attention/u)).toBeInTheDocument();
     expect(context.getByText(/No target set/u)).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
 
     expect(context.getByText(/1 hostname/u)).toBeInTheDocument();
+    expect(context.getByText(/Ready to preview/u)).toBeInTheDocument();
   });
 
   it("renders the scan subtitle once", () => {
@@ -642,8 +677,8 @@ describe("ScanWorkspace", () => {
     fireEvent.change(screen.getByLabelText("Minimum packet rate"), { target: { value: "2000" } });
     fireEvent.change(screen.getByLabelText("Maximum packet rate"), { target: { value: "1000" } });
 
-    await userEvent.click(screen.getByRole("button", { name: "Preview" }));
-
+    expect(screen.getByRole("button", { name: "Preview" })).toBeDisabled();
+    expect(screen.getByRole("heading", { name: "Options need attention" })).toBeInTheDocument();
     expect(
       screen.getByText("Minimum packet rate cannot be greater than maximum packet rate."),
     ).toBeInTheDocument();
@@ -652,8 +687,6 @@ describe("ScanWorkspace", () => {
     fireEvent.change(screen.getByLabelText("Minimum packet rate"), { target: { value: "500" } });
     fireEvent.change(screen.getByLabelText("Minimum host group"), { target: { value: "50" } });
     fireEvent.change(screen.getByLabelText("Maximum host group"), { target: { value: "10" } });
-
-    await userEvent.click(screen.getByRole("button", { name: "Preview" }));
 
     expect(
       screen.getByText("Minimum host group cannot be greater than maximum host group."),

@@ -69,13 +69,18 @@ import {
 
 interface ScanWorkspaceProps {
   nmapPath?: string;
+  onOpenEnvironment?: () => void;
   onScanFinished?: () => void;
 }
 
 type ScanPanel = "configure" | "options" | "scripts" | "output";
 type OptionGroup = "shape" | "ports" | "timing" | "evasion" | "behavior";
 
-export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps): React.JSX.Element {
+export function ScanWorkspace({
+  nmapPath,
+  onOpenEnvironment,
+  onScanFinished,
+}: ScanWorkspaceProps): React.JSX.Element {
   const [targets, setTargets] = useState("");
   const [targetModeId, setTargetModeId] = useState<TargetModeID>("single");
   const [profileId, setProfileId] = useState<ScanProfileID>("connect");
@@ -102,6 +107,11 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
   const scope = scanScope(profileId, targets);
   const parsedTargetSummary = targetBuilderSummary(targets);
   const targetValidation = targetModeValidationSummary(targetModeId, targets);
+  const optionsMessage = messageForInvalidScanOptions(scanOptions);
+  const targetsReady =
+    targetValidation.valid || (scanOptions.targetInputFile.trim() !== "" && targets.trim() === "");
+  const readiness = scanReadiness(nmapPath, targetsReady, optionsMessage);
+  const scanReady = readiness.level === "ready";
   const scripts = buildScanScripts(
     scriptCategories,
     scriptNames,
@@ -155,7 +165,6 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
       setError(messageForInvalidTargets(targetModeId, targets));
       return;
     }
-    const optionsMessage = messageForInvalidScanOptions(scanOptions);
     if (optionsMessage !== "") {
       setActivePanel("options");
       setError(optionsMessage);
@@ -189,7 +198,6 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
       setError(messageForInvalidTargets(targetModeId, targets));
       return;
     }
-    const optionsMessage = messageForInvalidScanOptions(scanOptions);
     if (optionsMessage !== "") {
       setActivePanel("options");
       setError(optionsMessage);
@@ -342,17 +350,13 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
         </div>
         <div className="scan-actions">
           <button
-            disabled={nmapPath === undefined}
+            disabled={!scanReady || running}
             onClick={() => void previewCommand()}
             type="button"
           >
             Preview
           </button>
-          <button
-            disabled={nmapPath === undefined || running}
-            onClick={() => void runScan()}
-            type="button"
-          >
+          <button disabled={!scanReady || running} onClick={() => void runScan()} type="button">
             Run Scan
           </button>
           <button disabled={!running} onClick={() => void cancelScan()} type="button">
@@ -361,12 +365,37 @@ export function ScanWorkspace({ nmapPath, onScanFinished }: ScanWorkspaceProps):
         </div>
       </div>
 
+      <section className={`scan-readiness scan-readiness--${readiness.level}`}>
+        <div>
+          <h3>{readiness.title}</h3>
+          <p>{readiness.message}</p>
+        </div>
+        {readiness.action === "environment" && onOpenEnvironment !== undefined ? (
+          <button type="button" onClick={onOpenEnvironment}>
+            Configure Nmap
+          </button>
+        ) : null}
+        {readiness.action === "configure" ? (
+          <button type="button" onClick={() => setActivePanel("configure")}>
+            Fix Target
+          </button>
+        ) : null}
+        {readiness.action === "options" ? (
+          <button type="button" onClick={() => setActivePanel("options")}>
+            Fix Options
+          </button>
+        ) : null}
+      </section>
+
       <section aria-label="Scan context" className="scan-context-strip">
         <h3>Scan context</h3>
         <ContextMetric label="Recipe" value={selectedPreset?.name ?? "Custom scan"} />
         <ContextMetric label="Target type" value={targetModeContextLabel(targetModeId)} />
         <ContextMetric label="Targets" value={parsedTargetSummary.parsedTargets} />
-        <ContextMetric label="Status" value={scanStatusLabel(status)} />
+        <ContextMetric
+          label="Status"
+          value={status === "idle" ? readiness.title : scanStatusLabel(status)}
+        />
       </section>
 
       <nav className="scan-panel-tabs" aria-label="Scan setup sections">
@@ -1707,6 +1736,53 @@ function errorMessage(caught: unknown): string {
 
 function clipboardErrorMessage(caught: unknown): string {
   return caught instanceof Error ? caught.message : "Unable to copy argv to clipboard.";
+}
+
+type ScanReadinessLevel = "ready" | "blocked";
+type ScanReadinessAction = "environment" | "configure" | "options" | "none";
+
+interface ScanReadiness {
+  action: ScanReadinessAction;
+  level: ScanReadinessLevel;
+  message: string;
+  title: string;
+}
+
+function scanReadiness(
+  nmapPath: string | undefined,
+  targetsReady: boolean,
+  optionsMessage: string,
+): ScanReadiness {
+  if (nmapPath === undefined) {
+    return {
+      action: "environment",
+      level: "blocked",
+      message: "Maple needs a locally installed Nmap binary before it can preview or run scans.",
+      title: "Nmap is missing",
+    };
+  }
+  if (!targetsReady) {
+    return {
+      action: "configure",
+      level: "blocked",
+      message: "Choose a target shape and enter targets that match it before previewing argv.",
+      title: "Target needs attention",
+    };
+  }
+  if (optionsMessage !== "") {
+    return {
+      action: "options",
+      level: "blocked",
+      message: optionsMessage,
+      title: "Options need attention",
+    };
+  }
+  return {
+    action: "none",
+    level: "ready",
+    message: "Maple can preview the exact argv before it starts Nmap.",
+    title: "Ready to preview",
+  };
 }
 
 interface ScanPanelButtonProps {

@@ -119,6 +119,21 @@ describe("App", () => {
     );
   });
 
+  it("opens Environment from the missing Nmap scan readiness action", async () => {
+    detectToolsMock.mockResolvedValue([]);
+
+    render(<App />);
+
+    expect(await screen.findByRole("heading", { name: "Nmap is missing" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Configure Nmap" }));
+
+    expect(screen.getByRole("button", { name: "Environment, 0 tools detected" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.getByRole("heading", { name: "Tool Detection" })).toBeInTheDocument();
+  });
+
   it("surfaces Ncat, Ndiff, and Nping as separate utility workspaces", async () => {
     detectToolsMock.mockResolvedValue([
       {

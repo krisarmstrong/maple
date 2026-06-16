@@ -387,6 +387,40 @@
   padding: var(--space-8);
 }
 
+.scan-readiness {
+  align-items: center;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  gap: var(--space-10);
+  justify-content: space-between;
+  margin-bottom: var(--space-11);
+  padding: var(--space-8);
+}
+
+.scan-readiness h3 {
+  font-size: var(--font-size-md);
+  margin: var(--space-0) var(--space-0) var(--space-2);
+}
+
+.scan-readiness p {
+  color: var(--muted);
+  margin: var(--space-0);
+}
+
+.scan-readiness--ready {
+  background: var(--color-success-surface);
+}
+
+.scan-readiness--blocked {
+  background: var(--warn-bg);
+  border-color: var(--warn-border);
+}
+
+.scan-readiness--blocked h3 {
+  color: var(--warn-text);
+}
+
 .scan-context-strip h3 {
   align-self: center;
   font-size: var(--font-size-md);
@@ -1614,6 +1648,11 @@ textarea:focus {
   .scan-grid,
   .target-entry-grid {
     grid-template-columns: 1fr;
+  }
+
+  .scan-readiness {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .recipe-save-row {
