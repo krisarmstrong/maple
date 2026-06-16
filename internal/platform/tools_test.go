@@ -219,3 +219,149 @@ func TestHelpReportsMissingToolWithoutRunningHelp(t *testing.T) {
 		t.Fatal("expected missing tool error")
 	}
 }
+
+func TestParseNmapVersion(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		wantVer string
+		wantOK  bool
+	}{
+		{
+			name:    "release build",
+			input:   "Nmap version 7.95 ( https://nmap.org )",
+			wantVer: "7.95",
+			wantOK:  true,
+		},
+		{
+			name:    "development build with SVN suffix",
+			input:   "Nmap version 7.94SVN ( https://nmap.org )",
+			wantVer: "7.94",
+			wantOK:  true,
+		},
+		{
+			name:    "older release",
+			input:   "Nmap version 7.70 ( https://nmap.org )",
+			wantVer: "7.70",
+			wantOK:  true,
+		},
+		{
+			name:    "three-part version",
+			input:   "Nmap version 7.80.1 ( https://nmap.org )",
+			wantVer: "7.80.1",
+			wantOK:  true,
+		},
+		{
+			name:    "version string without URL",
+			input:   "Nmap version 7.99",
+			wantVer: "7.99",
+			wantOK:  true,
+		},
+		{
+			name:    "empty string",
+			input:   "",
+			wantVer: "",
+			wantOK:  false,
+		},
+		{
+			name:    "garbled output",
+			input:   "garbled",
+			wantVer: "",
+			wantOK:  false,
+		},
+		{
+			name:    "missing version keyword",
+			input:   "Nmap 7.95",
+			wantVer: "",
+			wantOK:  false,
+		},
+		{
+			name:    "version keyword with no number following",
+			input:   "Nmap version ",
+			wantVer: "",
+			wantOK:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotVer, gotOK := parseNmapVersion(tt.input)
+			if gotOK != tt.wantOK {
+				t.Fatalf("parseNmapVersion(%q) ok = %v, want %v", tt.input, gotOK, tt.wantOK)
+			}
+			if gotVer != tt.wantVer {
+				t.Fatalf("parseNmapVersion(%q) = %q, want %q", tt.input, gotVer, tt.wantVer)
+			}
+		})
+	}
+}
+
+func TestDetectOnePopulatesVersionIntelForNmap(t *testing.T) {
+	tests := []struct {
+		name           string
+		versionOutput  string
+		wantBelow      bool
+		wantMinVersion string
+	}{
+		{
+			name:           "current release — not below minimum",
+			versionOutput:  "Nmap version 7.95 ( https://nmap.org )\n",
+			wantBelow:      false,
+			wantMinVersion: NmapMinVersion,
+		},
+		{
+			name:           "exactly at minimum — not below",
+			versionOutput:  "Nmap version 7.80 ( https://nmap.org )\n",
+			wantBelow:      false,
+			wantMinVersion: NmapMinVersion,
+		},
+		{
+			name:           "older than minimum — below",
+			versionOutput:  "Nmap version 7.70 ( https://nmap.org )\n",
+			wantBelow:      true,
+			wantMinVersion: NmapMinVersion,
+		},
+		{
+			name:           "development build older than minimum",
+			versionOutput:  "Nmap version 7.60SVN ( https://nmap.org )\n",
+			wantBelow:      true,
+			wantMinVersion: NmapMinVersion,
+		},
+		{
+			name:           "unparseable version — no intel fields set",
+			versionOutput:  "garbled output\n",
+			wantBelow:      false,
+			wantMinVersion: "",
+		},
+		{
+			name:           "empty version output — no intel fields set",
+			versionOutput:  "",
+			wantBelow:      false,
+			wantMinVersion: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			detector := Detector{
+				lookPath: func(string) (string, error) { return "/usr/bin/nmap", nil },
+				run: func(context.Context, string, ...string) ([]byte, error) {
+					return []byte(tt.versionOutput), nil
+				},
+			}
+			result := detector.DetectOne(context.Background(), ToolSpec{
+				Name:        "nmap",
+				DisplayName: "Nmap",
+				Required:    true,
+				VersionArg:  "--version",
+			})
+
+			if result.BelowMinVersion != tt.wantBelow {
+				t.Fatalf("BelowMinVersion = %v, want %v", result.BelowMinVersion, tt.wantBelow)
+			}
+			if result.MinVersion != tt.wantMinVersion {
+				t.Fatalf("MinVersion = %q, want %q", result.MinVersion, tt.wantMinVersion)
+			}
+		})
+	}
+}

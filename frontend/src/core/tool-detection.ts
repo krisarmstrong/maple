@@ -7,6 +7,10 @@ export interface ToolDetection {
   version?: string;
   error?: string;
   installHint?: string;
+  /** True when the detected Nmap version is older than the supported minimum. */
+  belowMinVersion?: boolean;
+  /** The minimum recommended version string (e.g. "7.80"). Set when belowMinVersion is true. */
+  minVersion?: string;
 }
 
 export type ToolStatus = "installed" | "missing-required" | "missing-optional";

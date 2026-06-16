@@ -5,11 +5,18 @@ import (
 	"errors"
 	"os/exec"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 )
 
 const versionTimeout = 2 * time.Second
+
+// NmapMinVersion is the oldest Nmap release that Maple fully supports.
+// 7.80 (released 2019-10-31) introduced modern TLS probes and a significant
+// NSE library refresh; versions older than this may lack script categories or
+// flag syntax that Maple exposes in its UI.
+const NmapMinVersion = "7.80"
 
 var errEmptyToolName = errors.New("tool name cannot be empty")
 var errEmptyToolPath = errors.New("tool path cannot be empty")
@@ -22,14 +29,16 @@ type ToolSpec struct {
 }
 
 type ToolDetection struct {
-	Name        string `json:"name"`
-	DisplayName string `json:"displayName"`
-	Required    bool   `json:"required"`
-	Installed   bool   `json:"installed"`
-	Path        string `json:"path,omitempty"`
-	Version     string `json:"version,omitempty"`
-	Error       string `json:"error,omitempty"`
-	InstallHint string `json:"installHint,omitempty"`
+	Name            string `json:"name"`
+	DisplayName     string `json:"displayName"`
+	Required        bool   `json:"required"`
+	Installed       bool   `json:"installed"`
+	Path            string `json:"path,omitempty"`
+	Version         string `json:"version,omitempty"`
+	Error           string `json:"error,omitempty"`
+	InstallHint     string `json:"installHint,omitempty"`
+	BelowMinVersion bool   `json:"belowMinVersion,omitempty"`
+	MinVersion      string `json:"minVersion,omitempty"`
 }
 
 type Detector struct {
@@ -84,6 +93,9 @@ func (d Detector) DetectOne(ctx context.Context, spec ToolSpec) ToolDetection {
 	result.Installed = true
 	result.Path = path
 	result.Version = d.version(ctx, path, spec.VersionArg)
+	if spec.Name == "nmap" {
+		applyNmapVersionIntel(&result)
+	}
 	return result
 }
 
@@ -111,7 +123,112 @@ func (d Detector) DetectPath(ctx context.Context, spec ToolSpec, path string) To
 		result.Error = "unable to run " + spec.DisplayName + " at the selected path"
 		result.InstallHint = installHint(spec.Name, runtime.GOOS)
 	}
+	if spec.Name == "nmap" && result.Installed {
+		applyNmapVersionIntel(&result)
+	}
 	return result
+}
+
+// applyNmapVersionIntel sets BelowMinVersion and MinVersion on a detected Nmap
+// result. It is a no-op when the version cannot be parsed.
+func applyNmapVersionIntel(result *ToolDetection) {
+	v, ok := parseNmapVersion(result.Version)
+	if !ok {
+		return
+	}
+	result.MinVersion = NmapMinVersion
+	if versionLessThan(v, NmapMinVersion) {
+		result.BelowMinVersion = true
+	}
+}
+
+// parseNmapVersion extracts the dotted numeric version string from Nmap's
+// --version output. It handles both release builds ("Nmap version 7.95") and
+// development builds that carry a suffix ("Nmap version 7.94SVN"). Returns
+// ("", false) for unrecognised or empty input — never an error.
+//
+// Examples:
+//
+//	"Nmap version 7.95 ( https://nmap.org )" → ("7.95", true)
+//	"Nmap version 7.94SVN ( https://nmap.org )" → ("7.94", true)
+//	"" → ("", false)
+//	"garbled" → ("", false)
+func parseNmapVersion(s string) (string, bool) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return "", false
+	}
+
+	// Nmap outputs: "Nmap version 7.95 ( https://nmap.org )"
+	// Find the token after "version "
+	const marker = "version "
+	idx := strings.Index(strings.ToLower(s), marker)
+	if idx < 0 {
+		return "", false
+	}
+	rest := strings.TrimSpace(s[idx+len(marker):])
+	if rest == "" {
+		return "", false
+	}
+
+	// Take the first whitespace-delimited token — it may have a non-numeric
+	// suffix such as "SVN". Strip any trailing non-numeric characters from
+	// each dotted component.
+	token := strings.Fields(rest)[0]
+
+	// Strip any non-digit, non-dot suffix from the token (e.g. "7.94SVN" → "7.94").
+	end := len(token)
+	for i, c := range token {
+		if c != '.' && (c < '0' || c > '9') {
+			end = i
+			break
+		}
+	}
+	token = token[:end]
+	token = strings.TrimRight(token, ".")
+
+	// Validate: must have at least one dotted segment of digits.
+	if token == "" {
+		return "", false
+	}
+	for _, part := range strings.Split(token, ".") {
+		if part == "" {
+			return "", false
+		}
+		if _, err := strconv.Atoi(part); err != nil {
+			return "", false
+		}
+	}
+
+	return token, true
+}
+
+// versionLessThan reports whether dotted version string a is strictly less
+// than dotted version string b. Segments are compared numerically left to
+// right; a shorter version is padded with zeros.
+func versionLessThan(a, b string) bool {
+	aParts := strings.Split(a, ".")
+	bParts := strings.Split(b, ".")
+
+	maxLen := len(aParts)
+	if len(bParts) > maxLen {
+		maxLen = len(bParts)
+	}
+
+	for i := range maxLen {
+		aVal := 0
+		if i < len(aParts) {
+			aVal, _ = strconv.Atoi(aParts[i])
+		}
+		bVal := 0
+		if i < len(bParts) {
+			bVal, _ = strconv.Atoi(bParts[i])
+		}
+		if aVal != bVal {
+			return aVal < bVal
+		}
+	}
+	return false
 }
 
 func installHint(name string, goos string) string {
