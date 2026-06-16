@@ -15,6 +15,7 @@ import (
 
 const historyFileMode = 0o600
 const sidecarDirMode = 0o700
+const maxHistoryRecords = 500
 
 var ErrRecordNotFound = errors.New("scan record not found")
 var runIDSafeCharacter = regexp.MustCompile(`[^A-Za-z0-9_.-]+`)
@@ -128,6 +129,15 @@ func (s *HistoryStore) Add(record ScanRecord) error {
 	}
 	records = append([]ScanRecord{record}, records...)
 
+	if len(records) > maxHistoryRecords {
+		for _, trimmed := range records[maxHistoryRecords:] {
+			if err := s.removeRecordSidecar(trimmed.RunID); err != nil {
+				return err
+			}
+		}
+		records = records[:maxHistoryRecords]
+	}
+
 	if err := os.MkdirAll(filepath.Dir(s.path), 0o700); err != nil {
 		return err
 	}
@@ -215,6 +225,31 @@ func writeFileAtomic(path string, data []byte, mode os.FileMode) error {
 		return err
 	}
 	return os.Rename(tempPath, path)
+}
+
+func (s *HistoryStore) DeleteOlderThan(t time.Time) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	records, err := s.readLocked()
+	if err != nil {
+		return err
+	}
+	keep := make([]ScanRecord, 0, len(records))
+	var firstErr error
+	for _, record := range records {
+		if !record.FinishedAt.Before(t) {
+			keep = append(keep, record)
+			continue
+		}
+		if err := s.removeRecordSidecar(record.RunID); err != nil && firstErr == nil {
+			firstErr = err
+		}
+	}
+	if firstErr != nil {
+		return firstErr
+	}
+	return s.writeLocked(keep)
 }
 
 func (s *HistoryStore) readLocked() ([]ScanRecord, error) {

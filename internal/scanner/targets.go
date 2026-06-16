@@ -75,7 +75,7 @@ func parseTarget(value string) (Target, bool) {
 	if isIPv4Range(value) {
 		return Target{Value: value, Kind: TargetRange}, true
 	}
-	if strings.Contains(value, ".") && strings.Contains(value, "-") {
+	if strings.Contains(value, "-") {
 		return Target{}, false
 	}
 	if _, err := netip.ParseAddr(value); err == nil {
@@ -103,17 +103,58 @@ func looksLikeInvalidIP(value string) bool {
 }
 
 func isIPv4Range(value string) bool {
-	start, end, ok := strings.Cut(value, "-")
-	if !ok || start == "" || end == "" || strings.Contains(end, "-") {
+	parts := strings.Split(value, ".")
+	if len(parts) != 4 {
 		return false
 	}
-	address, err := netip.ParseAddr(start)
-	if err != nil || !address.Is4() {
-		return false
+	hasRange := false
+	for _, part := range parts {
+		if part == "*" {
+			hasRange = true
+			continue
+		}
+		if strings.Contains(part, "-") {
+			hasRange = true
+			lo, hi, ok := strings.Cut(part, "-")
+			if !ok || lo == "" || hi == "" {
+				return false
+			}
+			if strings.Contains(hi, "-") {
+				return false
+			}
+			loVal, err := parseOctet(lo)
+			if err != nil {
+				return false
+			}
+			hiVal, err := parseOctet(hi)
+			if err != nil {
+				return false
+			}
+			if loVal > hiVal {
+				return false
+			}
+			continue
+		}
+		if _, err := parseOctet(part); err != nil {
+			return false
+		}
 	}
-	endAddress, err := netip.ParseAddr("192.0.2." + end)
-	if err != nil || !endAddress.Is4() {
-		return false
+	return hasRange
+}
+
+func parseOctet(s string) (int, error) {
+	if s == "" || len(s) > 3 {
+		return 0, errors.New("invalid octet")
 	}
-	return int(endAddress.As4()[3]) >= int(address.As4()[3])
+	n := 0
+	for _, c := range s {
+		if c < '0' || c > '9' {
+			return 0, errors.New("invalid octet char")
+		}
+		n = n*10 + int(c-'0')
+	}
+	if n > 255 {
+		return 0, errors.New("octet out of range")
+	}
+	return n, nil
 }
