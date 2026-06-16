@@ -290,6 +290,37 @@ export function optionCoverageCounts(): Record<NmapOptionStatus, number> {
   return counts;
 }
 
+export function optionControlPath(entry: NmapOptionCatalogEntry): string {
+  if (entry.status === "blocked") {
+    return "Not exposed by design";
+  }
+  if (entry.groupId === "targeting") {
+    if (entry.name === "Target builder") {
+      return "Scan > Configure > Targets";
+    }
+    return "Scan > Options > Scan shape";
+  }
+  if (entry.groupId === "discovery" || entry.groupId === "scan") {
+    return "Scan > Options > Scan shape";
+  }
+  if (entry.groupId === "ports" || entry.groupId === "service") {
+    return "Scan > Options > Ports";
+  }
+  if (entry.groupId === "timing") {
+    return "Scan > Options > Timing";
+  }
+  if (entry.groupId === "nse") {
+    return "Scan > Scripts";
+  }
+  if (entry.groupId === "output") {
+    return "Scan > Output or History exports";
+  }
+  if (entry.groupId === "evasion") {
+    return "Scan > Options > Evasion";
+  }
+  return "Help > Nmap Option Coverage";
+}
+
 function entry(
   groupId: string,
   name: string,

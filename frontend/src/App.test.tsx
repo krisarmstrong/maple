@@ -523,9 +523,11 @@ describe("App", () => {
     expect(screen.getAllByText("Blocked by design").length).toBeGreaterThan(0);
     expect(screen.getByText("-sT -sS -sU -sA -sW -sM -sN -sF -sX -sY -sZ -sO")).toBeInTheDocument();
     expect(screen.getByText("--script-args --script-args-file")).toBeInTheDocument();
+    expect(screen.getAllByText("Use in: Scan > Options > Ports").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Use in: Scan > Scripts").length).toBeGreaterThan(0);
   });
 
-  it("filters Nmap option coverage by switch text and status", async () => {
+  it("filters Nmap option coverage by switch text, UI location, and status", async () => {
     detectToolsMock.mockResolvedValue([]);
 
     render(<App />);
@@ -536,6 +538,15 @@ describe("App", () => {
     expect(screen.getByText("Decoys and spoofing")).toBeInTheDocument();
     expect(screen.getByText("-D -S --spoof-mac -e")).toBeInTheDocument();
     expect(screen.queryByText("Raw shell command input")).not.toBeInTheDocument();
+
+    await userEvent.clear(screen.getByRole("searchbox", { name: "Find option or switch" }));
+    await userEvent.type(
+      screen.getByRole("searchbox", { name: "Find option or switch" }),
+      "Scan > Scripts",
+    );
+
+    expect(screen.getByText("Script arguments")).toBeInTheDocument();
+    expect(screen.queryByText("Port selection")).not.toBeInTheDocument();
 
     await userEvent.clear(screen.getByRole("searchbox", { name: "Find option or switch" }));
     await userEvent.selectOptions(

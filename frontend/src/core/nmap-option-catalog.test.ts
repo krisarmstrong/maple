@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   catalogGroups,
   nmapOptionCatalog,
+  optionControlPath,
   optionCoverageCounts,
   optionStatusLabel,
 } from "./nmap-option-catalog";
@@ -62,4 +63,21 @@ describe("nmap option catalog", () => {
     expect(optionStatusLabel("planned")).toBe("Planned");
     expect(optionStatusLabel("blocked")).toBe("Blocked by design");
   });
+
+  it("maps catalog entries back to their Maple UI location", () => {
+    expect(optionControlPath(requiredEntry("Target builder"))).toBe("Scan > Configure > Targets");
+    expect(optionControlPath(requiredEntry("Port selection"))).toBe("Scan > Options > Ports");
+    expect(optionControlPath(requiredEntry("Script arguments"))).toBe("Scan > Scripts");
+    expect(optionControlPath(requiredEntry("Raw shell command input"))).toBe(
+      "Not exposed by design",
+    );
+  });
 });
+
+function requiredEntry(name: string) {
+  const entry = nmapOptionCatalog.find((candidate) => candidate.name === name);
+  if (entry === undefined) {
+    throw new Error(`missing catalog entry ${name}`);
+  }
+  return entry;
+}

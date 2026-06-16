@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   catalogGroups,
   type NmapOptionCatalogEntry,
+  optionControlPath,
   optionCoverageCounts,
   optionStatusLabel,
 } from "../core/nmap-option-catalog";
@@ -254,7 +255,14 @@ function matchesCatalogFilter(
   if (query === "") {
     return true;
   }
-  const searchable = [groupName, entry.name, entry.note, entry.status, ...entry.switches]
+  const searchable = [
+    groupName,
+    entry.name,
+    entry.note,
+    entry.status,
+    optionControlPath(entry),
+    ...entry.switches,
+  ]
     .join(" ")
     .toLowerCase();
   return searchable.includes(query);
@@ -287,6 +295,7 @@ function OptionCatalogEntry({ entry }: { entry: NmapOptionCatalogEntry }): React
         <span>{optionStatusLabel(entry.status)}</span>
       </div>
       <code>{switchLabel(entry.switches)}</code>
+      <small>Use in: {optionControlPath(entry)}</small>
       <p>{entry.note}</p>
     </div>
   );

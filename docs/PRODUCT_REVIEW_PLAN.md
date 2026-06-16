@@ -43,6 +43,7 @@ and Linux.
    - Add searchable option descriptions that map directly to existing structured controls.
    - Keep unsupported expert flags visible as roadmap items rather than adding arbitrary command
      strings.
+   - Status: option coverage search now maps entries to their Maple UI control locations.
 
 5. **NSE Script Workflow**
    - Improve script search results with richer descriptions, category badges, and risk badges.
