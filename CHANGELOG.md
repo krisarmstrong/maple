@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.7](https://github.com/krisarmstrong/maple/compare/v0.1.6...v0.1.7) (2026-06-16)
+
+
+### Continuous Integration
+
+* allow macos release scanner install ([#52](https://github.com/krisarmstrong/maple/issues/52)) ([0c13e74](https://github.com/krisarmstrong/maple/commit/0c13e740cce8d2a721ee4d6db1d3948e6725c433))
+
+
+### Miscellaneous
+
+* **deps:** refresh maple frontend toolchain ([#51](https://github.com/krisarmstrong/maple/issues/51)) ([e6a8917](https://github.com/krisarmstrong/maple/commit/e6a891732d17a6417aee93075f2088652054df3f))
+
 ## [0.1.6](https://github.com/krisarmstrong/maple/compare/v0.1.5...v0.1.6) (2026-06-16)
 
 
