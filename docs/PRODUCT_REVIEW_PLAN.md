@@ -6,6 +6,10 @@ Maple has reached a local unsigned release-candidate shape. The current bar rema
 local desktop Nmap workbench that preserves Nmap power without exposing raw shell command entry,
 bundles no Nmap/Npcap tools, and remains understandable on macOS, Windows, and Linux.
 
+The active release train is tracked in `docs/RELEASE_TRAIN.md`: `v0.3.0 Beta 2` focuses on
+stronger NSE, recipes, and option building; `v0.4.0 Release Candidate` focuses on docs, polish,
+package trust, and platform smoke closure.
+
 ## Current Assessment
 
 - Scan setup, target validation, recipes, options, scripts, output preview, history, exports,
