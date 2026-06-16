@@ -39,7 +39,8 @@ Expected:
 
 Recommended scan:
 
-1. In Target Builder, choose `Single target` and enter `127.0.0.1`.
+1. In Target Builder, choose `Single target` and enter `10.0.0.1` on an owned local network.
+   Use `127.0.0.1` when no local gateway target is available.
 2. Confirm Target Builder shows accepted syntax, parsed target type, estimated addresses, and `Matches selected target type`.
 3. Switch to `Subnet` without changing the target and confirm Target Builder explains the mismatch before preview or run.
 4. Switch back to `Single target`.
@@ -61,6 +62,9 @@ Recommended scan:
 19. Confirm each export shows the generated filename and saved path.
 20. Open Help and confirm Nmap Option Coverage reports zero tracked option gaps.
 21. Load local Nmap help and confirm search filters the local help output.
+22. Optional owned-network subnet smoke: choose `Subnet`, enter `10.0.0.0/24`, preview only
+    first, confirm the large-scan warning is visible, then run only when the network scope is
+    authorized.
 
 ## Windows Smoke
 
@@ -76,7 +80,7 @@ Expected:
 - Tool detection finds user-installed `nmap.exe` when it is on `PATH`.
 - A custom absolute `nmap.exe` path can be validated and used when Nmap is outside `PATH`.
 - Missing Nmap is reported cleanly.
-- Target Builder, DNS resolver validation, version intensity, preview argv tokens, scan/history/details, and all three export formats pass against a safe local target such as `127.0.0.1`.
+- Target Builder, DNS resolver validation, version intensity, preview argv tokens, scan/history/details, and all three export formats pass against a safe local target such as `127.0.0.1` or an owned gateway such as `10.0.0.1`.
 - The Windows CI artifact is unsigned unless a signing certificate has been configured.
 
 ## Linux Smoke
@@ -92,7 +96,7 @@ Expected:
 - Tool detection finds user-installed `nmap` when it is on `PATH`.
 - A custom absolute `nmap` path can be validated and used when Nmap is outside `PATH`.
 - Missing Nmap is reported cleanly.
-- Target Builder, DNS resolver validation, version intensity, preview argv tokens, scan/history/details, and all three export formats pass against a safe local target such as `127.0.0.1`.
+- Target Builder, DNS resolver validation, version intensity, preview argv tokens, scan/history/details, and all three export formats pass against a safe local target such as `127.0.0.1` or an owned gateway such as `10.0.0.1`.
 - The Linux `.deb` and `.rpm` packages recommend Nmap but do not bundle it.
 
 ## Invariants

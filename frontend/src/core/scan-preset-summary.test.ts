@@ -34,6 +34,12 @@ describe("scan-preset-summary", () => {
     expect(summarizePreset({ ...presetBase, id: "builtin-web-quick-look" }).intentLabel).toBe(
       "HTTP/HTTPS headers and titles",
     );
+    expect(summarizePreset({ ...presetBase, id: "builtin-full-tcp-inventory" }).intentLabel).toBe(
+      "All TCP ports without service scripts",
+    );
+    expect(summarizePreset({ ...presetBase, id: "builtin-ms17-010-check" }).intentLabel).toBe(
+      "Focused SMB MS17-010 check",
+    );
   });
 });
 

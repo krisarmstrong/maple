@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { defaultScanOptions } from "../core/scan-options";
+import { builtInScanPresets } from "../core/scan-presets";
 import { copyText } from "../services/clipboard-service";
 import {
   cancelScan,
@@ -161,7 +162,13 @@ describe("ScanWorkspace", () => {
     render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
 
     expect(screen.getByRole("heading", { name: "Scan Recipe" })).toBeInTheDocument();
+    const recipeSelect = screen.getByLabelText("Scan recipe");
+    const builtInOptions = within(recipeSelect).getAllByRole("option");
+    expect(builtInOptions.map((option) => option.textContent)).toEqual(
+      builtInScanPresets.map((preset) => preset.name),
+    );
     expect(screen.getByRole("option", { name: "Fast host discovery" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "MS17-010 check" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "TLS certificate review" })).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Apply TLS certificate review" }),
