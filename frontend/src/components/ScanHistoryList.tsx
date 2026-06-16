@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { historyLabel } from "../core/history-display";
 import { filterHistoryRecords, type HistoryFilterID } from "../core/history-filter";
+import { type HistorySortID, sortHistoryRecords } from "../core/history-sort";
 import type { ScanHistoryRecord } from "../services/history-service";
 import {
   deleteScanHistoryRecord,
@@ -20,9 +21,10 @@ export function ScanHistoryList({ records, onChanged }: ScanHistoryListProps): R
   const [pendingDeleteRunId, setPendingDeleteRunId] = useState<string | undefined>();
   const [query, setQuery] = useState("");
   const [filterId, setFilterId] = useState<HistoryFilterID>("all");
+  const [sortId, setSortId] = useState<HistorySortID>("newest");
   const [exportPath, setExportPath] = useState("");
   const [error, setError] = useState("");
-  const visibleRecords = filterHistoryRecords(records, query, filterId);
+  const visibleRecords = sortHistoryRecords(filterHistoryRecords(records, query, filterId), sortId);
 
   if (records.length === 0) {
     return <p className="muted">No completed scans yet.</p>;
@@ -107,6 +109,19 @@ export function ScanHistoryList({ records, onChanged }: ScanHistoryListProps): R
             <option value="errors">Errors</option>
           </select>
         </label>
+        <label>
+          <span>Sort</span>
+          <select
+            onChange={(event) => setSortId(toHistorySortID(event.target.value))}
+            value={sortId}
+          >
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="open-ports">Most open ports</option>
+            <option value="hosts-up">Most hosts up</option>
+            <option value="needs-review">Needs review first</option>
+          </select>
+        </label>
       </div>
       <p className="history-count">
         Showing {visibleRecords.length} of {records.length} scans
@@ -121,7 +136,7 @@ export function ScanHistoryList({ records, onChanged }: ScanHistoryListProps): R
         <p className="muted">No scans match the current filters.</p>
       ) : null}
       {visibleRecords.map((record) => (
-        <article className="history-card" key={record.runId}>
+        <article className="history-card" data-run-id={record.runId} key={record.runId}>
           <div className="history-card-header">
             <div>
               <h3>{formatTimestamp(record.finishedAt)}</h3>
@@ -188,6 +203,18 @@ function toHistoryFilterID(value: string): HistoryFilterID {
     return value;
   }
   return "all";
+}
+
+function toHistorySortID(value: string): HistorySortID {
+  if (
+    value === "oldest" ||
+    value === "open-ports" ||
+    value === "hosts-up" ||
+    value === "needs-review"
+  ) {
+    return value;
+  }
+  return "newest";
 }
 
 function formatTimestamp(value: string): string {
