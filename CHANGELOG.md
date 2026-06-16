@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.8](https://github.com/krisarmstrong/maple/compare/v0.1.7...v0.1.8) (2026-06-16)
+
+
+### Features
+
+* expand scan recipes and smoke evidence ([#54](https://github.com/krisarmstrong/maple/issues/54)) ([3d5178b](https://github.com/krisarmstrong/maple/commit/3d5178b6e0761d1704c366351a1c193b17f9d3c3))
+
 ## [0.1.7](https://github.com/krisarmstrong/maple/compare/v0.1.6...v0.1.7) (2026-06-16)
 
 
