@@ -71,9 +71,10 @@ describe("computeScanDiff", () => {
     const a = makeRecord("scan-1", [host]);
     const b = makeRecord("scan-2", [{ ...host }]);
     const result = computeScanDiff(a, b);
-    expect(result).not.toBeNull();
-    // biome-ignore lint/style/noNonNullAssertion: checked above
-    expect(isDiffEmpty(result!)).toBe(true);
+    if (result === null) {
+      throw new Error("expected a diff result for distinct run IDs");
+    }
+    expect(isDiffEmpty(result)).toBe(true);
   });
 
   it("reports hosts only in A", () => {
@@ -160,9 +161,10 @@ describe("computeScanDiff", () => {
     const a = makeRecord("scan-1", []);
     const b = makeRecord("scan-2", []);
     const result = computeScanDiff(a, b);
-    expect(result).not.toBeNull();
-    // biome-ignore lint/style/noNonNullAssertion: checked above
-    expect(isDiffEmpty(result!)).toBe(true);
+    if (result === null) {
+      throw new Error("expected a diff result for distinct run IDs");
+    }
+    expect(isDiffEmpty(result)).toBe(true);
   });
 });
 
