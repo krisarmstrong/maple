@@ -192,6 +192,7 @@ export default function App(): React.JSX.Element {
             {state.status === "loading" ? <p className="muted">Detecting local tools...</p> : null}
             {state.status === "failed" ? <p className="error">{state.message}</p> : null}
             {toolActionError === "" ? null : <p className="error">{toolActionError}</p>}
+            <FirstRunChecklist nmapPath={nmapPathFor(state, customNmapPath)} />
             <NmapPathControl
               nmapPath={customNmapPath}
               onPathChange={setStoredCustomNmapPath(setCustomNmapPath)}
@@ -341,6 +342,59 @@ function viewTitle(view: AppView): string {
     return "Environment";
   }
   return "Help and references";
+}
+
+function FirstRunChecklist({ nmapPath }: { nmapPath: string | undefined }): React.JSX.Element {
+  const nmapReady = nmapPath !== undefined;
+  return (
+    <section className="first-run-checklist" aria-labelledby="first-run-checklist-title">
+      <div>
+        <p className="eyebrow">First-run readiness</p>
+        <h3 id="first-run-checklist-title">Before the first scan</h3>
+      </div>
+      <div className="first-run-grid">
+        <ChecklistItem
+          status={nmapReady ? "Ready" : "Required"}
+          title="Local Nmap"
+          tone={nmapReady ? "ready" : "blocked"}
+        >
+          {nmapReady
+            ? `Using ${nmapPath}. Preview and Run can build argv from this binary.`
+            : "Install Nmap or choose a custom nmap binary before Maple can preview or run scans."}
+        </ChecklistItem>
+        <ChecklistItem status="Review" title="Windows packet capture" tone="review">
+          Windows packet scans may require Npcap from the official Nmap project. Maple detects
+          tools, but it does not bundle Nmap, Npcap, Ncat, Ndiff, or Nping.
+        </ChecklistItem>
+        <ChecklistItem status="Review" title="Privileged scan modes" tone="review">
+          TCP connect scans are the safest desktop default. SYN, UDP, OS detection, spoofing, and
+          some evasion options may need elevated permissions on macOS, Linux, or Windows.
+        </ChecklistItem>
+      </div>
+    </section>
+  );
+}
+
+function ChecklistItem({
+  children,
+  status,
+  title,
+  tone,
+}: {
+  children: React.ReactNode;
+  status: string;
+  title: string;
+  tone: "blocked" | "ready" | "review";
+}): React.JSX.Element {
+  return (
+    <article className={`first-run-item first-run-item--${tone}`}>
+      <div>
+        <h4>{title}</h4>
+        <p>{children}</p>
+      </div>
+      <span>{status}</span>
+    </article>
+  );
 }
 
 function UtilityToolsWorkspace({ state }: { state: LoadState }): React.JSX.Element {

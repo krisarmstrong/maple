@@ -30,6 +30,7 @@ and Linux.
    - Make the disabled Preview/Run state explain whether the blocker is missing Nmap, invalid
      target input, or invalid options.
    - Add a one-click route from Scan to Environment when Nmap is missing.
+   - Status: scan blockers and Environment checklist implemented.
 
 3. **Utility Tool Workspaces**
    - Add focused UI for detected Nmap suite tools: Ncat, Ndiff, and Nping.

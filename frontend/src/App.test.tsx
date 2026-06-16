@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
@@ -102,6 +102,7 @@ describe("App", () => {
         displayName: "Nmap",
         required: true,
         installed: true,
+        path: "/usr/local/bin/nmap",
         version: "Nmap version 7.95",
       },
     ]);
@@ -113,6 +114,10 @@ describe("App", () => {
     await userEvent.click(screen.getByRole("button", { name: /Environment/u }));
 
     expect(await screen.findByText("Nmap version 7.95")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Before the first scan" })).toBeInTheDocument();
+    expect(screen.getByText("Local Nmap")).toBeInTheDocument();
+    expect(screen.getByText("Ready")).toBeInTheDocument();
+    expect(screen.getByText(/Using \/usr\/local\/bin\/nmap/u)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Environment/u })).toHaveAttribute(
       "aria-current",
       "page",
@@ -132,6 +137,15 @@ describe("App", () => {
       "page",
     );
     expect(screen.getByRole("heading", { name: "Tool Detection" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Before the first scan" })).toBeInTheDocument();
+    expect(screen.getByText("Required")).toBeInTheDocument();
+    expect(screen.getByText(/Install Nmap or choose a custom nmap binary/u)).toBeInTheDocument();
+    expect(screen.getByText("Windows packet capture")).toBeInTheDocument();
+    expect(screen.getByText(/Windows packet scans may require Npcap/u)).toBeInTheDocument();
+    expect(screen.getByText("Privileged scan modes")).toBeInTheDocument();
+    expect(
+      screen.getByText(/may need elevated permissions on macOS, Linux, or Windows/u),
+    ).toBeInTheDocument();
   });
 
   it("surfaces Ncat, Ndiff, and Nping as separate utility workspaces", async () => {
@@ -239,6 +253,7 @@ describe("App", () => {
           displayName: "Nmap",
           required: true,
           installed: true,
+          path: "/usr/local/bin/nmap",
           version: "Nmap version 7.95",
         },
       ]);
@@ -247,7 +262,9 @@ describe("App", () => {
 
     expect((await screen.findAllByText("1 required tool missing")).length).toBeGreaterThan(0);
     await userEvent.click(screen.getByRole("button", { name: /Environment/u }));
-    expect(await screen.findByText("Required")).toBeInTheDocument();
+    expect(
+      within(await screen.findByTestId("tool-status-list")).getByText("Required"),
+    ).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "Refresh" }));
 
