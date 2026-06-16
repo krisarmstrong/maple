@@ -75,7 +75,7 @@ func parseTarget(value string) (Target, bool) {
 	if isIPv4Range(value) {
 		return Target{Value: value, Kind: TargetRange}, true
 	}
-	if strings.Contains(value, "-") {
+	if looksLikeNumericRangeAttempt(value) {
 		return Target{}, false
 	}
 	if _, err := netip.ParseAddr(value); err == nil {
@@ -88,6 +88,23 @@ func parseTarget(value string) (Target, bool) {
 		return Target{Value: value, Kind: TargetHostname}, true
 	}
 	return Target{}, false
+}
+
+// looksLikeNumericRangeAttempt reports whether value is a malformed IPv4
+// octet-range attempt (only digits, dots, dashes, and wildcards) that
+// isIPv4Range already rejected. Values containing letters are left to
+// hostname matching so hyphenated hostnames (e.g. "web-01.example.com")
+// are not misclassified as bad ranges.
+func looksLikeNumericRangeAttempt(value string) bool {
+	if !strings.ContainsAny(value, "-*") {
+		return false
+	}
+	for _, char := range value {
+		if (char < '0' || char > '9') && char != '.' && char != '-' && char != '*' {
+			return false
+		}
+	}
+	return true
 }
 
 func looksLikeInvalidIP(value string) bool {

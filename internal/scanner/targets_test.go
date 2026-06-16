@@ -68,6 +68,34 @@ func TestIsIPv4Range(t *testing.T) {
 	}
 }
 
+func TestParseTargetsAcceptsHyphenatedHostnames(t *testing.T) {
+	cases := []struct {
+		input string
+		want  TargetKind
+	}{
+		{"my-host", TargetHostname},
+		{"web-01.example.com", TargetHostname},
+		{"intranet-gw", TargetHostname},
+	}
+	for _, tc := range cases {
+		targets, err := ParseTargets(tc.input)
+		if err != nil {
+			t.Fatalf("ParseTargets(%q) returned error: %v", tc.input, err)
+		}
+		if len(targets) != 1 || targets[0].Kind != tc.want {
+			t.Fatalf("ParseTargets(%q) = %+v, want one %q", tc.input, targets, tc.want)
+		}
+	}
+}
+
+func TestParseTargetsRejectsMalformedNumericRanges(t *testing.T) {
+	for _, input := range []string{"192.168.1.20-1", "10-20", "10.0.255-0.1"} {
+		if _, err := ParseTargets(input); err == nil {
+			t.Fatalf("ParseTargets(%q) accepted a malformed range", input)
+		}
+	}
+}
+
 func TestParseTargetsAcceptsMultiOctetRange(t *testing.T) {
 	targets, err := ParseTargets("10.0.0-255.1-100")
 	if err != nil {
