@@ -1422,6 +1422,36 @@ textarea:focus {
   margin: var(--space-10) var(--space-0) var(--space-0);
 }
 
+.scan-phase-list {
+  display: grid;
+  gap: var(--space-6);
+  list-style: none;
+  margin: var(--space-12) var(--space-0) var(--space-0);
+  padding: var(--space-0);
+}
+
+.scan-phase-list li {
+  align-items: center;
+  background: var(--panel-subtle);
+  border: var(--border-width) solid var(--color-sidebar-border);
+  border-radius: var(--radius-sm);
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(var(--size-history-metric-min), 0.34fr) minmax(0, 1fr);
+  min-height: var(--size-control-height-sm);
+  padding: var(--space-7) var(--space-9);
+}
+
+.scan-phase-list strong {
+  color: var(--accent-strong);
+  font-size: var(--font-size-sm);
+}
+
+.scan-phase-list span {
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+}
+
 .target-examples {
   display: flex;
   flex-wrap: wrap;

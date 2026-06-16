@@ -13,6 +13,7 @@ import (
 
 const (
 	EventScanStarted  = "scan:started"
+	EventScanPhase    = "scan:phase"
 	EventScanOutput   = "scan:output"
 	EventScanFinished = "scan:finished"
 )
@@ -55,6 +56,7 @@ func (m *Manager) Start(
 		return scanner.ScanStarted{}, err
 	}
 	emit(EventScanStarted, started)
+	emit(EventScanPhase, scanPhase(started.RunID, "validating", "Target and option validation passed."))
 	go m.run(runCtx, cancel, token, started.RunID, request, emit)
 	return started, nil
 }
@@ -113,13 +115,20 @@ func (m *Manager) run(
 ) {
 	defer cancel()
 	defer m.release(token)
+	emit(EventScanPhase, scanPhase(runID, "launching", "Starting local Nmap process."))
+	outputSeen := false
 	result, err := m.runner.Run(ctx, request, func(output scanner.ScanOutput) {
+		if !outputSeen {
+			outputSeen = true
+			emit(EventScanPhase, scanPhase(runID, "running", "Nmap is producing live output."))
+		}
 		emit(EventScanOutput, scanner.ScanChunk{
 			RunID:  runID,
 			Stream: output.Stream,
 			Text:   output.Text,
 		})
 	})
+	emit(EventScanPhase, scanPhase(runID, "parsing", "Reading Nmap XML output."))
 	finished := scanner.ScanFinished{
 		RunID:       runID,
 		ExitCode:    result.ExitCode,
@@ -130,4 +139,8 @@ func (m *Manager) run(
 		finished.Error = err.Error()
 	}
 	emit(EventScanFinished, finished)
+}
+
+func scanPhase(runID string, phase string, message string) scanner.ScanPhase {
+	return scanner.ScanPhase{RunID: runID, Phase: phase, Message: message}
 }

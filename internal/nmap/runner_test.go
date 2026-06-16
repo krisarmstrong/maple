@@ -40,6 +40,35 @@ func TestManagerStreamsAndCapturesXML(t *testing.T) {
 	}
 }
 
+func TestManagerEmitsScanPhases(t *testing.T) {
+	runner := fakeRunner{chunks: []scanner.ScanOutput{
+		{Stream: scanner.StreamStderr, Text: "starting"},
+	}}
+	manager := NewManager(runner)
+	sink := newRecordingSink()
+
+	started, err := manager.Start(context.Background(), scanner.ScanRequest{
+		ProfileID: scanner.ProfilePing,
+		Targets:   "scanme.nmap.org",
+		NmapPath:  "nmap",
+	}, sink.Emit)
+	if err != nil {
+		t.Fatalf("Start returned error: %v", err)
+	}
+	sink.finished(t, started.RunID)
+
+	got := sink.phaseNames(started.RunID)
+	want := []string{"validating", "launching", "running", "parsing"}
+	if len(got) != len(want) {
+		t.Fatalf("phases = %v, want %v", got, want)
+	}
+	for index, phase := range want {
+		if got[index] != phase {
+			t.Fatalf("phases = %v, want %v", got, want)
+		}
+	}
+}
+
 func TestExitCodeReturnsZeroForSuccessfulCommand(t *testing.T) {
 	if code := exitCode(nil); code != 0 {
 		t.Fatalf("exitCode(nil) = %d, want 0", code)
@@ -120,9 +149,10 @@ func (b *blockingRunner) unblock() {
 }
 
 type recordingSink struct {
-	mu     sync.Mutex
-	done   chan struct{}
-	events []scanner.ScanFinished
+	mu             sync.Mutex
+	done           chan struct{}
+	finishedEvents []scanner.ScanFinished
+	phases         []scanner.ScanPhase
 }
 
 func newRecordingSink() *recordingSink {
@@ -130,17 +160,31 @@ func newRecordingSink() *recordingSink {
 }
 
 func (r *recordingSink) Emit(event string, payload interface{}) {
-	if event != EventScanFinished {
-		return
-	}
-	finished, ok := payload.(scanner.ScanFinished)
-	if !ok {
-		return
-	}
 	r.mu.Lock()
-	r.events = append(r.events, finished)
-	close(r.done)
-	r.mu.Unlock()
+	defer r.mu.Unlock()
+	if event == EventScanPhase {
+		if phase, ok := payload.(scanner.ScanPhase); ok {
+			r.phases = append(r.phases, phase)
+		}
+	}
+	if event == EventScanFinished {
+		if finished, ok := payload.(scanner.ScanFinished); ok {
+			r.finishedEvents = append(r.finishedEvents, finished)
+			close(r.done)
+		}
+	}
+}
+
+func (r *recordingSink) phaseNames(runID string) []string {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	names := []string{}
+	for _, phase := range r.phases {
+		if phase.RunID == runID {
+			names = append(names, phase.Phase)
+		}
+	}
+	return names
 }
 
 func (r *recordingSink) finished(t *testing.T, runID string) scanner.ScanFinished {
@@ -152,7 +196,7 @@ func (r *recordingSink) finished(t *testing.T, runID string) scanner.ScanFinishe
 	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	for _, finished := range r.events {
+	for _, finished := range r.finishedEvents {
 		if finished.RunID == runID {
 			return finished
 		}

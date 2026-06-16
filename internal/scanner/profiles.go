@@ -48,6 +48,12 @@ type ScanChunk struct {
 	Text   string `json:"text"`
 }
 
+type ScanPhase struct {
+	RunID   string `json:"runId"`
+	Phase   string `json:"phase"`
+	Message string `json:"message"`
+}
+
 type ScanStarted struct {
 	RunID   string         `json:"runId"`
 	Preview CommandPreview `json:"preview"`

@@ -26,6 +26,12 @@ export interface ScanOutputEvent {
   text: string;
 }
 
+export interface ScanPhaseEvent {
+  runId: string;
+  phase: string;
+  message: string;
+}
+
 export interface ScanFinishedEvent {
   runId: string;
   exitCode: number;
@@ -41,6 +47,7 @@ export interface CommandPreview {
 
 export type ScanEvent =
   | { type: "started"; runId: string }
+  | { type: "phase"; phase: ScanPhaseEvent }
   | { type: "output"; output: ScanOutputEvent }
   | { type: "finished"; result: ScanFinishedEvent };
 
@@ -77,6 +84,11 @@ export function onScanEvent(listener: (event: ScanEvent) => void): () => void {
       listener({ type: "started", runId: payload.runId });
     }
   });
+  const removePhase = EventsOn("scan:phase", (payload: unknown) => {
+    if (isScanPhase(payload)) {
+      listener({ type: "phase", phase: payload });
+    }
+  });
   const removeOutput = EventsOn("scan:output", (payload: unknown) => {
     if (isScanOutput(payload)) {
       listener({ type: "output", output: payload });
@@ -89,6 +101,7 @@ export function onScanEvent(listener: (event: ScanEvent) => void): () => void {
   });
   return () => {
     removeStarted();
+    removePhase();
     removeOutput();
     removeFinished();
   };
@@ -104,6 +117,15 @@ function isScanOutput(value: unknown): value is ScanOutputEvent {
     typeof value.runId === "string" &&
     (value.stream === "stdout" || value.stream === "stderr") &&
     typeof value.text === "string"
+  );
+}
+
+function isScanPhase(value: unknown): value is ScanPhaseEvent {
+  return (
+    isObject(value) &&
+    typeof value.runId === "string" &&
+    typeof value.phase === "string" &&
+    typeof value.message === "string"
   );
 }
 

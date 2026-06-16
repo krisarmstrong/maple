@@ -171,6 +171,11 @@ func (a *App) historyEmitter(emit nmap.EventEmitter) nmap.EventEmitter {
 						recordError = "Unable to parse Nmap XML: " + err.Error()
 					}
 				}
+				emit(nmap.EventScanPhase, scanner.ScanPhase{
+					RunID:   value.RunID,
+					Phase:   "saving-history",
+					Message: "Saving scan summary and raw export data.",
+				})
 				_ = a.history.Add(store.ScanRecord{
 					RunID:       value.RunID,
 					StartedAt:   startedAt,
@@ -181,6 +186,11 @@ func (a *App) historyEmitter(emit nmap.EventEmitter) nmap.EventEmitter {
 					XML:         value.XML,
 					Diagnostics: value.Diagnostics,
 					Error:       recordError,
+				})
+				emit(nmap.EventScanPhase, scanner.ScanPhase{
+					RunID:   value.RunID,
+					Phase:   "history-saved",
+					Message: "History record is ready.",
 				})
 			}
 		}
