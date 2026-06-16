@@ -1569,4 +1569,128 @@ describe("ScanWorkspace", () => {
     expect(targetToken).toBeInTheDocument();
     expect(targetToken).not.toHaveAttribute("title");
   });
+
+  // #85 — NSE disruptive category confirmation gate
+  it("does not show the risk confirmation gate when no disruptive categories are selected", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.click(screen.getByRole("tab", { name: "Scripts" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "safe" }));
+
+    expect(screen.queryByTestId("nse-risk-confirm")).not.toBeInTheDocument();
+    expect(screen.queryByText("Disruptive scripts require confirmation")).not.toBeInTheDocument();
+  });
+
+  it("shows the risk confirmation gate when a disruptive category is selected", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    await userEvent.click(screen.getByRole("tab", { name: "Scripts" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "intrusive" }));
+
+    expect(screen.getByTestId("nse-risk-confirm")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Disruptive scripts require confirmation" }),
+    ).toBeInTheDocument();
+    // The warning section names the engaged categories
+    const confirmSection = screen.getByLabelText("NSE risk confirmation");
+    expect(within(confirmSection).getByText("intrusive")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Only run these against systems you are explicitly authorized to test\./u),
+    ).toBeInTheDocument();
+  });
+
+  it("blocks Start when a disruptive category is selected but confirmation is not ticked", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
+    await userEvent.click(screen.getByRole("tab", { name: "Scripts" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "dos" }));
+
+    expect(screen.getByRole("button", { name: "Run Scan" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Preview" })).toBeDisabled();
+    expect(screen.getByTestId("nse-risk-confirm")).not.toBeChecked();
+  });
+
+  it("unblocks Start after ticking the disruptive-category confirmation checkbox", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
+    await userEvent.click(screen.getByRole("tab", { name: "Scripts" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "exploit" }));
+
+    expect(screen.getByRole("button", { name: "Run Scan" })).toBeDisabled();
+
+    await userEvent.click(screen.getByTestId("nse-risk-confirm"));
+
+    expect(screen.getByRole("button", { name: "Run Scan" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Preview" })).toBeEnabled();
+  });
+
+  it("resets confirmation when a different disruptive category is toggled", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
+    await userEvent.click(screen.getByRole("tab", { name: "Scripts" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "exploit" }));
+    await userEvent.click(screen.getByTestId("nse-risk-confirm"));
+
+    expect(screen.getByRole("button", { name: "Run Scan" })).toBeEnabled();
+
+    // Toggle another category — confirmation must reset
+    await userEvent.click(screen.getByRole("checkbox", { name: "dos" }));
+
+    expect(screen.getByTestId("nse-risk-confirm")).not.toBeChecked();
+    expect(screen.getByRole("button", { name: "Run Scan" })).toBeDisabled();
+  });
+
+  it("hides the confirmation gate and re-enables Start when all disruptive categories are deselected", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
+    await userEvent.click(screen.getByRole("tab", { name: "Scripts" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "brute" }));
+
+    expect(screen.getByRole("button", { name: "Run Scan" })).toBeDisabled();
+    expect(screen.getByTestId("nse-risk-confirm")).toBeInTheDocument();
+
+    // Deselect the disruptive category
+    await userEvent.click(screen.getByRole("checkbox", { name: "brute" }));
+
+    expect(screen.queryByTestId("nse-risk-confirm")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Run Scan" })).toBeEnabled();
+  });
+
+  it("shows the confirmation gate and blocks Start when a disruptive script is selected by name", async () => {
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
+    await userEvent.click(screen.getByRole("tab", { name: "Scripts" }));
+    // smb-brute belongs to the brute category
+    fireEvent.change(screen.getByLabelText("Search built-in scripts"), {
+      target: { value: "smb-brute" },
+    });
+    await userEvent.click(screen.getByRole("checkbox", { name: "smb-brute" }));
+
+    expect(screen.getByTestId("nse-risk-confirm")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Run Scan" })).toBeDisabled();
+  });
+
+  it("does not change the scan start flow for safe-only script selections", async () => {
+    previewScanCommandMock.mockResolvedValue([
+      "nmap",
+      "-oX",
+      "<managed-xml-file>",
+      "--",
+      "scanme.nmap.org",
+    ]);
+    render(<ScanWorkspace nmapPath="/usr/local/bin/nmap" />);
+
+    fireEvent.change(screen.getByLabelText("Targets"), { target: { value: "scanme.nmap.org" } });
+    await userEvent.click(screen.getByRole("tab", { name: "Scripts" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "safe" }));
+
+    expect(screen.queryByTestId("nse-risk-confirm")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Run Scan" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Preview" })).toBeEnabled();
+  });
 });
