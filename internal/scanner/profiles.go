@@ -60,11 +60,12 @@ type ScanStarted struct {
 }
 
 type ScanFinished struct {
-	RunID       string `json:"runId"`
-	ExitCode    int    `json:"exitCode"`
-	XML         string `json:"xml"`
-	Diagnostics string `json:"diagnostics,omitempty"`
-	Error       string `json:"error,omitempty"`
+	RunID        string `json:"runId"`
+	ExitCode     int    `json:"exitCode"`
+	XML          string `json:"xml"`
+	Diagnostics  string `json:"diagnostics,omitempty"`
+	Error        string `json:"error,omitempty"`
+	PersistError string `json:"persistError,omitempty"`
 }
 
 const (

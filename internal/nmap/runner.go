@@ -167,6 +167,11 @@ func createXMLOutputPath() (string, error) {
 		return "", err
 	}
 	path := file.Name()
+	if err := file.Chmod(0o600); err != nil {
+		_ = file.Close()
+		_ = os.Remove(path)
+		return "", err
+	}
 	if err := file.Close(); err != nil {
 		_ = os.Remove(path)
 		return "", err
