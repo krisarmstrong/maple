@@ -58,7 +58,7 @@ const recipeIntentLabels: Readonly<Record<string, string>> = {
   "builtin-web-quick-look": "HTTP/HTTPS headers and titles",
 };
 
-function changedOptionCount(options: ScanOptions): number {
+export function changedOptionCount(options: ScanOptions): number {
   return typedKeys(defaultScanOptions).filter((key) => options[key] !== defaultScanOptions[key])
     .length;
 }

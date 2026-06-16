@@ -15,13 +15,13 @@ test.describe("Maple browser smoke", () => {
     await page.goto("/");
 
     await assertNoHorizontalOverflow(page);
-    await page.getByRole("button", { name: "Options" }).click();
+    await page.getByRole("tab", { name: "Options" }).click();
     await expect(page.getByRole("heading", { name: "Nmap options" })).toBeVisible();
     await assertNoHorizontalOverflow(page);
-    await page.getByRole("button", { name: "Scripts" }).click();
+    await page.getByRole("tab", { name: "Scripts" }).click();
     await expect(page.getByRole("heading", { name: "NSE scripts" })).toBeVisible();
     await assertNoHorizontalOverflow(page);
-    await page.getByRole("button", { name: "Output" }).click();
+    await page.getByRole("tab", { name: "Output" }).click();
     await expect(page.getByRole("heading", { name: "Preview argv" })).toBeVisible();
     await assertNoHorizontalOverflow(page);
   });

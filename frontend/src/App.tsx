@@ -172,6 +172,7 @@ export default function App(): React.JSX.Element {
                   setConfirmClearHistory(false);
                   refreshHistory(setHistoryState);
                 }}
+                onStartScan={() => setActiveView("scan")}
               />
             ) : null}
           </section>

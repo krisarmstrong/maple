@@ -26,7 +26,7 @@ import {
   verbosityModes,
   versionModes,
 } from "../core/scan-options";
-import { summarizePreset } from "../core/scan-preset-summary";
+import { changedOptionCount, summarizePreset } from "../core/scan-preset-summary";
 import {
   builtInScanPresets,
   loadSavedPresets,
@@ -145,6 +145,8 @@ export function ScanWorkspace({
       label: script,
     })),
   ];
+  const optionsBadgeCount = changedOptionCount(scanOptions);
+  const scriptsBadgeCount = selectedScriptValues.length;
   const previewTokens = commandTokens(preview);
   const safetyWarnings = scanSafetyWarnings({
     options: scanOptions,
@@ -448,7 +450,7 @@ export function ScanWorkspace({
         />
       </section>
 
-      <nav className="scan-panel-tabs" aria-label="Scan setup sections">
+      <div className="scan-panel-tabs" role="tablist" aria-label="Scan setup sections">
         <ScanPanelButton
           activePanel={activePanel}
           id="configure"
@@ -459,12 +461,14 @@ export function ScanWorkspace({
           activePanel={activePanel}
           id="options"
           label="Options"
+          badge={optionsBadgeCount}
           onSelect={setActivePanel}
         />
         <ScanPanelButton
           activePanel={activePanel}
           id="scripts"
           label="Scripts"
+          badge={scriptsBadgeCount}
           onSelect={setActivePanel}
         />
         <ScanPanelButton
@@ -473,12 +477,18 @@ export function ScanWorkspace({
           label="Output"
           onSelect={setActivePanel}
         />
-      </nav>
+      </div>
 
       {error === "" ? null : <p className="error">{error}</p>}
 
       {activePanel === "configure" ? (
-        <div className="scan-panel" data-testid="configure-panel">
+        <div
+          className="scan-panel"
+          data-testid="configure-panel"
+          id="scan-panel-configure"
+          role="tabpanel"
+          aria-labelledby="scan-tab-configure"
+        >
           <div className="scan-grid">
             <div className="target-input">
               <div>
@@ -617,15 +627,19 @@ export function ScanWorkspace({
       ) : null}
 
       {activePanel === "options" ? (
-        <div className="scan-panel options-panel">
+        <div
+          className="scan-panel options-panel"
+          id="scan-panel-options"
+          role="tabpanel"
+          aria-labelledby="scan-tab-options"
+        >
           <div>
             <h3>Nmap options</h3>
             <p className="target-mode-help">
               Add common Nmap switches as structured choices. Maple still builds argv directly.
             </p>
           </div>
-          <fieldset className="option-group-tabs">
-            <legend>Option groups</legend>
+          <div className="option-group-tabs" role="tablist" aria-label="Option groups">
             <OptionGroupTab
               activeGroup={activeOptionGroup}
               group="shape"
@@ -656,8 +670,13 @@ export function ScanWorkspace({
               label="Behavior"
               onSelect={setActiveOptionGroup}
             />
-          </fieldset>
-          <div className="options-grid">
+          </div>
+          <div
+            className="options-grid"
+            id={`option-panel-${activeOptionGroup}`}
+            role="tabpanel"
+            aria-labelledby={`option-tab-${activeOptionGroup}`}
+          >
             {activeOptionGroup === "shape" ? (
               <>
                 <h4 className="option-section-heading">Scan shape</h4>
@@ -1303,144 +1322,144 @@ export function ScanWorkspace({
                 </label>
               </>
             ) : null}
+            {activeOptionGroup === "behavior" ? (
+              <fieldset className="option-toggle-grid">
+                <legend>Scan behavior</legend>
+                <label>
+                  <input
+                    checked={scanOptions.icmpEchoProbe}
+                    disabled={scanOptions.discoveryMode === "skip"}
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        icmpEchoProbe: event.target.checked,
+                      }))
+                    }
+                    type="checkbox"
+                  />
+                  <span>ICMP echo probe</span>
+                </label>
+                <label>
+                  <input
+                    checked={scanOptions.icmpTimestamp}
+                    disabled={scanOptions.discoveryMode === "skip"}
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        icmpTimestamp: event.target.checked,
+                      }))
+                    }
+                    type="checkbox"
+                  />
+                  <span>ICMP timestamp probe</span>
+                </label>
+                <label>
+                  <input
+                    checked={scanOptions.icmpNetmask}
+                    disabled={scanOptions.discoveryMode === "skip"}
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        icmpNetmask: event.target.checked,
+                      }))
+                    }
+                    type="checkbox"
+                  />
+                  <span>ICMP netmask probe</span>
+                </label>
+                <label>
+                  <input
+                    checked={scanOptions.serviceDetection}
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        serviceDetection: event.target.checked,
+                        versionMode: event.target.checked ? current.versionMode : "",
+                        versionIntensity: event.target.checked ? current.versionIntensity : "",
+                      }))
+                    }
+                    type="checkbox"
+                  />
+                  <span>Service detection</span>
+                </label>
+                <label>
+                  <input
+                    checked={scanOptions.ipv6}
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({ ...current, ipv6: event.target.checked }))
+                    }
+                    type="checkbox"
+                  />
+                  <span>IPv6</span>
+                </label>
+                <label>
+                  <input
+                    checked={scanOptions.osDetection}
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        osDetection: event.target.checked,
+                      }))
+                    }
+                    type="checkbox"
+                  />
+                  <span>OS detection</span>
+                </label>
+                <label>
+                  <input
+                    checked={scanOptions.traceroute}
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        traceroute: event.target.checked,
+                      }))
+                    }
+                    type="checkbox"
+                  />
+                  <span>Traceroute</span>
+                </label>
+                <label>
+                  <input
+                    checked={scanOptions.reason}
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        reason: event.target.checked,
+                      }))
+                    }
+                    type="checkbox"
+                  />
+                  <span>Show reasons</span>
+                </label>
+                <label>
+                  <input
+                    checked={scanOptions.openOnly}
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        openOnly: event.target.checked,
+                      }))
+                    }
+                    type="checkbox"
+                  />
+                  <span>Only open ports</span>
+                </label>
+                <label>
+                  <input
+                    checked={scanOptions.packetTrace}
+                    onChange={(event) =>
+                      updateScanOptions((current) => ({
+                        ...current,
+                        packetTrace: event.target.checked,
+                      }))
+                    }
+                    type="checkbox"
+                  />
+                  <span>Packet trace</span>
+                </label>
+              </fieldset>
+            ) : null}
           </div>
-          {activeOptionGroup === "behavior" ? (
-            <fieldset className="option-toggle-grid">
-              <legend>Scan behavior</legend>
-              <label>
-                <input
-                  checked={scanOptions.icmpEchoProbe}
-                  disabled={scanOptions.discoveryMode === "skip"}
-                  onChange={(event) =>
-                    updateScanOptions((current) => ({
-                      ...current,
-                      icmpEchoProbe: event.target.checked,
-                    }))
-                  }
-                  type="checkbox"
-                />
-                <span>ICMP echo probe</span>
-              </label>
-              <label>
-                <input
-                  checked={scanOptions.icmpTimestamp}
-                  disabled={scanOptions.discoveryMode === "skip"}
-                  onChange={(event) =>
-                    updateScanOptions((current) => ({
-                      ...current,
-                      icmpTimestamp: event.target.checked,
-                    }))
-                  }
-                  type="checkbox"
-                />
-                <span>ICMP timestamp probe</span>
-              </label>
-              <label>
-                <input
-                  checked={scanOptions.icmpNetmask}
-                  disabled={scanOptions.discoveryMode === "skip"}
-                  onChange={(event) =>
-                    updateScanOptions((current) => ({
-                      ...current,
-                      icmpNetmask: event.target.checked,
-                    }))
-                  }
-                  type="checkbox"
-                />
-                <span>ICMP netmask probe</span>
-              </label>
-              <label>
-                <input
-                  checked={scanOptions.serviceDetection}
-                  onChange={(event) =>
-                    updateScanOptions((current) => ({
-                      ...current,
-                      serviceDetection: event.target.checked,
-                      versionMode: event.target.checked ? current.versionMode : "",
-                      versionIntensity: event.target.checked ? current.versionIntensity : "",
-                    }))
-                  }
-                  type="checkbox"
-                />
-                <span>Service detection</span>
-              </label>
-              <label>
-                <input
-                  checked={scanOptions.ipv6}
-                  onChange={(event) =>
-                    updateScanOptions((current) => ({ ...current, ipv6: event.target.checked }))
-                  }
-                  type="checkbox"
-                />
-                <span>IPv6</span>
-              </label>
-              <label>
-                <input
-                  checked={scanOptions.osDetection}
-                  onChange={(event) =>
-                    updateScanOptions((current) => ({
-                      ...current,
-                      osDetection: event.target.checked,
-                    }))
-                  }
-                  type="checkbox"
-                />
-                <span>OS detection</span>
-              </label>
-              <label>
-                <input
-                  checked={scanOptions.traceroute}
-                  onChange={(event) =>
-                    updateScanOptions((current) => ({
-                      ...current,
-                      traceroute: event.target.checked,
-                    }))
-                  }
-                  type="checkbox"
-                />
-                <span>Traceroute</span>
-              </label>
-              <label>
-                <input
-                  checked={scanOptions.reason}
-                  onChange={(event) =>
-                    updateScanOptions((current) => ({
-                      ...current,
-                      reason: event.target.checked,
-                    }))
-                  }
-                  type="checkbox"
-                />
-                <span>Show reasons</span>
-              </label>
-              <label>
-                <input
-                  checked={scanOptions.openOnly}
-                  onChange={(event) =>
-                    updateScanOptions((current) => ({
-                      ...current,
-                      openOnly: event.target.checked,
-                    }))
-                  }
-                  type="checkbox"
-                />
-                <span>Only open ports</span>
-              </label>
-              <label>
-                <input
-                  checked={scanOptions.packetTrace}
-                  onChange={(event) =>
-                    updateScanOptions((current) => ({
-                      ...current,
-                      packetTrace: event.target.checked,
-                    }))
-                  }
-                  type="checkbox"
-                />
-                <span>Packet trace</span>
-              </label>
-            </fieldset>
-          ) : null}
           {scanOptions.osDetection ? (
             <p className="option-warning">
               OS detection often requires elevated privileges on macOS, Linux, and Windows.
@@ -1513,7 +1532,12 @@ export function ScanWorkspace({
       ) : null}
 
       {activePanel === "scripts" ? (
-        <div className="scan-panel scripts-panel">
+        <div
+          className="scan-panel scripts-panel"
+          id="scan-panel-scripts"
+          role="tabpanel"
+          aria-labelledby="scan-tab-scripts"
+        >
           <div>
             <h3>NSE scripts</h3>
             <p className="target-mode-help">
@@ -1681,7 +1705,12 @@ export function ScanWorkspace({
       ) : null}
 
       {activePanel === "output" ? (
-        <div className="scan-panel output-panel">
+        <div
+          className="scan-panel output-panel"
+          id="scan-panel-output"
+          role="tabpanel"
+          aria-labelledby="scan-tab-output"
+        >
           <section className="output-section">
             <h3>Run status</h3>
             <p className="scan-status">{scanStatusLabel(status)}</p>
@@ -1875,6 +1904,7 @@ function ScriptRiskBadge({ risk }: { risk: NSERiskLevel }): React.JSX.Element | 
 
 interface ScanPanelButtonProps {
   activePanel: ScanPanel;
+  badge?: number;
   id: ScanPanel;
   label: string;
   onSelect: (panel: ScanPanel) => void;
@@ -1882,18 +1912,31 @@ interface ScanPanelButtonProps {
 
 function ScanPanelButton({
   activePanel,
+  badge,
   id,
   label,
   onSelect,
 }: ScanPanelButtonProps): React.JSX.Element {
+  const isActive = activePanel === id;
+  const showBadge = badge !== undefined && badge > 0;
+  const accessibleLabel = showBadge ? `${label}, ${badge} change${badge === 1 ? "" : "s"}` : label;
   return (
     <button
-      aria-current={activePanel === id ? "page" : undefined}
+      aria-controls={`scan-panel-${id}`}
+      aria-label={accessibleLabel}
+      aria-selected={isActive}
       className="scan-panel-tab"
+      id={`scan-tab-${id}`}
+      role="tab"
       type="button"
       onClick={() => onSelect(id)}
     >
       {label}
+      {showBadge ? (
+        <span className="tab-badge" aria-hidden="true">
+          {badge}
+        </span>
+      ) : null}
     </button>
   );
 }
@@ -1913,8 +1956,11 @@ function OptionGroupTab({
 }: OptionGroupTabProps): React.JSX.Element {
   return (
     <button
-      aria-pressed={activeGroup === group}
+      aria-controls={`option-panel-${group}`}
+      aria-selected={activeGroup === group}
       className="option-group-tab"
+      id={`option-tab-${group}`}
+      role="tab"
       type="button"
       onClick={() => onSelect(group)}
     >
