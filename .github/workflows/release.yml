@@ -77,6 +77,15 @@ jobs:
             ldflags: "-w -s -extldflags '-framework UniformTypeIdentifiers'"
             wails_flags: ""
             archive_ext: tar.gz
+          - name: macos-amd64
+            os: macos
+            runner: macos-13
+            platform: darwin/amd64
+            package_arch: amd64
+            build_tags: desktop,wv2runtime.download,production
+            ldflags: "-w -s -extldflags '-framework UniformTypeIdentifiers'"
+            wails_flags: ""
+            archive_ext: tar.gz
           - name: linux-amd64
             os: linux
             runner: ubuntu-24.04
