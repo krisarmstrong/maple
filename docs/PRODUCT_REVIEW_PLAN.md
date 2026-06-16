@@ -36,6 +36,7 @@ and Linux.
    - Add focused UI for detected Nmap suite tools: Ncat, Ndiff, and Nping.
    - Keep these as argv-safe builders, not raw shell fields.
    - Start with read-only/help and safe builders before adding deeper workflows.
+   - Status: preview-only argv builders implemented for Ncat, Ndiff, and Nping.
 
 4. **Nmap Option Builder Depth**
    - Expand the structured option model for high-value flags that are still help-only.

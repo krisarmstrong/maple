@@ -305,7 +305,11 @@
 
 .utility-workspace {
   display: grid;
-  gap: var(--space-12);
+  gap: var(--space-10);
+}
+
+.utility-workspace .workspace-header {
+  margin-bottom: var(--space-0);
 }
 
 .utility-tool-grid {
@@ -319,10 +323,17 @@
   border: var(--border-width) solid var(--border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-inset);
+  color: var(--text);
   display: grid;
   gap: var(--space-10);
   min-height: var(--size-tool-card-min);
   padding: var(--space-11);
+  text-align: left;
+}
+
+.utility-tool-card[aria-pressed="true"] {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-focus);
 }
 
 .utility-tool-card p {
@@ -348,6 +359,68 @@
 .utility-tool-meta strong {
   color: var(--muted);
   font-size: var(--font-size-sm);
+}
+
+.utility-builder {
+  background: var(--panel-subtle);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  display: grid;
+  gap: var(--space-10);
+  padding: var(--space-11);
+}
+
+.utility-builder-header {
+  align-items: flex-start;
+  display: flex;
+  gap: var(--space-10);
+  justify-content: space-between;
+}
+
+.utility-builder-header h3 {
+  font-size: var(--font-size-panel-title);
+  margin-bottom: var(--space-3);
+}
+
+.utility-builder-header p,
+.utility-builder-preview p {
+  color: var(--muted);
+  margin-bottom: var(--space-0);
+}
+
+.utility-builder-header > span {
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-pill);
+  flex: 0 0 auto;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-label);
+  padding: var(--space-3) var(--space-6);
+}
+
+.utility-builder-grid {
+  display: grid;
+  gap: var(--space-8);
+  grid-template-columns: repeat(auto-fit, minmax(var(--size-target-summary-min), 1fr));
+}
+
+.utility-builder-grid label {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.utility-builder-grid label span {
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-label);
+}
+
+.utility-builder-preview {
+  background: var(--panel-raised);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-sm);
+  display: grid;
+  gap: var(--space-7);
+  padding: var(--space-8);
 }
 
 .tool-card--installed span {
@@ -1201,7 +1274,8 @@ textarea:focus {
   padding: var(--space-0);
 }
 
-.argv-token {
+.argv-token,
+.argv-token-list code {
   background: var(--code-bg);
   border: var(--border-width) solid var(--color-sidebar-border);
   border-radius: var(--radius-sm);

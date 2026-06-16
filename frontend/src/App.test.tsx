@@ -162,19 +162,22 @@ describe("App", () => {
         displayName: "Ncat",
         required: false,
         installed: true,
+        path: "/usr/local/bin/ncat",
         version: "Ncat: Version 7.96",
       },
       {
         name: "ndiff",
         displayName: "Ndiff",
         required: false,
-        installed: false,
+        installed: true,
+        path: "/usr/local/bin/ndiff",
       },
       {
         name: "nping",
         displayName: "Nping",
         required: false,
         installed: true,
+        path: "/usr/local/bin/nping",
         version: "Nping version 7.96",
       },
     ]);
@@ -188,14 +191,85 @@ describe("App", () => {
     expect(screen.getByRole("heading", { name: "Ndiff" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Nping" })).toBeInTheDocument();
     expect(screen.getByText("Ncat: Version 7.96")).toBeInTheDocument();
-    expect(screen.getAllByText("Command builder planned")).toHaveLength(3);
-    expect(screen.getAllByText("Detected").length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByText("Not detected")).toBeInTheDocument();
+    expect(screen.getAllByText("Open builder")).toHaveLength(2);
+    expect(screen.getByText("Builder selected")).toBeInTheDocument();
+    expect(screen.getAllByText("Detected").length).toBeGreaterThanOrEqual(3);
     expect(
       screen.getByText(
-        "These tools stay separate from Nmap scan recipes and keep argv-only execution.",
+        "Build safe argv previews for Ncat, Ndiff, and Nping without raw shell input.",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("builds argv previews for utility tools without raw shell input", async () => {
+    detectToolsMock.mockResolvedValue([
+      {
+        name: "ncat",
+        displayName: "Ncat",
+        required: false,
+        installed: true,
+        path: "/usr/local/bin/ncat",
+      },
+      {
+        name: "ndiff",
+        displayName: "Ndiff",
+        required: false,
+        installed: true,
+        path: "/usr/local/bin/ndiff",
+      },
+      {
+        name: "nping",
+        displayName: "Nping",
+        required: false,
+        installed: true,
+        path: "/usr/local/bin/nping",
+      },
+    ]);
+
+    render(<App />);
+
+    await userEvent.click(await screen.findByRole("button", { name: /Tools/u }));
+
+    expect(screen.getByRole("heading", { name: "Ncat argv builder" })).toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText("Host"), "10.0.0.1");
+    await userEvent.type(screen.getByLabelText("Port"), "443");
+    expect(
+      within(screen.getByLabelText("Utility argv tokens")).getByText("/usr/local/bin/ncat"),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByLabelText("Utility argv tokens")).getByText("10.0.0.1"),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByLabelText("Utility argv tokens")).getByText("443"),
+    ).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: /Ndiff/u }));
+    await userEvent.type(
+      screen.getByLabelText("Baseline XML"),
+      "/Users/krisarmstrong/scans/baseline.xml",
+    );
+    await userEvent.type(
+      screen.getByLabelText("Current XML"),
+      "/Users/krisarmstrong/scans/current.xml",
+    );
+    expect(
+      within(screen.getByLabelText("Utility argv tokens")).getByText("/usr/local/bin/ndiff"),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByLabelText("Utility argv tokens")).getByText(
+        "/Users/krisarmstrong/scans/current.xml",
+      ),
+    ).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: /Nping/u }));
+    await userEvent.type(screen.getByLabelText("Target"), "10.0.0.1");
+    expect(
+      within(screen.getByLabelText("Utility argv tokens")).getByText("/usr/local/bin/nping"),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByLabelText("Utility argv tokens")).getByText("--tcp"),
+    ).toBeInTheDocument();
+    expect(within(screen.getByLabelText("Utility argv tokens")).getByText("5")).toBeInTheDocument();
   });
 
   it("renders a desktop workbench shell with live status metadata", async () => {
