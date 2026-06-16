@@ -1,5 +1,10 @@
 import type { Dispatch, SetStateAction } from "react";
-import { scanEventIsFinished, scanEventLogLine, scanEventRunningState } from "../core/scan-events";
+import {
+  scanEventFinishKind,
+  scanEventIsFinished,
+  scanEventLogLine,
+  scanEventRunningState,
+} from "../core/scan-events";
 import type { ScanOptions } from "../core/scan-options";
 import { isScanProfileID, type ScanProfileID } from "../core/scan-profiles";
 import { type TargetModeID, validateTargetsForMode } from "../core/target-modes";
@@ -15,6 +20,7 @@ export type ScanStatus = "idle" | "previewed" | "running" | "complete" | "failed
 export interface ScanEventHandlers {
   setRunning: (running: boolean) => void;
   setLog: Dispatch<SetStateAction<LogEntry[]>>;
+  setDiagnostics: (diagnostics: string) => void;
   setStatus: (status: ScanStatus) => void;
   onScanFinished?: () => void;
 }
@@ -86,6 +92,7 @@ export function handleScanEvent(event: ScanEvent, handlers: ScanEventHandlers): 
   }
   updateStatus(event, handlers.setStatus);
   appendLogLine(event, handlers.setLog);
+  updateDiagnostics(event, handlers.setDiagnostics);
   if (scanEventIsFinished(event)) {
     handlers.onScanFinished?.();
   }
@@ -107,14 +114,31 @@ export function scanStatusLabel(status: ScanStatus): string {
   return status === "failed" ? "Scan failed" : "Scan complete";
 }
 
+export function scanStatusDetail(status: ScanStatus): string {
+  if (status === "idle") {
+    return "Preview argv before running so the exact command is visible.";
+  }
+  if (status === "previewed") {
+    return "Review the argv tokens, then run the scan when the target and options look right.";
+  }
+  if (status === "running") {
+    return "Nmap is running locally. Live stdout and stderr appear below without raw XML.";
+  }
+  if (status === "cancelled") {
+    return "Cancellation was requested. Any partial XML stays available only if Nmap produced it.";
+  }
+  if (status === "failed") {
+    return "The run did not finish cleanly. Check diagnostics and stderr for the exact cause.";
+  }
+  return "The run completed. Results are parsed into History and raw XML remains export-only.";
+}
+
 function updateStatus(event: ScanEvent, setStatus: (status: ScanStatus) => void): void {
   if (event.type === "started") {
     setStatus("running");
   }
   if (event.type === "finished") {
-    setStatus(
-      event.result.error === undefined || event.result.error === "" ? "complete" : "failed",
-    );
+    setStatus(scanEventFinishKind(event) ?? "failed");
   }
 }
 
@@ -123,6 +147,16 @@ function appendLogLine(event: ScanEvent, setLog: Dispatch<SetStateAction<LogEntr
   if (line !== undefined) {
     setLog((current) => [...current, { id: nextLogID(current), text: line }]);
   }
+}
+
+export function updateDiagnostics(
+  event: ScanEvent,
+  setDiagnostics: (diagnostics: string) => void,
+): void {
+  if (event.type !== "finished") {
+    return;
+  }
+  setDiagnostics(event.result.diagnostics ?? "");
 }
 
 function nextLogID(current: LogEntry[]): number {

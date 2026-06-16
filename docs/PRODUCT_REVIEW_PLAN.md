@@ -55,6 +55,8 @@ and Linux.
    - Add clearer live run phases: validating, launching, running, parsing, saving history.
    - Improve cancelled/failed/partial-result language.
    - Keep raw XML out of live output while preserving XML/JSON/Markdown exports.
+   - Status: Output status copy, cancellation feedback, diagnostics details, and tab contrast
+     improved; backend phase events remain to be added.
 
 7. **History and Reporting**
    - Add richer filtering and sorting for hosts, ports, services, and findings.

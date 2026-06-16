@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { scanEventLogLine, scanEventRunningState } from "./scan-events";
+import { scanEventFinishKind, scanEventLogLine, scanEventRunningState } from "./scan-events";
 
 describe("scan events", () => {
   it("tracks running state from lifecycle events", () => {
@@ -57,5 +57,26 @@ describe("scan events", () => {
         output: { runId: "scan-1", stream: "stderr", text: "Stats: 0:00:01 elapsed" },
       }),
     ).toBe("Stats: 0:00:01 elapsed");
+  });
+
+  it("classifies completed, failed, and cancelled finish events", () => {
+    expect(
+      scanEventFinishKind({
+        type: "finished",
+        result: { runId: "scan-1", exitCode: 0, xml: "<nmaprun />" },
+      }),
+    ).toBe("complete");
+    expect(
+      scanEventFinishKind({
+        type: "finished",
+        result: { runId: "scan-1", exitCode: 1, xml: "", error: "nmap failed" },
+      }),
+    ).toBe("failed");
+    expect(
+      scanEventFinishKind({
+        type: "finished",
+        result: { runId: "scan-1", exitCode: 1, xml: "", error: "context canceled" },
+      }),
+    ).toBe("cancelled");
   });
 });

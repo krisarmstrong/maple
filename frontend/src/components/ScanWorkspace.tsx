@@ -66,6 +66,7 @@ import {
   makeRequest,
   messageForInvalidTargets,
   type ScanStatus,
+  scanStatusDetail,
   scanStatusLabel,
   updateTargets,
 } from "./scan-workspace-state";
@@ -104,6 +105,7 @@ export function ScanWorkspace({
   const [copyMessage, setCopyMessage] = useState("");
   const [preview, setPreview] = useState<string[]>([]);
   const [log, setLog] = useState<LogEntry[]>([]);
+  const [diagnostics, setDiagnostics] = useState("");
   const [running, setRunning] = useState(false);
   const [status, setStatus] = useState<ScanStatus>("idle");
   const selectedProfile = findProfile(profileId);
@@ -147,7 +149,7 @@ export function ScanWorkspace({
         if (event.type === "started") {
           setActivePanel("output");
         }
-        handleScanEvent(event, { setRunning, setLog, setStatus, onScanFinished });
+        handleScanEvent(event, { setRunning, setLog, setDiagnostics, setStatus, onScanFinished });
       }),
     [onScanFinished],
   );
@@ -209,6 +211,7 @@ export function ScanWorkspace({
     setError("");
     setCopyMessage("");
     setLog([]);
+    setDiagnostics("");
     setStatus("running");
     setActivePanel("output");
     try {
@@ -218,6 +221,21 @@ export function ScanWorkspace({
       setStatus("failed");
       setActivePanel("configure");
       setError(errorMessage(caught));
+    }
+  }
+
+  async function requestCancelScan(): Promise<void> {
+    const cancelled = await cancelScan();
+    if (cancelled) {
+      setStatus("cancelled");
+      setRunning(false);
+      setLog((current) => {
+        const last = current.at(-1);
+        return [
+          ...current,
+          { id: last === undefined ? 1 : last.id + 1, text: "Cancel requested." },
+        ];
+      });
     }
   }
 
@@ -362,7 +380,7 @@ export function ScanWorkspace({
           <button disabled={!scanReady || running} onClick={() => void runScan()} type="button">
             Run Scan
           </button>
-          <button disabled={!running} onClick={() => void cancelScan()} type="button">
+          <button disabled={!running} onClick={() => void requestCancelScan()} type="button">
             Cancel
           </button>
         </div>
@@ -1638,6 +1656,7 @@ export function ScanWorkspace({
           <section className="output-section">
             <h3>Run status</h3>
             <p className="scan-status">{scanStatusLabel(status)}</p>
+            <p className="muted">{scanStatusDetail(status)}</p>
             <p className="muted">Raw XML is captured for History exports, not shown here.</p>
           </section>
           <section className="output-section">
@@ -1684,7 +1703,14 @@ export function ScanWorkspace({
           </section>
           <section className="output-section">
             <h3>Diagnostics</h3>
-            <p className="muted">Warnings and stderr lines appear in the live log.</p>
+            {diagnostics === "" ? (
+              <p className="muted">No diagnostics captured yet.</p>
+            ) : (
+              <details className="diagnostics-details">
+                <summary>Parser notes and stderr diagnostics</summary>
+                <pre>{diagnostics}</pre>
+              </details>
+            )}
           </section>
         </div>
       ) : null}
