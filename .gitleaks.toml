@@ -10,4 +10,7 @@ regexes = [
   # localStorage key constant for saved scan presets — not a credential.
   # (frontend/src/core/scan-presets.ts: savedPresetStorageKey)
   '''maple\.scanPresets\.v1''',
+  # localStorage key constant for saved target groups — not a credential.
+  # (frontend/src/core/target-groups.ts: targetGroupStorageKey)
+  '''maple\.targetGroups\.v1''',
 ]
