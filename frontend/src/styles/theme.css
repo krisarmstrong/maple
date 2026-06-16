@@ -16,6 +16,7 @@
   --color-warm: #b86b12;
   --color-warm-surface: #fff0dc;
   --color-danger-surface: #fde4df;
+  --color-danger-border: #efb5ab;
   --color-danger-text: #9b2d1f;
   --color-success-surface: #dff4e8;
   --color-code-surface: #0d1513;
@@ -117,6 +118,7 @@
   --warm: var(--color-warm);
   --warm-bg: var(--color-warm-surface);
   --warn-bg: var(--color-danger-surface);
+  --warn-border: var(--color-danger-border);
   --warn-text: var(--color-danger-text);
   --warning: var(--color-danger-text);
   --code-bg: var(--color-code-surface);
