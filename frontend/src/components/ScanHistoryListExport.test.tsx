@@ -42,6 +42,22 @@ describe("ScanHistoryList exports", () => {
     expect(exportScanHistoryRecordMock).toHaveBeenCalledWith("scan-1", "markdown");
   });
 
+  it("exports CSV from history", async () => {
+    render(<ScanHistoryList records={[scanRecord("scan-1")]} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "CSV" }));
+
+    expect(exportScanHistoryRecordMock).toHaveBeenCalledWith("scan-1", "csv");
+  });
+
+  it("exports grepable format from history", async () => {
+    render(<ScanHistoryList records={[scanRecord("scan-1")]} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Grepable" }));
+
+    expect(exportScanHistoryRecordMock).toHaveBeenCalledWith("scan-1", "grepable");
+  });
+
   it("shows where an export was saved", async () => {
     exportScanHistoryRecordMock.mockResolvedValue("/Users/krisarmstrong/Desktop/maple-scan.md");
     render(<ScanHistoryList records={[scanRecord("scan-1")]} />);

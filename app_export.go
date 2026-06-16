@@ -47,6 +47,10 @@ func exportFilters(format exporter.Format) []runtime.FileFilter {
 		return []runtime.FileFilter{{DisplayName: "Nmap XML (*.xml)", Pattern: "*.xml"}}
 	case exporter.FormatMarkdown:
 		return []runtime.FileFilter{{DisplayName: "Markdown (*.md)", Pattern: "*.md"}}
+	case exporter.FormatCSV:
+		return []runtime.FileFilter{{DisplayName: "CSV (*.csv)", Pattern: "*.csv"}}
+	case exporter.FormatGrepable:
+		return []runtime.FileFilter{{DisplayName: "Grepable Nmap (*.gnmap)", Pattern: "*.gnmap"}}
 	default:
 		return []runtime.FileFilter{{DisplayName: "JSON (*.json)", Pattern: "*.json"}}
 	}

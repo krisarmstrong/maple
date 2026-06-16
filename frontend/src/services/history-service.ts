@@ -127,7 +127,7 @@ export function loadScanReport(runId: string): Promise<string> {
 
 export function exportScanHistoryRecord(
   runId: string,
-  format: "xml" | "json" | "markdown",
+  format: "xml" | "json" | "markdown" | "csv" | "grepable",
 ): Promise<string> {
   if (!hasWailsBackend()) {
     return Promise.reject(unavailableBridgeError());
