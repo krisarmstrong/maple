@@ -96,7 +96,10 @@ export function ScanHistoryList({
     }
   }
 
-  async function exportRecord(runId: string, format: "xml" | "json" | "markdown"): Promise<void> {
+  async function exportRecord(
+    runId: string,
+    format: "xml" | "json" | "markdown" | "csv" | "grepable",
+  ): Promise<void> {
     setError("");
     setExportPath("");
     try {
@@ -248,6 +251,12 @@ export function ScanHistoryList({
               </button>
               <button type="button" onClick={() => void exportRecord(record.runId, "markdown")}>
                 Markdown Report
+              </button>
+              <button type="button" onClick={() => void exportRecord(record.runId, "csv")}>
+                CSV
+              </button>
+              <button type="button" onClick={() => void exportRecord(record.runId, "grepable")}>
+                Grepable
               </button>
             </div>
             <button type="button" onClick={() => void deleteRecord(record.runId)}>
