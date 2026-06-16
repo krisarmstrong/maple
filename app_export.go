@@ -22,7 +22,14 @@ func (a *App) ExportScanHistoryRecord(runID string, format exporter.Format) (str
 	if err != nil || path == "" {
 		return path, err
 	}
-	return path, os.WriteFile(path, file.Content, exportFileMode)
+	return path, writeExportFile(path, file.Content)
+}
+
+// writeExportFile persists export bytes with owner-only permissions. It is the
+// testable half of ExportScanHistoryRecord; the surrounding method only adds
+// the native save dialog, which cannot run headless.
+func writeExportFile(path string, content []byte) error {
+	return os.WriteFile(path, content, exportFileMode)
 }
 
 func (a *App) exportPath(filename string, format exporter.Format) (string, error) {
