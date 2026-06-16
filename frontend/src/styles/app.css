@@ -697,6 +697,7 @@
 }
 
 .scan-grid {
+  align-items: start;
   display: grid;
   gap: var(--space-11);
   grid-template-columns: minmax(0, 1.55fr) minmax(var(--layout-profile-column-width), 0.8fr);
@@ -755,6 +756,7 @@
 }
 
 .target-input {
+  align-content: start;
   display: grid;
   gap: var(--space-8);
 }
