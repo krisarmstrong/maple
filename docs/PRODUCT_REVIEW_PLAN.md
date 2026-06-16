@@ -1,20 +1,20 @@
 # Maple Product Review Plan
 
-Updated: 2026-06-15
+Updated: 2026-06-16
 
-Maple is beyond the first usable scan flow, but it is not release-candidate complete yet. The
-current bar is a polished local desktop Nmap workbench that preserves Nmap power without exposing
-raw shell command entry, bundles no Nmap/Npcap tools, and remains understandable on macOS, Windows,
-and Linux.
+Maple has reached a local unsigned release-candidate shape. The current bar remains a polished
+local desktop Nmap workbench that preserves Nmap power without exposing raw shell command entry,
+bundles no Nmap/Npcap tools, and remains understandable on macOS, Windows, and Linux.
 
 ## Current Assessment
 
 - Scan setup, target validation, recipes, options, scripts, output preview, history, exports,
   environment detection, and help are implemented.
-- Local gates pass: `make fmt-check`, `make lint`, `make test`, `make build`, `make test-e2e`.
+- Local gates pass: `make rc-check`.
 - Screenshot QA found no horizontal overflow, no raw XML console display, and no stale
   profile/preset wording.
-- A tablet-width layout defect was found and fixed by switching to the compact shell earlier.
+- A 2026-06-16 real scan against an owned `10.0.0.1` gateway completed with `exit 0` using
+  user-installed Nmap 7.99 and produced readable service results.
 
 ## Remaining Workstreams
 
@@ -49,7 +49,8 @@ and Linux.
    - Improve script search results with richer descriptions, category badges, and risk badges.
    - Add selected-script details so users understand what a script does before running it.
    - Improve custom script file/directory validation and explain absolute-path requirements inline.
-   - Status: category/script descriptions and noisy/intrusive badges implemented in script browsing.
+   - Status: category/script descriptions, noisy/intrusive badges, richer discovery search, and a
+     30-recipe built-in library are implemented in script browsing.
 
 6. **Scan Run Reliability**
    - Add clearer live run phases: validating, launching, running, parsing, saving history.
@@ -84,8 +85,11 @@ and Linux.
      release-candidate gate until signing credentials and tester machines are available.
 
 10. **Release-Candidate Polish**
-    - Add a repeatable screenshot review artifact set.
-    - Add smoke checklist updates for Windows/Linux testers.
-    - Finish accessibility pass for focus states, control sizing, and color contrast.
-    - Only call Maple release-candidate ready after the above workstreams have green gates and
-      a clean desktop smoke on the latest build.
+   - Add a repeatable screenshot review artifact set.
+   - Add smoke checklist updates for Windows/Linux testers.
+   - Finish accessibility pass for focus states, control sizing, and color contrast.
+   - Only call Maple release-candidate ready after the above workstreams have green gates and
+     a clean desktop smoke on the latest build.
+   - Status: local screenshot cycles, local real-scan evidence, and smoke docs are complete.
+     Remaining external validation is signed/notarized installers and real Windows/Linux
+     target-host smoke.

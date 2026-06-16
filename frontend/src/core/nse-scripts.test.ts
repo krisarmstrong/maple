@@ -32,6 +32,7 @@ describe("NSE script helpers", () => {
   it("returns scripts that belong to selected categories", () => {
     expect(scriptsForCategories(["discovery", "safe"])).toEqual([
       "broadcast-dns-service-discovery",
+      "dns-recursion",
       "dns-service-discovery",
       "http-title",
       "smb-os-discovery",
@@ -63,6 +64,7 @@ describe("NSE script helpers", () => {
       "smb-vuln-ms10-054",
       "smb-vuln-ms17-010",
     ]);
+    expect(searchNSEScripts("recursion")).toEqual(["dns-recursion"]);
   });
 
   it("describes categories and script risk", () => {

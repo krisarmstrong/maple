@@ -10,7 +10,7 @@ import {
 
 describe("scan-presets", () => {
   it("ships a useful built-in preset library without saved targets", () => {
-    expect(builtInScanPresets).toHaveLength(10);
+    expect(builtInScanPresets).toHaveLength(30);
     expect(builtInScanPresets.map((preset) => preset.name)).toEqual([
       "Fast host discovery",
       "Top TCP ports",
@@ -22,8 +22,30 @@ describe("scan-presets", () => {
       "UDP essentials",
       "Authenticated surface check",
       "Careful vulnerability check",
+      "Safe default scripts",
+      "Full TCP inventory",
+      "Top 1000 service review",
+      "Web deep review",
+      "SSH review",
+      "Mail service review",
+      "Database surface",
+      "Printer and IoT discovery",
+      "SNMP review",
+      "Directory services",
+      "RDP and remote access",
+      "IP protocol discovery",
+      "ACK firewall check",
+      "No-ping top ports",
+      "DNS no-recursion check",
+      "Broadcast local discovery",
+      "TLS Heartbleed check",
+      "MS17-010 check",
+      "Slow safe subnet sweep",
+      "Verbose troubleshooting",
     ]);
     expect(builtInScanPresets.every((preset) => preset.id.startsWith("builtin-"))).toBe(true);
+    expect(new Set(builtInScanPresets.map((preset) => preset.id))).toHaveLength(30);
+    expect(new Set(builtInScanPresets.map((preset) => preset.name))).toHaveLength(30);
   });
 
   it("loads saved presets from storage", () => {

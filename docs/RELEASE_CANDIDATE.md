@@ -49,6 +49,20 @@ Required smoke coverage:
 - Raw XML, Full JSON, and Markdown Report exports.
 - Environment and Help guidance that Maple does not bundle Nmap, Npcap, Ncat, Ndiff, or Nping.
 
+### Local Real-Scan Evidence
+
+On 2026-06-16, local macOS smoke used user-installed Nmap 7.99 from `/opt/homebrew/bin/nmap`
+against an owned LAN gateway:
+
+```bash
+nmap -sT -Pn -T3 --top-ports 20 -oX .tmp/real-scan/10.0.0.1-top20.xml 10.0.0.1
+```
+
+The scan completed with `exit 0`, reported one host up at `10.0.0.1`, and produced readable
+service rows for open `53/tcp`, `80/tcp`, `443/tcp`, and `8080/tcp`. The raw XML remains under
+`.tmp/` and must not be committed; parser/export tests should use sanitized fixtures rather than
+private-network scan output.
+
 ## CI Release Gate
 
 Versioning is owned by release-please. Conventional commits merged to `main` update
