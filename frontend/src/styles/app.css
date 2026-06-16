@@ -835,6 +835,12 @@
   padding: var(--space-4) var(--space-6);
 }
 
+.option-catalog-entry small {
+  color: var(--muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-label);
+}
+
 .option-catalog-entry p {
   color: var(--muted);
   margin-bottom: var(--space-0);
