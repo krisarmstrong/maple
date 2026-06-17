@@ -5,6 +5,7 @@ import {
   verbosityModes,
   versionModes,
 } from "../../core/scan-options";
+import { SectionHeading } from "./SectionHeading";
 
 interface PortsOptionsProps {
   scanOptions: ScanOptions;
@@ -14,7 +15,10 @@ interface PortsOptionsProps {
 export function PortsOptions({ scanOptions, onChange }: PortsOptionsProps): React.JSX.Element {
   return (
     <>
-      <h4 className="option-section-heading">Ports and detail</h4>
+      <SectionHeading
+        title="Ports and detail"
+        hint="Port selection plus service-version and output detail."
+      />
       <label>
         <span>Version detail</span>
         <select

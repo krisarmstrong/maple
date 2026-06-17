@@ -1,4 +1,5 @@
 import type { ScanOptions } from "../../core/scan-options";
+import { SectionHeading } from "./SectionHeading";
 
 interface EvasionOptionsProps {
   scanOptions: ScanOptions;
@@ -8,7 +9,7 @@ interface EvasionOptionsProps {
 export function EvasionOptions({ scanOptions, onChange }: EvasionOptionsProps): React.JSX.Element {
   return (
     <>
-      <h4 className="option-section-heading">Packet shaping</h4>
+      <SectionHeading title="Packet shaping" hint="Fragmentation, MTU, padding, and source port." />
       <label>
         <span>Custom MTU</span>
         <input
@@ -73,7 +74,10 @@ export function EvasionOptions({ scanOptions, onChange }: EvasionOptionsProps): 
           value={scanOptions.sourcePort}
         />
       </label>
-      <h4 className="option-section-heading">Identity and evasion</h4>
+      <SectionHeading
+        title="Identity and evasion"
+        hint="Decoys, spoofed source, interface, and MAC."
+      />
       <label>
         <span>Decoys</span>
         <input

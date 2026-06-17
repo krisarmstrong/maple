@@ -1,4 +1,5 @@
 import type { ScanOptions } from "../../core/scan-options";
+import { SectionHeading } from "./SectionHeading";
 
 interface TimingOptionsProps {
   scanOptions: ScanOptions;
@@ -8,7 +9,10 @@ interface TimingOptionsProps {
 export function TimingOptions({ scanOptions, onChange }: TimingOptionsProps): React.JSX.Element {
   return (
     <>
-      <h4 className="option-section-heading">Timing and performance</h4>
+      <SectionHeading
+        title="Timing and performance"
+        hint="Packet rates, retries, timeouts, and parallelism."
+      />
       <label>
         <span>Minimum packet rate</span>
         <input
