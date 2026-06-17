@@ -49,54 +49,57 @@ const (
 var ErrInvalidScanOption = errors.New("enter valid structured Nmap options")
 
 type ScanOptions struct {
-	ScanTechnique    ScanTechnique `json:"scanTechnique,omitempty"`
-	DiscoveryMode    DiscoveryMode `json:"discoveryMode,omitempty"`
-	TCPSYNProbes     string        `json:"tcpSynProbes,omitempty"`
-	TCPACKProbes     string        `json:"tcpAckProbes,omitempty"`
-	UDPProbes        string        `json:"udpProbes,omitempty"`
-	SCTPInitProbes   string        `json:"sctpInitProbes,omitempty"`
-	ICMPEchoProbe    bool          `json:"icmpEchoProbe,omitempty"`
-	ICMPTimestamp    bool          `json:"icmpTimestamp,omitempty"`
-	ICMPNetmask      bool          `json:"icmpNetmask,omitempty"`
-	TargetInputFile  string        `json:"targetInputFile,omitempty"`
-	ExcludeTargets   string        `json:"excludeTargets,omitempty"`
-	ExcludeFile      string        `json:"excludeFile,omitempty"`
-	TimingTemplate   string        `json:"timingTemplate,omitempty"`
-	Ports            string        `json:"ports,omitempty"`
-	TopPorts         int           `json:"topPorts,omitempty"`
-	AllPorts         bool          `json:"allPorts,omitempty"`
-	ServiceDetection bool          `json:"serviceDetection,omitempty"`
-	VersionMode      VersionMode   `json:"versionMode,omitempty"`
-	VersionIntensity string        `json:"versionIntensity,omitempty"`
-	IPv6             bool          `json:"ipv6,omitempty"`
-	OSDetection      bool          `json:"osDetection,omitempty"`
-	Traceroute       bool          `json:"traceroute,omitempty"`
-	DNSMode          DNSMode       `json:"dnsMode,omitempty"`
-	DNSServers       string        `json:"dnsServers,omitempty"`
-	VerbosityMode    VerbosityMode `json:"verbosityMode,omitempty"`
-	Reason           bool          `json:"reason,omitempty"`
-	OpenOnly         bool          `json:"openOnly,omitempty"`
-	MinRate          int           `json:"minRate,omitempty"`
-	MaxRate          int           `json:"maxRate,omitempty"`
-	MaxRetries       string        `json:"maxRetries,omitempty"`
-	HostTimeout      string        `json:"hostTimeout,omitempty"`
-	MaxRTTTimeout    string        `json:"maxRttTimeout,omitempty"`
-	StatsEvery       string        `json:"statsEvery,omitempty"`
-	ScanDelay        string        `json:"scanDelay,omitempty"`
-	MaxScanDelay     string        `json:"maxScanDelay,omitempty"`
-	MinHostGroup     int           `json:"minHostGroup,omitempty"`
-	MaxHostGroup     int           `json:"maxHostGroup,omitempty"`
-	MinParallelism   int           `json:"minParallelism,omitempty"`
-	MaxParallelism   int           `json:"maxParallelism,omitempty"`
-	FragmentPackets  bool          `json:"fragmentPackets,omitempty"`
-	MTU              int           `json:"mtu,omitempty"`
-	DataLength       int           `json:"dataLength,omitempty"`
-	SourcePort       string        `json:"sourcePort,omitempty"`
-	Decoys           string        `json:"decoys,omitempty"`
-	SourceAddress    string        `json:"sourceAddress,omitempty"`
-	NetworkInterface string        `json:"networkInterface,omitempty"`
-	SpoofMAC         string        `json:"spoofMac,omitempty"`
-	PacketTrace      bool          `json:"packetTrace,omitempty"`
+	ScanTechnique     ScanTechnique `json:"scanTechnique,omitempty"`
+	DiscoveryMode     DiscoveryMode `json:"discoveryMode,omitempty"`
+	TCPSYNProbes      string        `json:"tcpSynProbes,omitempty"`
+	TCPACKProbes      string        `json:"tcpAckProbes,omitempty"`
+	UDPProbes         string        `json:"udpProbes,omitempty"`
+	SCTPInitProbes    string        `json:"sctpInitProbes,omitempty"`
+	ICMPEchoProbe     bool          `json:"icmpEchoProbe,omitempty"`
+	ICMPTimestamp     bool          `json:"icmpTimestamp,omitempty"`
+	ICMPNetmask       bool          `json:"icmpNetmask,omitempty"`
+	TargetInputFile   string        `json:"targetInputFile,omitempty"`
+	ExcludeTargets    string        `json:"excludeTargets,omitempty"`
+	ExcludeFile       string        `json:"excludeFile,omitempty"`
+	TimingTemplate    string        `json:"timingTemplate,omitempty"`
+	Ports             string        `json:"ports,omitempty"`
+	TopPorts          int           `json:"topPorts,omitempty"`
+	AllPorts          bool          `json:"allPorts,omitempty"`
+	ServiceDetection  bool          `json:"serviceDetection,omitempty"`
+	VersionMode       VersionMode   `json:"versionMode,omitempty"`
+	VersionIntensity  string        `json:"versionIntensity,omitempty"`
+	IPv6              bool          `json:"ipv6,omitempty"`
+	OSDetection       bool          `json:"osDetection,omitempty"`
+	Traceroute        bool          `json:"traceroute,omitempty"`
+	DNSMode           DNSMode       `json:"dnsMode,omitempty"`
+	DNSServers        string        `json:"dnsServers,omitempty"`
+	VerbosityMode     VerbosityMode `json:"verbosityMode,omitempty"`
+	Reason            bool          `json:"reason,omitempty"`
+	OpenOnly          bool          `json:"openOnly,omitempty"`
+	MinRate           int           `json:"minRate,omitempty"`
+	MaxRate           int           `json:"maxRate,omitempty"`
+	MaxRetries        string        `json:"maxRetries,omitempty"`
+	HostTimeout       string        `json:"hostTimeout,omitempty"`
+	MaxRTTTimeout     string        `json:"maxRttTimeout,omitempty"`
+	MinRTTTimeout     string        `json:"minRttTimeout,omitempty"`
+	InitialRTTTimeout string        `json:"initialRttTimeout,omitempty"`
+	ExcludePorts      string        `json:"excludePorts,omitempty"`
+	StatsEvery        string        `json:"statsEvery,omitempty"`
+	ScanDelay         string        `json:"scanDelay,omitempty"`
+	MaxScanDelay      string        `json:"maxScanDelay,omitempty"`
+	MinHostGroup      int           `json:"minHostGroup,omitempty"`
+	MaxHostGroup      int           `json:"maxHostGroup,omitempty"`
+	MinParallelism    int           `json:"minParallelism,omitempty"`
+	MaxParallelism    int           `json:"maxParallelism,omitempty"`
+	FragmentPackets   bool          `json:"fragmentPackets,omitempty"`
+	MTU               int           `json:"mtu,omitempty"`
+	DataLength        int           `json:"dataLength,omitempty"`
+	SourcePort        string        `json:"sourcePort,omitempty"`
+	Decoys            string        `json:"decoys,omitempty"`
+	SourceAddress     string        `json:"sourceAddress,omitempty"`
+	NetworkInterface  string        `json:"networkInterface,omitempty"`
+	SpoofMAC          string        `json:"spoofMac,omitempty"`
+	PacketTrace       bool          `json:"packetTrace,omitempty"`
 }
 
 func BuildOptionArgs(options ScanOptions) ([]string, error) {
@@ -151,6 +154,13 @@ func BuildOptionArgs(options ScanOptions) ([]string, error) {
 	if options.TopPorts != 0 {
 		args = append(args, "--top-ports", strconv.Itoa(options.TopPorts))
 	}
+	if strings.TrimSpace(options.ExcludePorts) != "" {
+		excludePorts, err := validatePorts(options.ExcludePorts)
+		if err != nil {
+			return nil, err
+		}
+		args = append(args, "--exclude-ports", excludePorts)
+	}
 	versionArgs, err := buildVersionArgs(options)
 	if err != nil {
 		return nil, err
@@ -200,6 +210,12 @@ func BuildOptionArgs(options ScanOptions) ([]string, error) {
 	}
 	if strings.TrimSpace(options.MaxRTTTimeout) != "" {
 		args = append(args, "--max-rtt-timeout", strings.TrimSpace(options.MaxRTTTimeout))
+	}
+	if strings.TrimSpace(options.MinRTTTimeout) != "" {
+		args = append(args, "--min-rtt-timeout", strings.TrimSpace(options.MinRTTTimeout))
+	}
+	if strings.TrimSpace(options.InitialRTTTimeout) != "" {
+		args = append(args, "--initial-rtt-timeout", strings.TrimSpace(options.InitialRTTTimeout))
 	}
 	if strings.TrimSpace(options.StatsEvery) != "" {
 		args = append(args, "--stats-every", strings.TrimSpace(options.StatsEvery))
@@ -268,6 +284,10 @@ func ProfileArgsForOptions(profile Profile, options ScanOptions) []string {
 				continue
 			}
 		}
+		if strings.TrimSpace(options.ExcludePorts) != "" && arg == "--exclude-ports" {
+			index++
+			continue
+		}
 		if hasVersionSelection(options) && isVersionArg(arg) {
 			if arg == "--version-intensity" {
 				index++
@@ -306,6 +326,14 @@ func ProfileArgsForOptions(profile Profile, options ScanOptions) []string {
 			continue
 		}
 		if strings.TrimSpace(options.MaxRTTTimeout) != "" && arg == "--max-rtt-timeout" {
+			index++
+			continue
+		}
+		if strings.TrimSpace(options.MinRTTTimeout) != "" && arg == "--min-rtt-timeout" {
+			index++
+			continue
+		}
+		if strings.TrimSpace(options.InitialRTTTimeout) != "" && arg == "--initial-rtt-timeout" {
 			index++
 			continue
 		}
@@ -504,6 +532,12 @@ func validatePerformanceOptions(options ScanOptions) error {
 		return err
 	}
 	if _, err := validateDurationExpression(options.MaxRTTTimeout); err != nil {
+		return err
+	}
+	if _, err := validateDurationExpression(options.MinRTTTimeout); err != nil {
+		return err
+	}
+	if _, err := validateDurationExpression(options.InitialRTTTimeout); err != nil {
 		return err
 	}
 	if _, err := validateDurationExpression(options.StatsEvery); err != nil {

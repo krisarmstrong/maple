@@ -31,6 +31,9 @@ describe("nmap option catalog", () => {
     expect(supportedSwitches).toContain("--dns-servers");
     expect(supportedSwitches).toContain("--script-args-file");
     expect(supportedSwitches).toContain("--max-rtt-timeout");
+    expect(supportedSwitches).toContain("--min-rtt-timeout");
+    expect(supportedSwitches).toContain("--initial-rtt-timeout");
+    expect(supportedSwitches).toContain("--exclude-ports");
     expect(supportedSwitches).toContain("--max-rate");
     expect(supportedSwitches).toContain("--min-hostgroup");
     expect(supportedSwitches).toContain("--scan-delay");
@@ -50,7 +53,7 @@ describe("nmap option catalog", () => {
 
   it("summarizes coverage by implementation status", () => {
     expect(optionCoverageCounts()).toEqual({
-      structured: 21,
+      structured: 22,
       "escape-hatch": 2,
       planned: 0,
       blocked: 3,

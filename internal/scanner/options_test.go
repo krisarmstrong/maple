@@ -367,6 +367,80 @@ func TestProfileArgsForOptionsRemovesIdentityDefaults(t *testing.T) {
 	}
 }
 
+func TestBuildOptionArgsAddsExcludePorts(t *testing.T) {
+	args, err := BuildOptionArgs(ScanOptions{ExcludePorts: "22,80,443"})
+	if err != nil {
+		t.Fatalf("BuildOptionArgs returned error: %v", err)
+	}
+
+	want := []string{"--exclude-ports", "22,80,443"}
+	if !sameStrings(args, want) {
+		t.Fatalf("args = %#v, want %#v", args, want)
+	}
+}
+
+func TestBuildOptionArgsAddsMinRTTTimeout(t *testing.T) {
+	args, err := BuildOptionArgs(ScanOptions{MinRTTTimeout: "100ms"})
+	if err != nil {
+		t.Fatalf("BuildOptionArgs returned error: %v", err)
+	}
+
+	want := []string{"--min-rtt-timeout", "100ms"}
+	if !sameStrings(args, want) {
+		t.Fatalf("args = %#v, want %#v", args, want)
+	}
+}
+
+func TestBuildOptionArgsAddsInitialRTTTimeout(t *testing.T) {
+	args, err := BuildOptionArgs(ScanOptions{InitialRTTTimeout: "500ms"})
+	if err != nil {
+		t.Fatalf("BuildOptionArgs returned error: %v", err)
+	}
+
+	want := []string{"--initial-rtt-timeout", "500ms"}
+	if !sameStrings(args, want) {
+		t.Fatalf("args = %#v, want %#v", args, want)
+	}
+}
+
+func TestBuildOptionArgsRejectsInvalidExcludePortsAndRTTTimeouts(t *testing.T) {
+	tests := []ScanOptions{
+		{ExcludePorts: "22 80"},
+		{ExcludePorts: "22;rm"},
+		{ExcludePorts: "22\n--script"},
+		{MinRTTTimeout: "2 seconds"},
+		{MinRTTTimeout: "2s\n--script"},
+		{InitialRTTTimeout: "half-second"},
+		{InitialRTTTimeout: "500ms\n--script"},
+	}
+
+	for _, test := range tests {
+		if _, err := BuildOptionArgs(test); err == nil {
+			t.Fatalf("expected error for %#v", test)
+		}
+	}
+}
+
+func TestProfileArgsForOptionsRemovesNewPortAndRTTDefaults(t *testing.T) {
+	profile := Profile{Args: []string{
+		"--exclude-ports", "22,80",
+		"--min-rtt-timeout", "100ms",
+		"--initial-rtt-timeout", "200ms",
+		"-T3",
+	}}
+
+	args := ProfileArgsForOptions(profile, ScanOptions{
+		ExcludePorts:      "443",
+		MinRTTTimeout:     "50ms",
+		InitialRTTTimeout: "100ms",
+	})
+
+	want := []string{"-T3"}
+	if !sameStrings(args, want) {
+		t.Fatalf("args = %#v, want %#v", args, want)
+	}
+}
+
 func sameStrings(got []string, want []string) bool {
 	if len(got) != len(want) {
 		return false

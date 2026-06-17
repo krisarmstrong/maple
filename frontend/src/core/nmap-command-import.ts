@@ -572,6 +572,38 @@ export function importNmapCommand(input: string): ImportResult {
       continue;
     }
 
+    if (tok === "--min-rtt-timeout") {
+      const value = nextValue(tok);
+      if (value === undefined) {
+        i++;
+        continue;
+      }
+      if (!isTimingString(value)) {
+        errors.push(`--min-rtt-timeout value '${value}' is not a valid time specification.`);
+        i++;
+        continue;
+      }
+      options.minRttTimeout = value;
+      i++;
+      continue;
+    }
+
+    if (tok === "--initial-rtt-timeout") {
+      const value = nextValue(tok);
+      if (value === undefined) {
+        i++;
+        continue;
+      }
+      if (!isTimingString(value)) {
+        errors.push(`--initial-rtt-timeout value '${value}' is not a valid time specification.`);
+        i++;
+        continue;
+      }
+      options.initialRttTimeout = value;
+      i++;
+      continue;
+    }
+
     if (tok === "--stats-every") {
       const value = nextValue(tok);
       if (value === undefined) {
@@ -887,6 +919,22 @@ export function importNmapCommand(input: string): ImportResult {
         continue;
       }
       options.excludeFile = value;
+      i++;
+      continue;
+    }
+
+    if (tok === "--exclude-ports") {
+      const value = nextValue(tok);
+      if (value === undefined) {
+        i++;
+        continue;
+      }
+      if (!isPortSpec(value)) {
+        errors.push(`--exclude-ports value '${value}' is not a valid port specification.`);
+        i++;
+        continue;
+      }
+      options.excludePorts = value;
       i++;
       continue;
     }

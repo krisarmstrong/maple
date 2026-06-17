@@ -303,6 +303,51 @@ describe("importNmapCommand", () => {
   });
 
   // ---------------------------------------------------------------------------
+  // New flags: --exclude-ports, --min-rtt-timeout, --initial-rtt-timeout
+  // ---------------------------------------------------------------------------
+  it("maps --exclude-ports to excludePorts", () => {
+    const result = importNmapCommand("--exclude-ports 22,80,443 10.0.0.1");
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.options.excludePorts).toBe("22,80,443");
+  });
+
+  it("rejects --exclude-ports with an invalid port spec", () => {
+    const result = importNmapCommand("--exclude-ports abc 10.0.0.1");
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors.some((e) => e.includes("--exclude-ports"))).toBe(true);
+  });
+
+  it("maps --min-rtt-timeout to minRttTimeout", () => {
+    const result = importNmapCommand("--min-rtt-timeout 100ms 10.0.0.1");
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.options.minRttTimeout).toBe("100ms");
+  });
+
+  it("rejects --min-rtt-timeout with an invalid time value", () => {
+    const result = importNmapCommand("--min-rtt-timeout invalid 10.0.0.1");
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors.some((e) => e.includes("--min-rtt-timeout"))).toBe(true);
+  });
+
+  it("maps --initial-rtt-timeout to initialRttTimeout", () => {
+    const result = importNmapCommand("--initial-rtt-timeout 500ms 10.0.0.1");
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.options.initialRttTimeout).toBe("500ms");
+  });
+
+  it("rejects --initial-rtt-timeout with an invalid time value", () => {
+    const result = importNmapCommand("--initial-rtt-timeout invalid 10.0.0.1");
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors.some((e) => e.includes("--initial-rtt-timeout"))).toBe(true);
+  });
+
+  // ---------------------------------------------------------------------------
   // Empty input
   // ---------------------------------------------------------------------------
   it("rejects empty input", () => {
