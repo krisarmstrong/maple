@@ -52,6 +52,9 @@ export interface ScanOptions {
   maxRetries: string;
   hostTimeout: string;
   maxRttTimeout: string;
+  minRttTimeout: string;
+  initialRttTimeout: string;
+  excludePorts: string;
   statsEvery: string;
   scanDelay: string;
   maxScanDelay: string;
@@ -104,6 +107,9 @@ export const defaultScanOptions: ScanOptions = {
   maxRetries: "",
   hostTimeout: "",
   maxRttTimeout: "",
+  minRttTimeout: "",
+  initialRttTimeout: "",
+  excludePorts: "",
   statsEvery: "",
   scanDelay: "",
   maxScanDelay: "",

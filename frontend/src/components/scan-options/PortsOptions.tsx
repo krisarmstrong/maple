@@ -143,6 +143,21 @@ export function PortsOptions({ scanOptions, onChange }: PortsOptionsProps): Reac
         />
         <span>Fast scan (-F, top 100 ports)</span>
       </label>
+      <label>
+        <span>Exclude ports</span>
+        <input
+          aria-label="Exclude ports"
+          onChange={(event) =>
+            onChange((current) => ({
+              ...current,
+              excludePorts: event.target.value,
+            }))
+          }
+          placeholder="22,80,443"
+          type="text"
+          value={scanOptions.excludePorts}
+        />
+      </label>
     </>
   );
 }

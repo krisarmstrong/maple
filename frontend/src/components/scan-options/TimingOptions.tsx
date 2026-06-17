@@ -74,6 +74,7 @@ export function TimingOptions({ scanOptions, onChange }: TimingOptionsProps): Re
       <label>
         <span>Max RTT timeout</span>
         <input
+          aria-label="Max RTT timeout"
           onChange={(event) =>
             onChange((current) => ({
               ...current,
@@ -83,6 +84,36 @@ export function TimingOptions({ scanOptions, onChange }: TimingOptionsProps): Re
           placeholder="2s"
           type="text"
           value={scanOptions.maxRttTimeout}
+        />
+      </label>
+      <label>
+        <span>Min RTT timeout</span>
+        <input
+          aria-label="Min RTT timeout"
+          onChange={(event) =>
+            onChange((current) => ({
+              ...current,
+              minRttTimeout: event.target.value,
+            }))
+          }
+          placeholder="100ms"
+          type="text"
+          value={scanOptions.minRttTimeout}
+        />
+      </label>
+      <label>
+        <span>Initial RTT timeout</span>
+        <input
+          aria-label="Initial RTT timeout"
+          onChange={(event) =>
+            onChange((current) => ({
+              ...current,
+              initialRttTimeout: event.target.value,
+            }))
+          }
+          placeholder="500ms"
+          type="text"
+          value={scanOptions.initialRttTimeout}
         />
       </label>
       <label>

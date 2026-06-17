@@ -141,6 +141,13 @@ export const nmapOptionCatalog: readonly NmapOptionCatalogEntry[] = [
     "Open-only result filtering is available.",
   ),
   entry(
+    "ports",
+    "Port exclusions",
+    ["--exclude-ports"],
+    "structured",
+    "Specific ports can be excluded from scanning.",
+  ),
+  entry(
     "service",
     "Service version detection",
     ["-sV", "--version-light", "--version-all", "--version-intensity"],
@@ -185,7 +192,13 @@ export const nmapOptionCatalog: readonly NmapOptionCatalogEntry[] = [
   entry(
     "timing",
     "Timeouts and progress",
-    ["--host-timeout", "--max-rtt-timeout", "--stats-every"],
+    [
+      "--host-timeout",
+      "--max-rtt-timeout",
+      "--min-rtt-timeout",
+      "--initial-rtt-timeout",
+      "--stats-every",
+    ],
     "structured",
     "Long-running scan controls are available.",
   ),
