@@ -53,8 +53,12 @@ func (ExecExecutor) Execute(
 	go copyStream(stdout, scanner.StreamStdout, emitOutput, diagnostics, &waitGroup)
 	go copyStream(stderr, scanner.StreamStderr, emitOutput, diagnostics, &waitGroup)
 
-	processErr := cmd.Wait()
+	// Drain stdout/stderr to EOF before reaping the process. cmd.Wait closes the
+	// pipes once the process exits, so waiting on it first can truncate a fast
+	// process's tail output (see os/exec StdoutPipe docs). The copy goroutines
+	// finish when the process closes its write ends, so this cannot deadlock.
 	waitGroup.Wait()
+	processErr := cmd.Wait()
 	xmlContent, readErr := readXMLFile(command.XMLPath)
 	if readErr != nil && processErr == nil {
 		return Result{
