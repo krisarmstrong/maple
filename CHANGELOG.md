@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.9](https://github.com/krisarmstrong/maple/compare/v0.1.8...v0.1.9) (2026-06-17)
+
+
+### Features
+
+* add fast scan (-F) and audit Nmap option coverage ([#109](https://github.com/krisarmstrong/maple/issues/109)) ([ede98e2](https://github.com/krisarmstrong/maple/commit/ede98e20a373ef234446821af51941440bef8e1d))
+
 ## [0.1.8](https://github.com/krisarmstrong/maple/compare/v0.1.7...v0.1.8) (2026-06-16)
 
 

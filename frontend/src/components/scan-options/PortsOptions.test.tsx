@@ -62,4 +62,15 @@ describe("PortsOptions", () => {
     expect(screen.getByRole("checkbox", { name: "All ports" })).toBeChecked();
     expect(screen.getByRole("textbox", { name: "Ports" })).toBeDisabled();
   });
+
+  it("enables fast scan, disables port inputs, and is mutually exclusive with All ports", () => {
+    render(<Wrapper initial={{ ...defaultScanOptions, allPorts: true }} />);
+
+    fireEvent.click(screen.getByRole("checkbox", { name: /Fast scan/u }));
+
+    expect(screen.getByRole("checkbox", { name: /Fast scan/u })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "All ports" })).not.toBeChecked();
+    expect(screen.getByRole("textbox", { name: "Ports" })).toBeDisabled();
+    expect(screen.getByRole("spinbutton", { name: "Top ports" })).toBeDisabled();
+  });
 });
