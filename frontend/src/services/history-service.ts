@@ -5,7 +5,7 @@ import {
   ScanHistory,
   ScanReport,
 } from "../../wailsjs/go/main/App";
-import type { reports } from "../../wailsjs/go/models";
+import type { scanner } from "../../wailsjs/go/models";
 import { hasWailsBackend, unavailableBridgeError } from "./wails-bridge";
 
 export interface ScanHistoryRecord {
@@ -149,7 +149,7 @@ export function clearScanHistory(): Promise<void> {
   return ClearScanHistory();
 }
 
-function normalizeHosts(hosts: reports.Host[]): ScanHistoryHost[] {
+function normalizeHosts(hosts: scanner.Host[]): ScanHistoryHost[] {
   return hosts.map((host) => ({
     ...host,
     osMatches: host.osMatches ?? [],
@@ -164,21 +164,21 @@ function normalizeHosts(hosts: reports.Host[]): ScanHistoryHost[] {
   }));
 }
 
-function normalizeScripts(scripts: reports.ScriptOutput[]): ScanHistoryScriptOutput[] {
+function normalizeScripts(scripts: scanner.ScriptOutput[]): ScanHistoryScriptOutput[] {
   return scripts.map((script) => ({
     ...script,
     details: normalizeScriptElements(script.details ?? []),
   }));
 }
 
-function normalizeScriptElements(details: reports.ScriptElement[]): ScanHistoryScriptElement[] {
+function normalizeScriptElements(details: scanner.ScriptElement[]): ScanHistoryScriptElement[] {
   return details.map((detail) => ({
     ...detail,
     children: normalizeScriptElements(detail.children ?? []),
   }));
 }
 
-function countOpenPorts(hosts: reports.Host[]): number {
+function countOpenPorts(hosts: scanner.Host[]): number {
   return hosts.reduce(
     (total, host) => total + (host.ports ?? []).filter((port) => port.state === "open").length,
     0,
