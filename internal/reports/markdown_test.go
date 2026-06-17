@@ -19,35 +19,35 @@ func TestMarkdownIncludesCommandAndSummary(t *testing.T) {
 			Targets:    []scanner.Target{{Value: "192.0.2.0/30", Kind: scanner.TargetCIDR}},
 			Profile:    scanner.Profile{Name: "Ping Sweep"},
 		},
-		Summary: Summary{
+		Summary: scanner.Summary{
 			HostCount:   2,
 			HostsUp:     1,
 			HostsDown:   1,
 			ElapsedTime: "5.00",
-			Hosts: []Host{
+			Hosts: []scanner.Host{
 				{
 					Address:  "192.0.2.1",
 					Hostname: "router.example",
 					State:    "up",
-					OSMatches: []OSMatch{
+					OSMatches: []scanner.OSMatch{
 						{Name: "Linux 5.x", Accuracy: "98"},
 					},
-					ExtraPorts: []ExtraPorts{
+					ExtraPorts: []scanner.ExtraPorts{
 						{State: "filtered", Count: 998, Reason: "no-responses"},
 					},
-					Trace: []TraceHop{
+					Trace: []scanner.TraceHop{
 						{TTL: "1", Address: "192.0.2.254", Hostname: "gateway.example", RTT: "1.23"},
 					},
-					Scripts: []ScriptOutput{
+					Scripts: []scanner.ScriptOutput{
 						{
 							ID:     "nbstat",
 							Output: "NetBIOS name: ROUTER",
-							Details: []ScriptElement{
+							Details: []scanner.ScriptElement{
 								{Kind: "elem", Key: "name", Value: "ROUTER"},
 							},
 						},
 					},
-					Ports: []Port{
+					Ports: []scanner.Port{
 						{
 							Protocol:  "tcp",
 							ID:        "22",
@@ -58,15 +58,15 @@ func TestMarkdownIncludesCommandAndSummary(t *testing.T) {
 							Version:   "9.6",
 							ExtraInfo: "protocol 2.0",
 							CPEs:      []string{"cpe:/a:openbsd:openssh:9.6"},
-							Scripts: []ScriptOutput{
+							Scripts: []scanner.ScriptOutput{
 								{
 									ID:     "ssh-hostkey",
 									Output: "2048 SHA256:abc (RSA)\n```",
-									Details: []ScriptElement{
+									Details: []scanner.ScriptElement{
 										{
 											Kind: "table",
 											Key:  "rsa",
-											Children: []ScriptElement{
+											Children: []scanner.ScriptElement{
 												{Kind: "elem", Key: "bits", Value: "2048"},
 												{Kind: "elem", Key: "fingerprint", Value: "SHA256:abc"},
 											},
@@ -149,7 +149,7 @@ func TestMarkdownIncludesErrorAndEmptyResults(t *testing.T) {
 			Targets:    []scanner.Target{{Value: "192.0.2.1", Kind: scanner.TargetIP}},
 			Profile:    scanner.Profile{Name: "TCP Connect"},
 		},
-		Summary:  Summary{HostCount: 0},
+		Summary:  scanner.Summary{HostCount: 0},
 		ExitCode: 1,
 		Error:    "scan failed",
 	})
