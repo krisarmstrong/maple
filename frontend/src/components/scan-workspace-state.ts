@@ -1,4 +1,3 @@
-import type { Dispatch, SetStateAction } from "react";
 import {
   scanEventFinishKind,
   scanEventIsFinished,
@@ -32,8 +31,8 @@ export type ScanStatus =
 
 export interface ScanEventHandlers {
   setRunning: (running: boolean) => void;
-  setLog: Dispatch<SetStateAction<LogEntry[]>>;
-  setPhases: Dispatch<SetStateAction<PhaseEntry[]>>;
+  appendLogLine: (text: string) => void;
+  appendPhase: (phase: string, message: string) => void;
   setDiagnostics: (diagnostics: string) => void;
   setStatus: (status: ScanStatus) => void;
   onScanFinished?: () => void;
@@ -105,8 +104,8 @@ export function handleScanEvent(event: ScanEvent, handlers: ScanEventHandlers): 
     handlers.setRunning(runningState);
   }
   updateStatus(event, handlers.setStatus);
-  appendPhase(event, handlers.setPhases);
-  appendLogLine(event, handlers.setLog);
+  appendPhaseEntry(event, handlers.appendPhase);
+  appendLogLineEntry(event, handlers.appendLogLine);
   updateDiagnostics(event, handlers.setDiagnostics);
   if (scanEventIsFinished(event)) {
     handlers.onScanFinished?.();
@@ -185,24 +184,20 @@ function updateStatus(event: ScanEvent, setStatus: (status: ScanStatus) => void)
   }
 }
 
-function appendPhase(event: ScanEvent, setPhases: Dispatch<SetStateAction<PhaseEntry[]>>): void {
+function appendPhaseEntry(
+  event: ScanEvent,
+  appendPhase: (phase: string, message: string) => void,
+): void {
   if (event.type !== "phase") {
     return;
   }
-  setPhases((current) => [
-    ...current,
-    {
-      id: nextPhaseID(current),
-      phase: event.phase.phase,
-      message: event.phase.message,
-    },
-  ]);
+  appendPhase(event.phase.phase, event.phase.message);
 }
 
-function appendLogLine(event: ScanEvent, setLog: Dispatch<SetStateAction<LogEntry[]>>): void {
+function appendLogLineEntry(event: ScanEvent, appendLogLine: (text: string) => void): void {
   const line = scanEventLogLine(event);
   if (line !== undefined) {
-    setLog((current) => [...current, { id: nextLogID(current), text: line }]);
+    appendLogLine(line);
   }
 }
 
@@ -214,14 +209,4 @@ export function updateDiagnostics(
     return;
   }
   setDiagnostics(event.result.diagnostics ?? "");
-}
-
-function nextLogID(current: LogEntry[]): number {
-  const last = current.at(-1);
-  return last === undefined ? 1 : last.id + 1;
-}
-
-function nextPhaseID(current: PhaseEntry[]): number {
-  const last = current.at(-1);
-  return last === undefined ? 1 : last.id + 1;
 }
