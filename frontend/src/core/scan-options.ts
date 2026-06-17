@@ -35,6 +35,7 @@ export interface ScanOptions {
   ports: string;
   topPorts: number;
   allPorts: boolean;
+  fastScan: boolean;
   serviceDetection: boolean;
   versionMode: VersionMode;
   versionIntensity: string;
@@ -86,6 +87,7 @@ export const defaultScanOptions: ScanOptions = {
   ports: "",
   topPorts: 0,
   allPorts: false,
+  fastScan: false,
   serviceDetection: false,
   versionMode: "",
   versionIntensity: "",
