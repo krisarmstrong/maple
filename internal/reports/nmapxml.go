@@ -4,85 +4,21 @@ import (
 	"encoding/xml"
 	"io"
 	"strings"
+
+	"github.com/krisarmstrong/maple/internal/scanner"
 )
 
-type Summary struct {
-	Args        string `json:"args,omitempty"`
-	StartedAt   string `json:"startedAt,omitempty"`
-	FinishedAt  string `json:"finishedAt,omitempty"`
-	ElapsedTime string `json:"elapsedTime,omitempty"`
-	HostCount   int    `json:"hostCount"`
-	HostsUp     int    `json:"hostsUp"`
-	HostsDown   int    `json:"hostsDown"`
-	Hosts       []Host `json:"hosts,omitempty"`
-}
-
-type Host struct {
-	Address    string         `json:"address,omitempty"`
-	Hostname   string         `json:"hostname,omitempty"`
-	State      string         `json:"state,omitempty"`
-	OSMatches  []OSMatch      `json:"osMatches,omitempty"`
-	ExtraPorts []ExtraPorts   `json:"extraPorts,omitempty"`
-	Trace      []TraceHop     `json:"trace,omitempty"`
-	Scripts    []ScriptOutput `json:"scripts,omitempty"`
-	Ports      []Port         `json:"ports,omitempty"`
-}
-
-type Port struct {
-	Protocol  string         `json:"protocol,omitempty"`
-	ID        string         `json:"id,omitempty"`
-	State     string         `json:"state,omitempty"`
-	Reason    string         `json:"reason,omitempty"`
-	Service   string         `json:"service,omitempty"`
-	Product   string         `json:"product,omitempty"`
-	Version   string         `json:"version,omitempty"`
-	ExtraInfo string         `json:"extraInfo,omitempty"`
-	CPEs      []string       `json:"cpes,omitempty"`
-	Scripts   []ScriptOutput `json:"scripts,omitempty"`
-}
-
-type ScriptOutput struct {
-	ID      string          `json:"id,omitempty"`
-	Output  string          `json:"output,omitempty"`
-	Details []ScriptElement `json:"details,omitempty"`
-}
-
-type ScriptElement struct {
-	Kind     string          `json:"kind,omitempty"`
-	Key      string          `json:"key,omitempty"`
-	Value    string          `json:"value,omitempty"`
-	Children []ScriptElement `json:"children,omitempty"`
-}
-
-type OSMatch struct {
-	Name     string `json:"name,omitempty"`
-	Accuracy string `json:"accuracy,omitempty"`
-}
-
-type ExtraPorts struct {
-	State  string `json:"state,omitempty"`
-	Count  int    `json:"count,omitempty"`
-	Reason string `json:"reason,omitempty"`
-}
-
-type TraceHop struct {
-	TTL      string `json:"ttl,omitempty"`
-	Address  string `json:"address,omitempty"`
-	Hostname string `json:"hostname,omitempty"`
-	RTT      string `json:"rtt,omitempty"`
-}
-
-func SummarizeNmapXML(input string) (Summary, error) {
+func SummarizeNmapXML(input string) (scanner.Summary, error) {
 	if strings.TrimSpace(input) == "" {
-		return Summary{}, nil
+		return scanner.Summary{}, nil
 	}
 
 	var document nmapRun
 	if err := xml.Unmarshal([]byte(input), &document); err != nil {
-		return Summary{}, err
+		return scanner.Summary{}, err
 	}
 
-	summary := Summary{
+	summary := scanner.Summary{
 		Args:        document.Args,
 		StartedAt:   document.Started,
 		FinishedAt:  document.RunStats.Finished.Time,
@@ -95,7 +31,7 @@ func SummarizeNmapXML(input string) (Summary, error) {
 		if document.RunStats.Hosts.Total == 0 {
 			countHostState(host.Status.State, &summary)
 		}
-		summary.Hosts = append(summary.Hosts, Host{
+		summary.Hosts = append(summary.Hosts, scanner.Host{
 			Address:    host.primaryAddress(),
 			Hostname:   host.primaryHostname(),
 			State:      host.Status.State,
@@ -109,7 +45,7 @@ func SummarizeNmapXML(input string) (Summary, error) {
 	return summary, nil
 }
 
-func countHostState(state string, summary *Summary) {
+func countHostState(state string, summary *scanner.Summary) {
 	switch state {
 	case "up":
 		summary.HostsUp++
@@ -161,10 +97,10 @@ func (h nmapHost) primaryHostname() string {
 	return ""
 }
 
-func (h nmapHost) ports() []Port {
-	ports := make([]Port, 0, len(h.Ports.Ports))
+func (h nmapHost) ports() []scanner.Port {
+	ports := make([]scanner.Port, 0, len(h.Ports.Ports))
 	for _, port := range h.Ports.Ports {
-		ports = append(ports, Port{
+		ports = append(ports, scanner.Port{
 			Protocol:  port.Protocol,
 			ID:        port.ID,
 			State:     port.State.State,
@@ -201,10 +137,10 @@ type nmapPorts struct {
 	ExtraPorts []nmapExtraPort `xml:"extraports"`
 }
 
-func (p nmapPorts) extraPorts() []ExtraPorts {
-	extraPorts := make([]ExtraPorts, 0, len(p.ExtraPorts))
+func (p nmapPorts) extraPorts() []scanner.ExtraPorts {
+	extraPorts := make([]scanner.ExtraPorts, 0, len(p.ExtraPorts))
 	for _, extra := range p.ExtraPorts {
-		extraPorts = append(extraPorts, ExtraPorts{
+		extraPorts = append(extraPorts, scanner.ExtraPorts{
 			State:  extra.State,
 			Count:  extra.Count,
 			Reason: extra.primaryReason(),
@@ -257,10 +193,10 @@ type nmapOS struct {
 	Matches []nmapOSMatch `xml:"osmatch"`
 }
 
-func (o nmapOS) matches() []OSMatch {
-	matches := make([]OSMatch, 0, len(o.Matches))
+func (o nmapOS) matches() []scanner.OSMatch {
+	matches := make([]scanner.OSMatch, 0, len(o.Matches))
 	for _, match := range o.Matches {
-		matches = append(matches, OSMatch(match))
+		matches = append(matches, scanner.OSMatch(match))
 	}
 	return matches
 }
@@ -274,10 +210,10 @@ type nmapTrace struct {
 	Hops []nmapHop `xml:"hop"`
 }
 
-func (t nmapTrace) hops() []TraceHop {
-	hops := make([]TraceHop, 0, len(t.Hops))
+func (t nmapTrace) hops() []scanner.TraceHop {
+	hops := make([]scanner.TraceHop, 0, len(t.Hops))
 	for _, hop := range t.Hops {
-		hops = append(hops, TraceHop(hop))
+		hops = append(hops, scanner.TraceHop(hop))
 	}
 	return hops
 }
@@ -293,14 +229,14 @@ type nmapScripts struct {
 	Scripts []nmapScript `xml:"script"`
 }
 
-func (s nmapScripts) scripts() []ScriptOutput {
+func (s nmapScripts) scripts() []scanner.ScriptOutput {
 	return scriptOutputs(s.Scripts)
 }
 
-func scriptOutputs(scripts []nmapScript) []ScriptOutput {
-	outputs := make([]ScriptOutput, 0, len(scripts))
+func scriptOutputs(scripts []nmapScript) []scanner.ScriptOutput {
+	outputs := make([]scanner.ScriptOutput, 0, len(scripts))
 	for _, script := range scripts {
-		outputs = append(outputs, ScriptOutput{
+		outputs = append(outputs, scanner.ScriptOutput{
 			ID:      script.ID,
 			Output:  script.Output,
 			Details: script.details(),
@@ -312,7 +248,7 @@ func scriptOutputs(scripts []nmapScript) []ScriptOutput {
 type nmapScript struct {
 	ID      string
 	Output  string
-	Details []ScriptElement
+	Details []scanner.ScriptElement
 }
 
 func (s *nmapScript) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
@@ -326,7 +262,7 @@ func (s *nmapScript) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) 
 	return nil
 }
 
-func (s nmapScript) details() []ScriptElement {
+func (s nmapScript) details() []scanner.ScriptElement {
 	return s.Details
 }
 
@@ -335,8 +271,8 @@ type nmapScriptElement struct {
 	Value string `xml:",chardata"`
 }
 
-func (e nmapScriptElement) detail() ScriptElement {
-	return ScriptElement{
+func (e nmapScriptElement) detail() scanner.ScriptElement {
+	return scanner.ScriptElement{
 		Kind:  "elem",
 		Key:   e.Key,
 		Value: strings.TrimSpace(e.Value),
@@ -345,7 +281,7 @@ func (e nmapScriptElement) detail() ScriptElement {
 
 type nmapScriptTable struct {
 	Key      string
-	Children []ScriptElement
+	Children []scanner.ScriptElement
 }
 
 func (t *nmapScriptTable) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
@@ -358,16 +294,16 @@ func (t *nmapScriptTable) UnmarshalXML(decoder *xml.Decoder, start xml.StartElem
 	return nil
 }
 
-func (t nmapScriptTable) detail() ScriptElement {
-	return ScriptElement{
+func (t nmapScriptTable) detail() scanner.ScriptElement {
+	return scanner.ScriptElement{
 		Kind:     "table",
 		Key:      t.Key,
 		Children: t.Children,
 	}
 }
 
-func decodeScriptChildren(decoder *xml.Decoder, start xml.StartElement) ([]ScriptElement, error) {
-	var details []ScriptElement
+func decodeScriptChildren(decoder *xml.Decoder, start xml.StartElement) ([]scanner.ScriptElement, error) {
+	var details []scanner.ScriptElement
 	for {
 		token, err := decoder.Token()
 		if err != nil {

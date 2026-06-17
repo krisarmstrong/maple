@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/krisarmstrong/maple/internal/reports"
 	"github.com/krisarmstrong/maple/internal/scanner"
 )
 
@@ -25,7 +24,7 @@ type ScanRecord struct {
 	StartedAt   time.Time              `json:"startedAt"`
 	FinishedAt  time.Time              `json:"finishedAt"`
 	Preview     scanner.CommandPreview `json:"preview"`
-	Summary     reports.Summary        `json:"summary"`
+	Summary     scanner.Summary        `json:"summary"`
 	ExitCode    int                    `json:"exitCode"`
 	XML         string                 `json:"xml"`
 	XMLPath     string                 `json:"xmlPath,omitempty"`

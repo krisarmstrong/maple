@@ -176,7 +176,7 @@ func (a *App) historyEmitter(emit nmap.EventEmitter) nmap.EventEmitter {
 				summary, err := reports.SummarizeNmapXML(value.XML)
 				recordError := value.Error
 				if err != nil {
-					summary = reports.Summary{}
+					summary = scanner.Summary{}
 					if recordError == "" {
 						recordError = "Unable to parse Nmap XML: " + err.Error()
 					}
