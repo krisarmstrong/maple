@@ -31,3 +31,8 @@ export function summarizeTools(tools: readonly ToolDetection[]): string {
   const installed = tools.filter((tool) => tool.installed).length;
   return `${installed} tools detected`;
 }
+
+export type LoadState =
+  | { status: "loading" }
+  | { status: "ready"; tools: ToolDetection[] }
+  | { status: "failed"; message: string };

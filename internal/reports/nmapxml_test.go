@@ -3,6 +3,8 @@ package reports
 import (
 	"os"
 	"testing"
+
+	"github.com/krisarmstrong/maple/internal/scanner"
 )
 
 func TestSummarizeNmapXMLCountsHostStatuses(t *testing.T) {
@@ -248,7 +250,7 @@ func TestSummarizeNmapXMLRejectsMalformedXML(t *testing.T) {
 	}
 }
 
-func findPort(ports []Port, protocol string, id string) *Port {
+func findPort(ports []scanner.Port, protocol string, id string) *scanner.Port {
 	for index := range ports {
 		if ports[index].Protocol == protocol && ports[index].ID == id {
 			return &ports[index]

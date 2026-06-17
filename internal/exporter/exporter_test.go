@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/krisarmstrong/maple/internal/reports"
 	"github.com/krisarmstrong/maple/internal/scanner"
 	"github.com/krisarmstrong/maple/internal/store"
 )
@@ -107,12 +106,12 @@ func TestBuildCSVExport_QuotesCommaInService(t *testing.T) {
 			Executable: "/opt/homebrew/bin/nmap",
 			Args:       []string{"-oX", "<managed-xml-file>", "-sT", "--", "127.0.0.1"},
 		},
-		Summary: reports.Summary{
-			Hosts: []reports.Host{
+		Summary: scanner.Summary{
+			Hosts: []scanner.Host{
 				{
 					Address:  "192.168.1.1",
 					Hostname: "router.local",
-					Ports: []reports.Port{
+					Ports: []scanner.Port{
 						{ID: "80", Protocol: "tcp", State: "open", Service: "http,alt", Product: "", Version: ""},
 					},
 				},
@@ -245,12 +244,12 @@ func exportRecordWithPorts() store.ScanRecord {
 			Executable: "/opt/homebrew/bin/nmap",
 			Args:       []string{"-oX", "<managed-xml-file>", "-sT", "--", "192.168.1.1"},
 		},
-		Summary: reports.Summary{
-			Hosts: []reports.Host{
+		Summary: scanner.Summary{
+			Hosts: []scanner.Host{
 				{
 					Address:  "192.168.1.1",
 					Hostname: "router.local",
-					Ports: []reports.Port{
+					Ports: []scanner.Port{
 						{ID: "80", Protocol: "tcp", State: "open", Service: "http", Product: "nginx", Version: "1.25.3"},
 						{ID: "443", Protocol: "tcp", State: "open", Service: "https", Product: "nginx", Version: "1.25.3"},
 					},

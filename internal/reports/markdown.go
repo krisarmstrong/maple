@@ -13,7 +13,7 @@ type MarkdownInput struct {
 	StartedAt   time.Time
 	FinishedAt  time.Time
 	Preview     scanner.CommandPreview
-	Summary     Summary
+	Summary     scanner.Summary
 	ExitCode    int
 	Diagnostics string
 	Error       string
@@ -77,7 +77,7 @@ func commandLine(preview scanner.CommandPreview) string {
 	return strings.Join(parts, " ")
 }
 
-func writeHosts(builder *strings.Builder, hosts []Host) {
+func writeHosts(builder *strings.Builder, hosts []scanner.Host) {
 	if len(hosts) == 0 {
 		builder.WriteString("\n## Hosts\n\n")
 		builder.WriteString("No parsed hosts were reported.\n")
@@ -102,7 +102,7 @@ func writeHosts(builder *strings.Builder, hosts []Host) {
 	}
 }
 
-func writeHostDetails(builder *strings.Builder, host Host) {
+func writeHostDetails(builder *strings.Builder, host scanner.Host) {
 	if len(host.OSMatches) == 0 && len(host.ExtraPorts) == 0 && len(host.Trace) == 0 {
 		return
 	}
@@ -146,7 +146,7 @@ func markdownCell(value string) string {
 	return markdownCellReplacer.Replace(value)
 }
 
-func writePorts(builder *strings.Builder, host Host) {
+func writePorts(builder *strings.Builder, host scanner.Host) {
 	if len(host.Ports) == 0 {
 		return
 	}
@@ -177,7 +177,7 @@ func writePorts(builder *strings.Builder, host Host) {
 	}
 }
 
-func writeTrace(builder *strings.Builder, host Host) {
+func writeTrace(builder *strings.Builder, host scanner.Host) {
 	if len(host.Trace) == 0 {
 		return
 	}
@@ -213,7 +213,7 @@ func writeList(builder *strings.Builder, heading string, values []string) {
 	}
 }
 
-func writeScripts(builder *strings.Builder, heading string, scripts []ScriptOutput) {
+func writeScripts(builder *strings.Builder, heading string, scripts []scanner.ScriptOutput) {
 	if len(scripts) == 0 {
 		return
 	}
@@ -239,7 +239,7 @@ func writeScripts(builder *strings.Builder, heading string, scripts []ScriptOutp
 	}
 }
 
-func writeScriptDetails(builder *strings.Builder, details []ScriptElement, depth int) {
+func writeScriptDetails(builder *strings.Builder, details []scanner.ScriptElement, depth int) {
 	for _, detail := range details {
 		indent := strings.Repeat("  ", depth)
 		builder.WriteString(indent)
@@ -280,7 +280,7 @@ func markdownFence(value string) string {
 	return strings.Repeat("`", longestRun+1)
 }
 
-func hostLabel(host Host) string {
+func hostLabel(host scanner.Host) string {
 	if host.Hostname != "" {
 		return host.Hostname
 	}
@@ -290,7 +290,7 @@ func hostLabel(host Host) string {
 	return "unknown host"
 }
 
-func serviceVersion(port Port) string {
+func serviceVersion(port scanner.Port) string {
 	parts := make([]string, 0, 2)
 	if port.Product != "" {
 		parts = append(parts, port.Product)
@@ -301,7 +301,7 @@ func serviceVersion(port Port) string {
 	return strings.Join(parts, " ")
 }
 
-func openPortCount(hosts []Host) int {
+func openPortCount(hosts []scanner.Host) int {
 	count := 0
 	for _, host := range hosts {
 		for _, port := range host.Ports {
