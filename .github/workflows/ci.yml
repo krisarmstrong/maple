@@ -50,6 +50,20 @@ jobs:
       - name: Install browser smoke dependencies
         run: npm --prefix frontend exec playwright install --with-deps chromium
 
+      - name: Check Wails bindings are up to date
+        run: |
+          npm --prefix frontend run build
+          wails generate module
+          if ! git diff --exit-code -- frontend/wailsjs/go/ >/dev/null 2>&1; then
+            echo ""
+            echo "ERROR: Wails bindings are stale. Regenerate with:"
+            echo "  wails generate module"
+            echo "Then commit the updated files in frontend/wailsjs/go/."
+            echo ""
+            git diff --stat -- frontend/wailsjs/go/
+            exit 1
+          fi
+
       - name: Release candidate gate
         run: make rc-check
 

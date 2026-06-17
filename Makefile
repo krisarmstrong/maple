@@ -29,7 +29,7 @@ PACKAGE_ARCH ?= $(HOST_GOARCH)
 PACKAGE_DEB_WEBKIT_DEP ?= libwebkit2gtk-4.1-0
 PACKAGE_RPM_WEBKIT_DEP ?= webkit2gtk4.1
 
-.PHONY: assert-native-platform build dev fmt fmt-check frontend-build lint package package-all package-dryrun package-linux package-linux-deb package-linux-dryrun package-linux-installers package-linux-rpm package-macos package-macos-dryrun package-macos-installer package-macos-pkg package-platform package-windows package-windows-dryrun rc-check security test test-e2e test-go test-ui tidy
+.PHONY: assert-native-platform bindings-check build dev fmt fmt-check frontend-build lint package package-all package-dryrun package-linux package-linux-deb package-linux-dryrun package-linux-installers package-linux-rpm package-macos package-macos-dryrun package-macos-installer package-macos-pkg package-platform package-windows package-windows-dryrun rc-check security test test-e2e test-go test-ui tidy
 
 frontend-build:
 	npm --prefix frontend run build
@@ -133,4 +133,19 @@ package-all: package
 package-dryrun:
 	GOCACHE=$(GOCACHE) $(WAILS) build -dryrun $(WAILS_BUILD_FLAGS) -ldflags "$(WAILS_LDFLAGS)" -platform $(HOST_PLATFORM)
 
-rc-check: fmt-check lint test test-e2e security build package-dryrun
+WAILS_VERSION := $(shell go list -m -f '{{.Version}}' github.com/wailsapp/wails/v2)
+
+bindings-check: frontend-build
+	go install github.com/wailsapp/wails/v2/cmd/wails@$(WAILS_VERSION)
+	$(shell go env GOPATH)/bin/wails generate module
+	@if ! git diff --exit-code -- frontend/wailsjs/go/ >/dev/null 2>&1; then \
+		echo ""; \
+		echo "ERROR: Wails bindings are stale. Regenerate with:"; \
+		echo "  wails generate module"; \
+		echo "Then commit the updated files in frontend/wailsjs/go/."; \
+		echo ""; \
+		git diff --stat -- frontend/wailsjs/go/; \
+		exit 1; \
+	fi
+
+rc-check: fmt-check lint test test-e2e security build package-dryrun bindings-check
