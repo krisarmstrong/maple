@@ -9,6 +9,7 @@ import {
   scanTechniques,
   timingTemplates,
 } from "../../core/scan-options";
+import { SectionHeading } from "./SectionHeading";
 
 interface ShapeOptionsProps {
   scanOptions: ScanOptions;
@@ -31,7 +32,7 @@ function clearDiscoveryProbes(options: ScanOptions): ScanOptions {
 export function ShapeOptions({ scanOptions, onChange }: ShapeOptionsProps): React.JSX.Element {
   return (
     <>
-      <h4 className="option-section-heading">Scan shape</h4>
+      <SectionHeading title="Scan shape" hint="Technique, host discovery, timing, and DNS behavior." />
       <label>
         <span>Scan technique</span>
         <select
@@ -131,7 +132,7 @@ export function ShapeOptions({ scanOptions, onChange }: ShapeOptionsProps): Reac
           value={scanOptions.dnsServers}
         />
       </label>
-      <h4 className="option-section-heading">Discovery probes</h4>
+      <SectionHeading title="Discovery probes" hint="Custom up-host probes: TCP, UDP, SCTP, and ICMP." />
       <label>
         <span>TCP SYN probe ports</span>
         <input
@@ -196,7 +197,7 @@ export function ShapeOptions({ scanOptions, onChange }: ShapeOptionsProps): Reac
           value={scanOptions.sctpInitProbes}
         />
       </label>
-      <h4 className="option-section-heading">Target scope</h4>
+      <SectionHeading title="Target scope" hint="Target file, inline exclusions, and an exclude file." />
       <label>
         <span>Target input file</span>
         <input
