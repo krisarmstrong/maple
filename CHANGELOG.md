@@ -1,5 +1,49 @@
 # Changelog
 
+## [0.1.8](https://github.com/krisarmstrong/maple/compare/v0.1.7...v0.1.8) (2026-06-16)
+
+
+### Features
+
+* add CSV and grepable scan export formats ([#102](https://github.com/krisarmstrong/maple/issues/102)) ([0e86093](https://github.com/krisarmstrong/maple/commit/0e8609320aceea45c2c9965327855f9cdca37587))
+* backend security and history hardening ([#93](https://github.com/krisarmstrong/maple/issues/93)) ([be9e9da](https://github.com/krisarmstrong/maple/commit/be9e9da8901b78d16498fd71105e68ae98c7ba0a))
+* compare two scans with a diff view ([#99](https://github.com/krisarmstrong/maple/issues/99)) ([c3b36b7](https://github.com/krisarmstrong/maple/commit/c3b36b7010cac190fa4b5df0faf936519808c145))
+* detect privilege-required scan failures and guide the user ([#106](https://github.com/krisarmstrong/maple/issues/106)) ([5d0d4bb](https://github.com/krisarmstrong/maple/commit/5d0d4bb3aea5c6840d339cdf9401b7e06a49f1bd)), closes [#69](https://github.com/krisarmstrong/maple/issues/69)
+* expand scan recipes and smoke evidence ([#54](https://github.com/krisarmstrong/maple/issues/54)) ([3d5178b](https://github.com/krisarmstrong/maple/commit/3d5178b6e0761d1704c366351a1c193b17f9d3c3))
+* import a structured scan from a pasted nmap command (one-way, rejects unknowns) ([#107](https://github.com/krisarmstrong/maple/issues/107)) ([b144984](https://github.com/krisarmstrong/maple/commit/b144984af6d834d0f79f73c9026f920a7e5775c8)), closes [#84](https://github.com/krisarmstrong/maple/issues/84)
+* live log filter/auto-scroll/progress and argv token affordances ([#100](https://github.com/krisarmstrong/maple/issues/100)) ([f99d1a6](https://github.com/krisarmstrong/maple/commit/f99d1a6064f40e9002cf39e82477e6bafca1ceb1))
+* require confirmation for disruptive NSE categories ([#103](https://github.com/krisarmstrong/maple/issues/103)) ([4b2483e](https://github.com/krisarmstrong/maple/commit/4b2483e059c3aa124f17931261e4bbf469c811eb))
+* save and rescan named target groups ([#83](https://github.com/krisarmstrong/maple/issues/83)) ([#105](https://github.com/krisarmstrong/maple/issues/105)) ([4258141](https://github.com/krisarmstrong/maple/commit/4258141165d63280781d0a6e6a1af41a6874e6be))
+* scan tab badges, tab a11y roles, and empty-history shortcut ([#94](https://github.com/krisarmstrong/maple/issues/94)) ([458ec1d](https://github.com/krisarmstrong/maple/commit/458ec1d1b0324ca925ea396fd555ca8304dc4cd8))
+* show parsed scan results on the Output tab ([#98](https://github.com/krisarmstrong/maple/issues/98)) ([b7a6c63](https://github.com/krisarmstrong/maple/commit/b7a6c6349840cf151a7a2c1e54463936f9d0dbe9)), closes [#73](https://github.com/krisarmstrong/maple/issues/73)
+* warn when the detected Nmap is older than the supported minimum ([#104](https://github.com/krisarmstrong/maple/issues/104)) ([44b169a](https://github.com/krisarmstrong/maple/commit/44b169a0fe10f99e9135888e95e9863be4fd84a5)), closes [#81](https://github.com/krisarmstrong/maple/issues/81)
+
+
+### Code Refactoring
+
+* split ScanWorkspace option groups into components ([#97](https://github.com/krisarmstrong/maple/issues/97)) ([aa212c2](https://github.com/krisarmstrong/maple/commit/aa212c2e12ae2bcec97614263c8340f5d85faa3a))
+
+
+### Documentation
+
+* define beta and rc release train ([#65](https://github.com/krisarmstrong/maple/issues/65)) ([2ed95f7](https://github.com/krisarmstrong/maple/commit/2ed95f74f91fbe12583a1d228d34b07749e1fbb3))
+
+
+### Tests
+
+* build fake nmap with go build instead of suppressing gosec ([#101](https://github.com/krisarmstrong/maple/issues/101)) ([fe04dbd](https://github.com/krisarmstrong/maple/commit/fe04dbdc994f18a5b8725faa157c66fb77917850))
+* cover root App methods and add fake-nmap IPC integration test ([#95](https://github.com/krisarmstrong/maple/issues/95)) ([2a9a9ec](https://github.com/krisarmstrong/maple/commit/2a9a9ec9224b2aa8589a750411cda094def36f9f))
+
+
+### Continuous Integration
+
+* add macOS Intel (darwin/amd64) release leg ([#92](https://github.com/krisarmstrong/maple/issues/92)) ([7ee84e4](https://github.com/krisarmstrong/maple/commit/7ee84e4f3a38236fafd5aabf89b90810af775fb6)), closes [#86](https://github.com/krisarmstrong/maple/issues/86)
+
+
+### Miscellaneous
+
+* **release:** add tag release automation ([#91](https://github.com/krisarmstrong/maple/issues/91)) ([61e55e5](https://github.com/krisarmstrong/maple/commit/61e55e5b403f51b8913561dd614f5e3f16e6db89))
+
 ## [0.1.7](https://github.com/krisarmstrong/maple/compare/v0.1.6...v0.1.7) (2026-06-16)
 
 
