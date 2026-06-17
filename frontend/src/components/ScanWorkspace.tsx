@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import { argvTokenDescription } from "../core/argv-token-info";
 import { importNmapCommand } from "../core/nmap-command-import";
 import {
@@ -24,6 +24,7 @@ import {
 } from "../core/scan-presets";
 import { findProfile, type ScanProfileID } from "../core/scan-profiles";
 import { parseScanProgressLine } from "../core/scan-progress";
+import { initialScanRunState, scanRunReducer } from "../core/scan-run-reducer";
 import { scanScope } from "../core/scan-scope";
 import {
   addTargetGroup,
@@ -69,12 +70,10 @@ import {
   type LogEntry,
   makeRequest,
   messageForInvalidTargets,
-  type PhaseEntry,
   type ScanStatus,
   scanPhaseLabel,
   scanStatusDetail,
   scanStatusLabel,
-  updateTargets,
 } from "./scan-workspace-state";
 
 interface ScanWorkspaceProps {
@@ -122,15 +121,9 @@ export function ScanWorkspace({
   const [activePanel, setActivePanel] = useState<ScanPanel>("configure");
   const [activeOptionGroup, setActiveOptionGroup] = useState<OptionGroup>("shape");
   const [nseRiskConfirmed, setNseRiskConfirmed] = useState(false);
-  const [error, setError] = useState("");
-  const [copyMessage, setCopyMessage] = useState("");
-  const [preview, setPreview] = useState<string[]>([]);
-  const [log, setLog] = useState<LogEntry[]>([]);
-  const [phases, setPhases] = useState<PhaseEntry[]>([]);
-  const [diagnostics, setDiagnostics] = useState("");
-  const [running, setRunning] = useState(false);
-  const [status, setStatus] = useState<ScanStatus>("idle");
-  const [logFilter, setLogFilter] = useState("");
+  const [runState, dispatch] = useReducer(scanRunReducer, initialScanRunState);
+  const { preview, log, phases, diagnostics, running, status, error, copyMessage, logFilter } =
+    runState;
   const logContainerRef = useRef<HTMLOutputElement>(null);
   const isPinnedToBottom = useRef(true);
   const selectedProfile = findProfile(profileId);
@@ -195,11 +188,11 @@ export function ScanWorkspace({
           onScanStarted?.(event.runId);
         }
         handleScanEvent(event, {
-          setRunning,
-          setLog,
-          setPhases,
-          setDiagnostics,
-          setStatus,
+          setRunning: (running) => dispatch({ type: "set-running", running }),
+          appendLogLine: (text) => dispatch({ type: "append-log-line", text }),
+          appendPhase: (phase, message) => dispatch({ type: "append-phase", phase, message }),
+          setDiagnostics: (diagnostics) => dispatch({ type: "set-diagnostics", diagnostics }),
+          setStatus: (status) => dispatch({ type: "set-status", status }),
           onScanFinished,
         });
       }),
@@ -232,23 +225,23 @@ export function ScanWorkspace({
     );
     if (request === undefined) {
       setActivePanel("configure");
-      setError(messageForInvalidTargets(targetModeId, targets));
+      dispatch({ type: "set-error", error: messageForInvalidTargets(targetModeId, targets) });
       return;
     }
     if (optionsMessage !== "") {
       setActivePanel("options");
-      setError(optionsMessage);
+      dispatch({ type: "set-error", error: optionsMessage });
       return;
     }
-    setError("");
-    setCopyMessage("");
+    dispatch({ type: "clear-error" });
+    dispatch({ type: "clear-copy-message" });
     try {
-      setPreview(await previewScanCommand(request));
-      setStatus("previewed");
+      dispatch({ type: "set-preview", preview: await previewScanCommand(request) });
+      dispatch({ type: "set-status", status: "previewed" });
       setActivePanel("output");
     } catch (caught) {
       setActivePanel("configure");
-      setError(errorMessage(caught));
+      dispatch({ type: "set-error", error: errorMessage(caught) });
     }
   }
 
@@ -265,62 +258,51 @@ export function ScanWorkspace({
     );
     if (request === undefined) {
       setActivePanel("configure");
-      setError(messageForInvalidTargets(targetModeId, targets));
+      dispatch({ type: "set-error", error: messageForInvalidTargets(targetModeId, targets) });
       return;
     }
     if (optionsMessage !== "") {
       setActivePanel("options");
-      setError(optionsMessage);
+      dispatch({ type: "set-error", error: optionsMessage });
       return;
     }
-    setError("");
-    setCopyMessage("");
-    setLog([]);
-    setPhases([]);
-    setDiagnostics("");
-    setStatus("running");
-    setLogFilter("");
+    dispatch({ type: "reset-run" });
+    dispatch({ type: "set-status", status: "running" });
     isPinnedToBottom.current = true;
     setActivePanel("output");
     try {
       await startScan({ ...request, elevated });
     } catch (caught) {
-      setRunning(false);
-      setStatus("failed");
+      dispatch({ type: "set-running", running: false });
+      dispatch({ type: "set-status", status: "failed" });
       setActivePanel("configure");
-      setError(errorMessage(caught));
+      dispatch({ type: "set-error", error: errorMessage(caught) });
     }
   }
 
   async function requestCancelScan(): Promise<void> {
     const cancelled = await cancelScan();
     if (cancelled) {
-      setStatus("cancelled");
-      setRunning(false);
-      setLog((current) => {
-        const last = current.at(-1);
-        return [
-          ...current,
-          { id: last === undefined ? 1 : last.id + 1, text: "Cancel requested." },
-        ];
-      });
+      dispatch({ type: "set-status", status: "cancelled" });
+      dispatch({ type: "set-running", running: false });
+      dispatch({ type: "append-log-line", text: "Cancel requested." });
     }
   }
 
   async function copyPreviewCommand(): Promise<void> {
-    setCopyMessage("");
+    dispatch({ type: "clear-copy-message" });
     try {
       await copyText(preview.join(" "));
-      setCopyMessage("Copied argv to clipboard.");
+      dispatch({ type: "set-copy-message", message: "Copied argv to clipboard." });
     } catch (caught) {
-      setCopyMessage(clipboardErrorMessage(caught));
+      dispatch({ type: "set-copy-message", message: clipboardErrorMessage(caught) });
     }
   }
 
   function updateTargetMode(modeId: TargetModeID): void {
     setTargetModeId(modeId);
-    setPreview([]);
-    setError("");
+    dispatch({ type: "clear-preview" });
+    dispatch({ type: "clear-error" });
   }
 
   function updateScriptCategory(category: NSECategory, checked: boolean): void {
@@ -330,14 +312,14 @@ export function ScanWorkspace({
         : current.filter((candidate) => candidate !== category),
     );
     setSelectedPresetID("");
-    setPreview([]);
+    dispatch({ type: "clear-preview" });
     setNseRiskConfirmed(false);
   }
 
   function updateScanOptions(updater: (options: ScanOptions) => ScanOptions): void {
     setScanOptions((current) => updater(current));
     setSelectedPresetID("");
-    setPreview([]);
+    dispatch({ type: "clear-preview" });
   }
 
   function saveCurrentPreset(): void {
@@ -398,7 +380,8 @@ export function ScanWorkspace({
     if (group === undefined) {
       return;
     }
-    updateTargets(group.targets, setTargets, setPreview);
+    setTargets(group.targets);
+    dispatch({ type: "clear-preview" });
   }
 
   function removeTargetGroup(id: string): void {
@@ -425,10 +408,10 @@ export function ScanWorkspace({
     }
     // Apply targets
     if (result.targets.length > 0) {
-      updateTargets(result.targets.join("\n"), setTargets, setPreview);
+      setTargets(result.targets.join("\n"));
     }
     setSelectedPresetID("");
-    setPreview([]);
+    dispatch({ type: "clear-preview" });
     setImportResult({
       ok: true,
       note: "Command imported. Review options and preview before scanning.",
@@ -450,8 +433,8 @@ export function ScanWorkspace({
     setScriptArgs(preset.scriptArgs);
     setScriptArgsFile(preset.scriptArgsFile);
     setSelectedPresetID(preset.id);
-    setPreview([]);
-    setError("");
+    dispatch({ type: "clear-preview" });
+    dispatch({ type: "clear-error" });
     setNseRiskConfirmed(false);
   }
 
@@ -464,7 +447,7 @@ export function ScanWorkspace({
     }
     setScriptNames([...current].sort().join("\n"));
     setSelectedPresetID("");
-    setPreview([]);
+    dispatch({ type: "clear-preview" });
     setNseRiskConfirmed(false);
   }
 
@@ -495,7 +478,7 @@ export function ScanWorkspace({
       );
     }
     setSelectedPresetID("");
-    setPreview([]);
+    dispatch({ type: "clear-preview" });
   }
 
   return (
@@ -623,7 +606,10 @@ export function ScanWorkspace({
                   className={
                     targetModeId === "list" ? "target-textarea-list" : "target-textarea-compact"
                   }
-                  onChange={(event) => updateTargets(event.target.value, setTargets, setPreview)}
+                  onChange={(event) => {
+                    setTargets(event.target.value);
+                    dispatch({ type: "clear-preview" });
+                  }}
                   placeholder={targetModePlaceholder(targetModeId)}
                   rows={targetModeId === "list" ? 7 : 2}
                   value={targets}
@@ -1090,7 +1076,7 @@ export function ScanWorkspace({
                 onChange={(event) => {
                   setScriptNames(event.target.value);
                   setSelectedPresetID("");
-                  setPreview([]);
+                  dispatch({ type: "clear-preview" });
                   setNseRiskConfirmed(false);
                 }}
                 placeholder="http-title&#10;ssl-enum-ciphers"
@@ -1136,7 +1122,7 @@ export function ScanWorkspace({
                 onChange={(event) => {
                   setCustomScriptPaths(event.target.value);
                   setSelectedPresetID("");
-                  setPreview([]);
+                  dispatch({ type: "clear-preview" });
                 }}
                 placeholder="/Users/you/nmap-scripts/custom-check.nse"
                 rows={3}
@@ -1149,7 +1135,7 @@ export function ScanWorkspace({
                 onChange={(event) => {
                   setCustomScriptDirectories(event.target.value);
                   setSelectedPresetID("");
-                  setPreview([]);
+                  dispatch({ type: "clear-preview" });
                 }}
                 placeholder="/Users/you/nmap-scripts"
                 rows={3}
@@ -1162,7 +1148,7 @@ export function ScanWorkspace({
                 onChange={(event) => {
                   setScriptArgs(event.target.value);
                   setSelectedPresetID("");
-                  setPreview([]);
+                  dispatch({ type: "clear-preview" });
                 }}
                 placeholder="http.useragent=Maple,creds.global=/Users/you/creds.txt"
                 type="text"
@@ -1175,7 +1161,7 @@ export function ScanWorkspace({
                 onChange={(event) => {
                   setScriptArgsFile(event.target.value);
                   setSelectedPresetID("");
-                  setPreview([]);
+                  dispatch({ type: "clear-preview" });
                 }}
                 placeholder="/Users/you/nmap-scripts/script-args.txt"
                 type="text"
@@ -1267,7 +1253,9 @@ export function ScanWorkspace({
                 aria-label="Filter log lines"
                 className="log-filter-input"
                 data-testid="log-filter"
-                onChange={(event) => setLogFilter(event.target.value)}
+                onChange={(event) =>
+                  dispatch({ type: "set-log-filter", filter: event.target.value })
+                }
                 placeholder="Filter log…"
                 type="search"
                 value={logFilter}
