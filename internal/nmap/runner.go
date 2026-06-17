@@ -31,11 +31,12 @@ type Executor interface {
 }
 
 type Runner struct {
-	executor Executor
+	executor         Executor
+	elevatedExecutor Executor
 }
 
 func NewRunner() Runner {
-	return Runner{executor: ExecExecutor{}}
+	return Runner{executor: ExecExecutor{}, elevatedExecutor: NewElevatedExecutor()}
 }
 
 func (r Runner) Run(
@@ -46,6 +47,9 @@ func (r Runner) Run(
 	command, err := BuildCommand(request)
 	if err != nil {
 		return Result{}, err
+	}
+	if request.Elevated {
+		return r.elevatedExecutorOrDefault().Execute(ctx, command, emit)
 	}
 	return r.executorOrDefault().Execute(ctx, command, emit)
 }
@@ -108,6 +112,13 @@ func (r Runner) executorOrDefault() Executor {
 		return r.executor
 	}
 	return ExecExecutor{}
+}
+
+func (r Runner) elevatedExecutorOrDefault() Executor {
+	if r.elevatedExecutor != nil {
+		return r.elevatedExecutor
+	}
+	return NewElevatedExecutor()
 }
 
 func previewCommandParts(request scanner.ScanRequest) (Command, scanner.Profile, []scanner.Target, error) {
