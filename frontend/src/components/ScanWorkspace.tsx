@@ -252,7 +252,7 @@ export function ScanWorkspace({
     }
   }
 
-  async function runScan(): Promise<void> {
+  async function runScan(elevated = false): Promise<void> {
     const request = makeRequest(
       profileId,
       targetModeId,
@@ -283,7 +283,7 @@ export function ScanWorkspace({
     isPinnedToBottom.current = true;
     setActivePanel("output");
     try {
-      await startScan(request);
+      await startScan({ ...request, elevated });
     } catch (caught) {
       setRunning(false);
       setStatus("failed");
@@ -1193,7 +1193,9 @@ export function ScanWorkspace({
           role="tabpanel"
           aria-labelledby="scan-tab-output"
         >
-          {status === "privilege" ? <PrivilegeRequiredMessage /> : null}
+          {status === "privilege" ? (
+            <PrivilegeRequiredMessage onElevate={() => runScan(true)} />
+          ) : null}
           <OutputResults record={completedRecord} status={status} onOpenCompare={onOpenCompare} />
           <section className="output-section">
             <h3>Run status</h3>
@@ -1362,7 +1364,11 @@ function OutputResults({
   );
 }
 
-function PrivilegeRequiredMessage(): React.JSX.Element {
+function PrivilegeRequiredMessage({
+  onElevate,
+}: {
+  onElevate: () => void | Promise<void>;
+}): React.JSX.Element {
   return (
     <section
       className="output-section"
@@ -1381,9 +1387,20 @@ function PrivilegeRequiredMessage(): React.JSX.Element {
         </strong>{" "}
         in the Options panel — it works without elevated access and is the default recipe.
       </p>
+      <button
+        type="button"
+        className="primary"
+        data-testid="run-elevated"
+        onClick={() => {
+          void onElevate();
+        }}
+      >
+        Run with elevated privileges
+      </button>
       <p className="muted">
-        One-click elevation support via sudo/runas is planned for a future release (#89). Until
-        then, run Maple with <code>sudo</code> on macOS/Linux or from an elevated prompt on Windows.
+        You will be prompted for credentials each time; Maple never stores them. On Linux you can
+        avoid prompts entirely by granting Nmap raw-socket capability once:{" "}
+        <code>sudo setcap cap_net_raw,cap_net_admin+eip $(which nmap)</code>.
       </p>
     </section>
   );

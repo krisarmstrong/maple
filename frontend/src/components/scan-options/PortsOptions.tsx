@@ -80,7 +80,7 @@ export function PortsOptions({ scanOptions, onChange }: PortsOptionsProps): Reac
       <label>
         <span>Ports</span>
         <input
-          disabled={scanOptions.allPorts}
+          disabled={scanOptions.allPorts || scanOptions.fastScan}
           onChange={(event) =>
             onChange((current) => ({
               ...current,
@@ -96,7 +96,7 @@ export function PortsOptions({ scanOptions, onChange }: PortsOptionsProps): Reac
       <label>
         <span>Top ports</span>
         <input
-          disabled={scanOptions.allPorts || scanOptions.ports.trim() !== ""}
+          disabled={scanOptions.allPorts || scanOptions.fastScan || scanOptions.ports.trim() !== ""}
           min={1}
           max={1000}
           onChange={(event) =>
@@ -118,6 +118,7 @@ export function PortsOptions({ scanOptions, onChange }: PortsOptionsProps): Reac
             onChange((current) => ({
               ...current,
               allPorts: event.target.checked,
+              fastScan: event.target.checked ? false : current.fastScan,
               ports: "",
               topPorts: 0,
             }))
@@ -125,6 +126,22 @@ export function PortsOptions({ scanOptions, onChange }: PortsOptionsProps): Reac
           type="checkbox"
         />
         <span>All ports</span>
+      </label>
+      <label>
+        <input
+          checked={scanOptions.fastScan}
+          onChange={(event) =>
+            onChange((current) => ({
+              ...current,
+              fastScan: event.target.checked,
+              allPorts: event.target.checked ? false : current.allPorts,
+              ports: "",
+              topPorts: 0,
+            }))
+          }
+          type="checkbox"
+        />
+        <span>Fast scan (-F, top 100 ports)</span>
       </label>
       <label>
         <span>Exclude ports</span>

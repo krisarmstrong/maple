@@ -322,6 +322,12 @@ export function importNmapCommand(input: string): ImportResult {
       continue;
     }
 
+    if (tok === "-F") {
+      options.fastScan = true;
+      i++;
+      continue;
+    }
+
     if (tok === "-p") {
       const value = nextValue(tok);
       if (value === undefined) {

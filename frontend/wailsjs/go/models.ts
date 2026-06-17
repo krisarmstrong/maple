@@ -528,6 +528,7 @@ export namespace scanner {
 	    scripts?: Script[];
 	    scriptArgs?: string;
 	    scriptArgsFile?: string;
+	    elevated?: boolean;
 
 	    static createFrom(source: any = {}) {
 	        return new ScanRequest(source);
@@ -542,6 +543,7 @@ export namespace scanner {
 	        this.scripts = this.convertValues(source["scripts"], Script);
 	        this.scriptArgs = source["scriptArgs"];
 	        this.scriptArgsFile = source["scriptArgsFile"];
+	        this.elevated = source["elevated"];
 	    }
 
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

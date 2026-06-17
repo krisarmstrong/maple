@@ -11,6 +11,47 @@ import (
 	"github.com/krisarmstrong/maple/internal/scanner"
 )
 
+type recordingExecutor struct {
+	label string
+	used  *string
+}
+
+func (e recordingExecutor) Execute(_ context.Context, command Command, _ func(scanner.ScanOutput)) (Result, error) {
+	*e.used = e.label
+	if command.XMLPath != "" {
+		_ = os.Remove(command.XMLPath)
+	}
+	return Result{}, nil
+}
+
+func TestRunnerRunDispatchesElevatedExecutor(t *testing.T) {
+	var used string
+	runner := Runner{
+		executor:         recordingExecutor{label: "standard", used: &used},
+		elevatedExecutor: recordingExecutor{label: "elevated", used: &used},
+	}
+	request := scanner.ScanRequest{
+		ProfileID: scanner.ProfileConnect,
+		Targets:   "127.0.0.1",
+		NmapPath:  "/usr/bin/nmap",
+	}
+
+	if _, err := runner.Run(context.Background(), request, func(scanner.ScanOutput) {}); err != nil {
+		t.Fatalf("Run returned error: %v", err)
+	}
+	if used != "standard" {
+		t.Fatalf("non-elevated request used %q executor, want standard", used)
+	}
+
+	request.Elevated = true
+	if _, err := runner.Run(context.Background(), request, func(scanner.ScanOutput) {}); err != nil {
+		t.Fatalf("Run returned error: %v", err)
+	}
+	if used != "elevated" {
+		t.Fatalf("elevated request used %q executor, want elevated", used)
+	}
+}
+
 func TestManagerStreamsAndCapturesXML(t *testing.T) {
 	runner := fakeRunner{chunks: []scanner.ScanOutput{
 		{Stream: scanner.StreamStdout, Text: "<nmaprun>"},

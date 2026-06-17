@@ -13,6 +13,7 @@ export interface ScanRequest {
   scripts?: ScanScript[];
   scriptArgs?: string;
   scriptArgsFile?: string;
+  elevated?: boolean;
 }
 
 export interface ScanScript {
@@ -151,5 +152,6 @@ function toBackendRequest(request: ScanRequest): scanner.ScanRequest {
     scripts: request.scripts ?? [],
     scriptArgs: request.scriptArgs ?? "",
     scriptArgsFile: request.scriptArgsFile ?? "",
+    elevated: request.elevated ?? false,
   });
 }

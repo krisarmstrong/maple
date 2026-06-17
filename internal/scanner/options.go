@@ -65,6 +65,7 @@ type ScanOptions struct {
 	Ports             string        `json:"ports,omitempty"`
 	TopPorts          int           `json:"topPorts,omitempty"`
 	AllPorts          bool          `json:"allPorts,omitempty"`
+	FastScan          bool          `json:"fastScan,omitempty"`
 	ServiceDetection  bool          `json:"serviceDetection,omitempty"`
 	VersionMode       VersionMode   `json:"versionMode,omitempty"`
 	VersionIntensity  string        `json:"versionIntensity,omitempty"`
@@ -153,6 +154,9 @@ func BuildOptionArgs(options ScanOptions) ([]string, error) {
 	}
 	if options.TopPorts != 0 {
 		args = append(args, "--top-ports", strconv.Itoa(options.TopPorts))
+	}
+	if options.FastScan {
+		args = append(args, "-F")
 	}
 	if strings.TrimSpace(options.ExcludePorts) != "" {
 		excludePorts, err := validatePorts(options.ExcludePorts)
@@ -489,6 +493,9 @@ func validatePortSelection(options ScanOptions) error {
 	if options.TopPorts != 0 {
 		selected++
 	}
+	if options.FastScan {
+		selected++
+	}
 	if selected > 1 {
 		return ErrInvalidScanOption
 	}
@@ -509,7 +516,8 @@ func validateDiscoveryOptions(options ScanOptions) error {
 }
 
 func hasPortSelection(options ScanOptions) bool {
-	return strings.TrimSpace(options.Ports) != "" || options.AllPorts || options.TopPorts != 0
+	return strings.TrimSpace(options.Ports) != "" || options.AllPorts || options.TopPorts != 0 ||
+		options.FastScan
 }
 
 func validatePerformanceOptions(options ScanOptions) error {

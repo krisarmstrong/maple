@@ -31,14 +31,16 @@ describe("nmap option catalog", () => {
     expect(supportedSwitches).toContain("--dns-servers");
     expect(supportedSwitches).toContain("--script-args-file");
     expect(supportedSwitches).toContain("--max-rtt-timeout");
-    expect(supportedSwitches).toContain("--min-rtt-timeout");
-    expect(supportedSwitches).toContain("--initial-rtt-timeout");
-    expect(supportedSwitches).toContain("--exclude-ports");
     expect(supportedSwitches).toContain("--max-rate");
     expect(supportedSwitches).toContain("--min-hostgroup");
     expect(supportedSwitches).toContain("--scan-delay");
     expect(supportedSwitches).toContain("--data-length");
     expect(supportedSwitches).toContain("--spoof-mac");
+    expect(supportedSwitches).toContain("-F");
+    expect(supportedSwitches).toContain("-6");
+    expect(supportedSwitches).toContain("--exclude-ports");
+    expect(supportedSwitches).toContain("--min-rtt-timeout");
+    expect(supportedSwitches).toContain("--initial-rtt-timeout");
   });
 
   it("keeps raw shell command input and unmanaged output paths blocked", () => {
@@ -53,10 +55,10 @@ describe("nmap option catalog", () => {
 
   it("summarizes coverage by implementation status", () => {
     expect(optionCoverageCounts()).toEqual({
-      structured: 22,
+      structured: 24,
       "escape-hatch": 2,
       planned: 0,
-      blocked: 3,
+      blocked: 4,
     });
   });
 

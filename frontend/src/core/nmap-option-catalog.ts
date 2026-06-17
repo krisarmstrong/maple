@@ -113,11 +113,25 @@ export const nmapOptionCatalog: readonly NmapOptionCatalogEntry[] = [
     "Common and specialized scan techniques are exposed with privilege guidance.",
   ),
   entry(
+    "scan",
+    "Specialized raw scans",
+    ["-sI", "-b", "--scanflags"],
+    "blocked",
+    "Idle, FTP bounce, and custom TCP-flag scans are out of scope: rarely needed and hard to validate safely.",
+  ),
+  entry(
     "ports",
     "Port selection",
     ["-p", "--top-ports", "-p-"],
     "structured",
     "Explicit ports, top ports, and all ports are supported.",
+  ),
+  entry(
+    "ports",
+    "Fast scan",
+    ["-F"],
+    "structured",
+    "Scans the top 100 ports; mutually exclusive with explicit, top, and all-port selection.",
   ),
   entry(
     "ports",
@@ -146,6 +160,13 @@ export const nmapOptionCatalog: readonly NmapOptionCatalogEntry[] = [
     ["-O"],
     "structured",
     "Available with elevated-privilege guidance.",
+  ),
+  entry(
+    "service",
+    "IPv6 scanning",
+    ["-6"],
+    "structured",
+    "IPv6 targets are scanned when the IPv6 toggle is enabled.",
   ),
   entry(
     "service",

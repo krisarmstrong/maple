@@ -148,6 +148,14 @@ func TestBuildOptionArgsSupportsAllPortsAndTopPorts(t *testing.T) {
 	if !sameStrings(args, []string{"--top-ports", "250"}) {
 		t.Fatalf("args = %#v", args)
 	}
+
+	args, err = BuildOptionArgs(ScanOptions{FastScan: true})
+	if err != nil {
+		t.Fatalf("BuildOptionArgs returned error: %v", err)
+	}
+	if !sameStrings(args, []string{"-F"}) {
+		t.Fatalf("args = %#v", args)
+	}
 }
 
 func TestBuildOptionArgsRejectsInvalidOptions(t *testing.T) {
@@ -160,6 +168,8 @@ func TestBuildOptionArgsRejectsInvalidOptions(t *testing.T) {
 		{Ports: "22", AllPorts: true},
 		{Ports: "22", TopPorts: 10},
 		{AllPorts: true, TopPorts: 10},
+		{FastScan: true, AllPorts: true},
+		{FastScan: true, Ports: "22"},
 		{DNSMode: "recursive"},
 		{DNSMode: DNSModeSkip, DNSServers: "1.1.1.1"},
 		{DNSServers: "resolver.example.com"},

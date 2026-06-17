@@ -17,6 +17,14 @@ describe("importNmapCommand", () => {
     expect(result.targets).toEqual(["10.0.0.0/24"]);
   });
 
+  it("maps -F to the fast-scan option", () => {
+    const result = importNmapCommand("nmap -F 10.0.0.1");
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.options.fastScan).toBe(true);
+    expect(result.targets).toEqual(["10.0.0.1"]);
+  });
+
   // ---------------------------------------------------------------------------
   // Leading "nmap" is stripped
   // ---------------------------------------------------------------------------
