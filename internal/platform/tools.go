@@ -218,17 +218,32 @@ func versionLessThan(a, b string) bool {
 	for i := range maxLen {
 		aVal := 0
 		if i < len(aParts) {
-			aVal, _ = strconv.Atoi(aParts[i])
+			aVal = versionSegment(aParts[i])
 		}
 		bVal := 0
 		if i < len(bParts) {
-			bVal, _ = strconv.Atoi(bParts[i])
+			bVal = versionSegment(bParts[i])
 		}
 		if aVal != bVal {
 			return aVal < bVal
 		}
 	}
 	return false
+}
+
+// versionSegment returns the leading numeric run of a dotted-version segment so
+// suffixed segments such as "94SVN" compare as 94 rather than 0. A segment with
+// no leading digits compares as 0.
+func versionSegment(segment string) int {
+	end := 0
+	for end < len(segment) && segment[end] >= '0' && segment[end] <= '9' {
+		end++
+	}
+	if end == 0 {
+		return 0
+	}
+	value, _ := strconv.Atoi(segment[:end]) // segment[:end] is all digits
+	return value
 }
 
 func installHint(name string, goos string) string {
