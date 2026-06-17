@@ -28,6 +28,9 @@ type ScanRequest struct {
 	Scripts        []Script    `json:"scripts,omitempty"`
 	ScriptArgs     string      `json:"scriptArgs,omitempty"`
 	ScriptArgsFile string      `json:"scriptArgsFile,omitempty"`
+	// Elevated requests platform-native privilege elevation for the scan. It
+	// does not change the argv, only how the validated process is launched.
+	Elevated bool `json:"elevated,omitempty"`
 }
 
 type CommandPreview struct {

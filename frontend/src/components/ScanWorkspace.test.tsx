@@ -1731,7 +1731,7 @@ describe("ScanWorkspace — privilege error", () => {
       screen.getByRole("heading", { name: "Elevated privileges required" }),
     ).toBeInTheDocument();
     expect(screen.getByText(/-sT/)).toBeInTheDocument();
-    expect(screen.getByText(/#89/)).toBeInTheDocument();
+    expect(screen.getByTestId("run-elevated")).toBeInTheDocument();
   });
 
   it("shows the privilege-required message for a raw-socket open failure", () => {
