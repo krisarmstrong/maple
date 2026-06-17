@@ -104,7 +104,7 @@ func (a *App) StartScan(request scanner.ScanRequest) (scanner.ScanStarted, error
 	if err != nil {
 		return scanner.ScanStarted{}, err
 	}
-	return a.scanManager.Start(a.context(), resolved, a.historyEmitter(nmap.RuntimeEmitter(a.context())))
+	return a.scanManager.Start(a.context(), resolved, a.historyEmitter(runtimeEmitter(a.context())))
 }
 
 func (a *App) CancelScan() bool {
@@ -208,6 +208,12 @@ func (a *App) historyEmitter(emit nmap.EventEmitter) nmap.EventEmitter {
 			}
 		}
 		emit(event, payload)
+	}
+}
+
+func runtimeEmitter(ctx context.Context) nmap.EventEmitter {
+	return func(name string, payload interface{}) {
+		runtime.EventsEmit(ctx, name, payload)
 	}
 }
 

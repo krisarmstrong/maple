@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/krisarmstrong/maple/internal/scanner"
-	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 const (
@@ -69,12 +68,6 @@ func (m *Manager) Cancel() bool {
 	}
 	m.cancel()
 	return true
-}
-
-func RuntimeEmitter(ctx context.Context) EventEmitter {
-	return func(name string, payload interface{}) {
-		runtime.EventsEmit(ctx, name, payload)
-	}
 }
 
 func (m *Manager) claim(ctx context.Context) (context.Context, context.CancelFunc, uint64, error) {
