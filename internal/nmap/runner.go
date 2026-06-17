@@ -60,6 +60,18 @@ func BuildCommand(request scanner.ScanRequest) (Command, error) {
 }
 
 func buildCommandParts(request scanner.ScanRequest) (Command, scanner.Profile, []scanner.Target, error) {
+	xmlPath, err := createXMLOutputPath()
+	if err != nil {
+		return Command{}, scanner.Profile{}, nil, err
+	}
+	return assembleCommand(request, xmlPath)
+}
+
+// assembleCommand constructs the nmap Command, resolved Profile, and parsed Targets
+// for the given ScanRequest using xmlPath as the XML output destination. It is the
+// shared implementation for both buildCommandParts (real run) and previewCommandParts
+// (dry-run preview).
+func assembleCommand(request scanner.ScanRequest, xmlPath string) (Command, scanner.Profile, []scanner.Target, error) {
 	if request.NmapPath == "" {
 		return Command{}, scanner.Profile{}, nil, ErrMissingNmapPath
 	}
@@ -90,10 +102,6 @@ func buildCommandParts(request scanner.ScanRequest) (Command, scanner.Profile, [
 		return Command{}, scanner.Profile{}, nil, err
 	}
 
-	xmlPath, err := createXMLOutputPath()
-	if err != nil {
-		return Command{}, scanner.Profile{}, nil, err
-	}
 	profile.Args = scanner.ProfileArgsForOptions(profile, request.Options)
 	argv := scanner.BuildArgv(
 		request.NmapPath,
@@ -122,47 +130,7 @@ func (r Runner) elevatedExecutorOrDefault() Executor {
 }
 
 func previewCommandParts(request scanner.ScanRequest) (Command, scanner.Profile, []scanner.Target, error) {
-	if request.NmapPath == "" {
-		return Command{}, scanner.Profile{}, nil, ErrMissingNmapPath
-	}
-
-	profile, err := scanner.FindProfile(request.ProfileID)
-	if err != nil {
-		return Command{}, scanner.Profile{}, nil, err
-	}
-	targets, err := parseRequestTargets(request)
-	if err != nil {
-		return Command{}, scanner.Profile{}, nil, err
-	}
-	scriptArgs, err := scanner.BuildScriptArgs(request.Scripts)
-	if err != nil {
-		return Command{}, scanner.Profile{}, nil, err
-	}
-	scriptArgsValueArgs, err := scanner.BuildScriptArgsValueArgs(request.ScriptArgs)
-	if err != nil {
-		return Command{}, scanner.Profile{}, nil, err
-	}
-	scriptArgs = append(scriptArgs, scriptArgsValueArgs...)
-	scriptArgsFileArgs, err := scanner.BuildScriptArgsFileArgs(request.ScriptArgsFile)
-	if err != nil {
-		return Command{}, scanner.Profile{}, nil, err
-	}
-	optionArgs, err := scanner.BuildOptionArgs(request.Options)
-	if err != nil {
-		return Command{}, scanner.Profile{}, nil, err
-	}
-
-	profile.Args = scanner.ProfileArgsForOptions(profile, request.Options)
-	argv := scanner.BuildArgv(
-		request.NmapPath,
-		previewXMLOutputPath,
-		profile,
-		optionArgs,
-		scriptArgs,
-		scriptArgsFileArgs,
-		targets,
-	)
-	return Command{Path: argv[0], Args: argv[1:], XMLPath: previewXMLOutputPath}, profile, targets, nil
+	return assembleCommand(request, previewXMLOutputPath)
 }
 
 func parseRequestTargets(request scanner.ScanRequest) ([]scanner.Target, error) {
