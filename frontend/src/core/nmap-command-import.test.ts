@@ -268,6 +268,33 @@ describe("importNmapCommand", () => {
     expect(result.options.maxRate).toBe(1000);
   });
 
+  it("accepts the --flag=value form", () => {
+    const result = importNmapCommand("nmap --max-rate=1000 -p=80,443 10.0.0.1");
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.options.maxRate).toBe(1000);
+    expect(result.options.ports).toBe("80,443");
+    expect(result.targets).toEqual(["10.0.0.1"]);
+  });
+
+  it("splits on the first '=' so --script-args=key=value is recognized (then rejected with its specific message)", () => {
+    const result = importNmapCommand("nmap --script-args=user=admin,pass=x 10.0.0.1");
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    // Recognized as --script-args (specific message), not a generic "Unrecognized flag".
+    expect(
+      result.errors.some((e) => e.includes("--script-args") && e.includes("Scripts panel")),
+    ).toBe(true);
+    expect(result.errors.some((e) => e.startsWith("Unrecognized flag"))).toBe(false);
+  });
+
+  it("still rejects an unknown --flag=value", () => {
+    const result = importNmapCommand("nmap --bogus=1 10.0.0.1");
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors.some((e) => e.includes("--bogus"))).toBe(true);
+  });
+
   it("maps --max-retries 3 correctly", () => {
     const result = importNmapCommand("--max-retries 3 10.0.0.1");
     expect(result.ok).toBe(true);
