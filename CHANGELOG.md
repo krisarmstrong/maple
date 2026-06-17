@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.1.10](https://github.com/krisarmstrong/maple/compare/v0.1.9...v0.1.10) (2026-06-17)
+
+
+### Features
+
+* add --exclude-ports and min/initial RTT timeout controls ([#113](https://github.com/krisarmstrong/maple/issues/113)) ([8a71293](https://github.com/krisarmstrong/maple/commit/8a71293b5a391bfc27545de98b774db2431ba1b7)), closes [#108](https://github.com/krisarmstrong/maple/issues/108)
+* add purpose hints under scan option group headings ([#116](https://github.com/krisarmstrong/maple/issues/116)) ([e25d946](https://github.com/krisarmstrong/maple/commit/e25d9468330e5ff225756bf7a4e623fffac1de0d))
+* opt-in privileged scan execution ([#89](https://github.com/krisarmstrong/maple/issues/89)) ([#111](https://github.com/krisarmstrong/maple/issues/111)) ([037bbd7](https://github.com/krisarmstrong/maple/commit/037bbd789dd2312c14e0882fa23799e7e07f6038))
+
+
+### Bug Fixes
+
+* drain pipes before reaping the scan process ([#115](https://github.com/krisarmstrong/maple/issues/115)) ([2d7f40e](https://github.com/krisarmstrong/maple/commit/2d7f40ec798c8d0dda7c62c9e3a6190d48d7c053))
+
+
+### Code Refactoring
+
+* consolidate ScanWorkspace run state with useReducer ([#128](https://github.com/krisarmstrong/maple/issues/128)) ([f8404ae](https://github.com/krisarmstrong/maple/commit/f8404ae198ca62460b5c82283df80f7286ccee37))
+* dedup nmap command building ([#124](https://github.com/krisarmstrong/maple/issues/124)) ([d388102](https://github.com/krisarmstrong/maple/commit/d388102106142c8c20d3e75d3d094ba17b197a99)), closes [#118](https://github.com/krisarmstrong/maple/issues/118)
+* drive profile-arg stripping from a declarative rule table ([#129](https://github.com/krisarmstrong/maple/issues/129)) ([d429a76](https://github.com/krisarmstrong/maple/commit/d429a762f3973ee57b8de90e3dc23426a7e4ac9a))
+* extract ScanHistoryDetails pure helpers to core/history-details-view ([#121](https://github.com/krisarmstrong/maple/issues/121) part B) ([#126](https://github.com/krisarmstrong/maple/issues/126)) ([0c7c697](https://github.com/krisarmstrong/maple/commit/0c7c6977fc7d6133dc523e09ae235c81bbfc5fba))
+* extract UtilityToolsWorkspace from App.tsx ([#125](https://github.com/krisarmstrong/maple/issues/125)) ([b9d639f](https://github.com/krisarmstrong/maple/commit/b9d639faa195f5182dac880a8aec2acbab655816))
+* make internal/nmap framework-free ([#123](https://github.com/krisarmstrong/maple/issues/123)) ([f7aaa5b](https://github.com/krisarmstrong/maple/commit/f7aaa5bf14ffb9900984aaaac0b77eefa631e572))
+* relocate Summary to scanner as the canonical domain type ([#127](https://github.com/krisarmstrong/maple/issues/127)) ([e6fc3a2](https://github.com/krisarmstrong/maple/commit/e6fc3a2c86c825e5164cc554180660b74aff2a77))
+
+
+### Miscellaneous
+
+* regenerate wails bindings and sync frontend to scanner namespace ([#131](https://github.com/krisarmstrong/maple/issues/131)) ([944f574](https://github.com/krisarmstrong/maple/commit/944f57492e2143c4062327601d8604850e147e63))
+
 ## [0.1.9](https://github.com/krisarmstrong/maple/compare/v0.1.8...v0.1.9) (2026-06-17)
 
 
