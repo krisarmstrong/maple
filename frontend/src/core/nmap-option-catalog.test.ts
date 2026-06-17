@@ -36,6 +36,8 @@ describe("nmap option catalog", () => {
     expect(supportedSwitches).toContain("--scan-delay");
     expect(supportedSwitches).toContain("--data-length");
     expect(supportedSwitches).toContain("--spoof-mac");
+    expect(supportedSwitches).toContain("-F");
+    expect(supportedSwitches).toContain("-6");
   });
 
   it("keeps raw shell command input and unmanaged output paths blocked", () => {
@@ -50,10 +52,10 @@ describe("nmap option catalog", () => {
 
   it("summarizes coverage by implementation status", () => {
     expect(optionCoverageCounts()).toEqual({
-      structured: 21,
+      structured: 23,
       "escape-hatch": 2,
       planned: 0,
-      blocked: 3,
+      blocked: 4,
     });
   });
 
