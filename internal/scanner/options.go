@@ -272,140 +272,109 @@ func BuildOptionArgs(options ScanOptions) ([]string, error) {
 	return args, nil
 }
 
+// profileFlagRule declares how an explicitly-set scan option supersedes a
+// profile's default flag, so the profile arg (and its value, if any) is dropped
+// before the explicit option is appended. This declarative table is the single
+// source of truth for the strip logic; it replaced a hand-mirrored if-chain
+// that paralleled BuildOptionArgs and had to be kept in sync by hand.
+type profileFlagRule struct {
+	// active is true when the user explicitly set the corresponding option.
+	active bool
+	// matches reports whether a profile arg belongs to this option.
+	matches func(string) bool
+	// takesValue reports whether a matched arg also consumes the following token
+	// (a value-carrying flag such as "--top-ports 100").
+	takesValue func(string) bool
+}
+
 func ProfileArgsForOptions(profile Profile, options ScanOptions) []string {
+	rules := profileFlagRules(options)
 	args := make([]string, 0, len(profile.Args))
 	for index := 0; index < len(profile.Args); index++ {
 		arg := profile.Args[index]
-		if options.TimingTemplate != "" && isTimingArg(arg) {
+		rule, matched := matchingProfileFlagRule(rules, arg)
+		if !matched {
+			args = append(args, arg)
 			continue
 		}
-		if hasPortSelection(options) {
-			if arg == "-p" || arg == "--top-ports" {
-				index++
-				continue
-			}
-			if arg == "-p-" {
-				continue
-			}
-		}
-		if strings.TrimSpace(options.ExcludePorts) != "" && arg == "--exclude-ports" {
+		if rule.takesValue(arg) {
 			index++
-			continue
 		}
-		if hasVersionSelection(options) && isVersionArg(arg) {
-			if arg == "--version-intensity" {
-				index++
-			}
-			continue
-		}
-		if options.ScanTechnique != ScanTechniqueDefault && isTechniqueArg(arg) {
-			continue
-		}
-		if shouldStripDiscoveryArg(arg, options) {
-			continue
-		}
-		if options.VerbosityMode != VerbosityModeDefault && isVerbosityArg(arg) {
-			continue
-		}
-		if options.Reason && arg == "--reason" {
-			continue
-		}
-		if options.OpenOnly && arg == "--open" {
-			continue
-		}
-		if options.MinRate != 0 && arg == "--min-rate" {
-			index++
-			continue
-		}
-		if options.MaxRate != 0 && arg == "--max-rate" {
-			index++
-			continue
-		}
-		if strings.TrimSpace(options.MaxRetries) != "" && arg == "--max-retries" {
-			index++
-			continue
-		}
-		if strings.TrimSpace(options.HostTimeout) != "" && arg == "--host-timeout" {
-			index++
-			continue
-		}
-		if strings.TrimSpace(options.MaxRTTTimeout) != "" && arg == "--max-rtt-timeout" {
-			index++
-			continue
-		}
-		if strings.TrimSpace(options.MinRTTTimeout) != "" && arg == "--min-rtt-timeout" {
-			index++
-			continue
-		}
-		if strings.TrimSpace(options.InitialRTTTimeout) != "" && arg == "--initial-rtt-timeout" {
-			index++
-			continue
-		}
-		if strings.TrimSpace(options.StatsEvery) != "" && arg == "--stats-every" {
-			index++
-			continue
-		}
-		if strings.TrimSpace(options.ScanDelay) != "" && arg == "--scan-delay" {
-			index++
-			continue
-		}
-		if strings.TrimSpace(options.MaxScanDelay) != "" && arg == "--max-scan-delay" {
-			index++
-			continue
-		}
-		if options.MinHostGroup != 0 && arg == "--min-hostgroup" {
-			index++
-			continue
-		}
-		if options.MaxHostGroup != 0 && arg == "--max-hostgroup" {
-			index++
-			continue
-		}
-		if options.MinParallelism != 0 && arg == "--min-parallelism" {
-			index++
-			continue
-		}
-		if options.MaxParallelism != 0 && arg == "--max-parallelism" {
-			index++
-			continue
-		}
-		if options.FragmentPackets && arg == "-f" {
-			continue
-		}
-		if options.MTU != 0 && arg == "--mtu" {
-			index++
-			continue
-		}
-		if options.DataLength != 0 && arg == "--data-length" {
-			index++
-			continue
-		}
-		if strings.TrimSpace(options.SourcePort) != "" && arg == "--source-port" {
-			index++
-			continue
-		}
-		if strings.TrimSpace(options.Decoys) != "" && arg == "-D" {
-			index++
-			continue
-		}
-		if strings.TrimSpace(options.SourceAddress) != "" && arg == "-S" {
-			index++
-			continue
-		}
-		if strings.TrimSpace(options.NetworkInterface) != "" && arg == "-e" {
-			index++
-			continue
-		}
-		if strings.TrimSpace(options.SpoofMAC) != "" && arg == "--spoof-mac" {
-			index++
-			continue
-		}
-		if options.PacketTrace && arg == "--packet-trace" {
-			continue
-		}
-		args = append(args, arg)
 	}
 	return args
+}
+
+func matchingProfileFlagRule(rules []profileFlagRule, arg string) (profileFlagRule, bool) {
+	for _, rule := range rules {
+		if rule.active && rule.matches(arg) {
+			return rule, true
+		}
+	}
+	return profileFlagRule{}, false
+}
+
+// profileFlagRules builds the strip rules for the given options. Each entry
+// mirrors a BuildOptionArgs emission: when the option is active, the profile's
+// equivalent default flag is stripped so the explicit value wins.
+func profileFlagRules(options ScanOptions) []profileFlagRule {
+	is := func(flag string) func(string) bool {
+		return func(arg string) bool { return arg == flag }
+	}
+	never := func(string) bool { return false }
+	always := func(string) bool { return true }
+	set := func(value string) bool { return strings.TrimSpace(value) != "" }
+
+	valueFlag := func(active bool, flag string) profileFlagRule {
+		return profileFlagRule{active: active, matches: is(flag), takesValue: always}
+	}
+	boolFlag := func(active bool, flag string) profileFlagRule {
+		return profileFlagRule{active: active, matches: is(flag), takesValue: never}
+	}
+
+	return []profileFlagRule{
+		{active: options.TimingTemplate != "", matches: isTimingArg, takesValue: never},
+		{
+			active:  hasPortSelection(options),
+			matches: func(arg string) bool { return arg == "-p" || arg == "--top-ports" || arg == "-p-" },
+			takesValue: func(arg string) bool {
+				return arg == "-p" || arg == "--top-ports"
+			},
+		},
+		valueFlag(set(options.ExcludePorts), "--exclude-ports"),
+		{
+			active:     hasVersionSelection(options),
+			matches:    isVersionArg,
+			takesValue: is("--version-intensity"),
+		},
+		{active: options.ScanTechnique != ScanTechniqueDefault, matches: isTechniqueArg, takesValue: never},
+		{active: true, matches: func(arg string) bool { return shouldStripDiscoveryArg(arg, options) }, takesValue: never},
+		{active: options.VerbosityMode != VerbosityModeDefault, matches: isVerbosityArg, takesValue: never},
+		boolFlag(options.Reason, "--reason"),
+		boolFlag(options.OpenOnly, "--open"),
+		valueFlag(options.MinRate != 0, "--min-rate"),
+		valueFlag(options.MaxRate != 0, "--max-rate"),
+		valueFlag(set(options.MaxRetries), "--max-retries"),
+		valueFlag(set(options.HostTimeout), "--host-timeout"),
+		valueFlag(set(options.MaxRTTTimeout), "--max-rtt-timeout"),
+		valueFlag(set(options.MinRTTTimeout), "--min-rtt-timeout"),
+		valueFlag(set(options.InitialRTTTimeout), "--initial-rtt-timeout"),
+		valueFlag(set(options.StatsEvery), "--stats-every"),
+		valueFlag(set(options.ScanDelay), "--scan-delay"),
+		valueFlag(set(options.MaxScanDelay), "--max-scan-delay"),
+		valueFlag(options.MinHostGroup != 0, "--min-hostgroup"),
+		valueFlag(options.MaxHostGroup != 0, "--max-hostgroup"),
+		valueFlag(options.MinParallelism != 0, "--min-parallelism"),
+		valueFlag(options.MaxParallelism != 0, "--max-parallelism"),
+		boolFlag(options.FragmentPackets, "-f"),
+		valueFlag(options.MTU != 0, "--mtu"),
+		valueFlag(options.DataLength != 0, "--data-length"),
+		valueFlag(set(options.SourcePort), "--source-port"),
+		valueFlag(set(options.Decoys), "-D"),
+		valueFlag(set(options.SourceAddress), "-S"),
+		valueFlag(set(options.NetworkInterface), "-e"),
+		valueFlag(set(options.SpoofMAC), "--spoof-mac"),
+		boolFlag(options.PacketTrace, "--packet-trace"),
+	}
 }
 
 func isTechniqueArg(value string) bool {
