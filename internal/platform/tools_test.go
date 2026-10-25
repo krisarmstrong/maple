@@ -296,6 +296,27 @@ func TestParseNmapVersion(t *testing.T) {
 	}
 }
 
+func TestVersionLessThanHandlesSuffixedAndGarbledSegments(t *testing.T) {
+	cases := []struct {
+		a, b string
+		want bool
+	}{
+		{"7.79", "7.80", true},
+		{"7.80", "7.80", false},
+		{"7.95", "7.80", false},
+		{"7.94SVN", "7.80", false}, // 94 >= 80 even with the SVN suffix
+		{"7.70SVN", "7.80", true},  // 70 < 80
+		{"7", "7.80", true},        // shorter padded with zeros
+		{"", "7.80", true},         // empty compares as 0.0
+		{"7.x", "7.80", true},      // non-numeric segment -> 0 < 80
+	}
+	for _, tc := range cases {
+		if got := versionLessThan(tc.a, tc.b); got != tc.want {
+			t.Errorf("versionLessThan(%q, %q) = %v, want %v", tc.a, tc.b, got, tc.want)
+		}
+	}
+}
+
 func TestDetectOnePopulatesVersionIntelForNmap(t *testing.T) {
 	tests := []struct {
 		name           string

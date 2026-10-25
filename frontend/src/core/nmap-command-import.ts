@@ -82,6 +82,22 @@ function tokenize(input: string): string[] {
   return tokens;
 }
 
+// expandEqualsFlags rewrites option tokens of the form `--flag=value` (or
+// `-x=value`) into two tokens, splitting on the first "=" so values containing
+// "=" are preserved. Bare (non-option) tokens are returned unchanged.
+function expandEqualsFlags(tokens: string[]): string[] {
+  const expanded: string[] = [];
+  for (const token of tokens) {
+    const eq = token.indexOf("=");
+    if (token.startsWith("-") && eq > 0) {
+      expanded.push(token.slice(0, eq), token.slice(eq + 1));
+    } else {
+      expanded.push(token);
+    }
+  }
+  return expanded;
+}
+
 // ---------------------------------------------------------------------------
 // Value validators
 // ---------------------------------------------------------------------------
@@ -160,11 +176,18 @@ export function importNmapCommand(input: string): ImportResult {
   }
 
   // Strip a leading "nmap" (case-insensitive) if present.
-  const tokens = rawTokens[0].toLowerCase() === "nmap" ? rawTokens.slice(1) : rawTokens;
+  const stripped = rawTokens[0].toLowerCase() === "nmap" ? rawTokens.slice(1) : rawTokens;
 
-  if (tokens.length === 0) {
+  if (stripped.length === 0) {
     return { ok: false, errors: ["No flags or targets after 'nmap'."] };
   }
+
+  // Expand `--flag=value` / `-x=value` into separate flag + value tokens so the
+  // exact-flag dispatch below also accepts nmap's "=" syntax. Split on the FIRST
+  // "=" only, so values that themselves contain "=" (e.g.
+  // --script-args=user=admin) are preserved. Only option tokens (leading "-")
+  // are split; bare targets are left untouched.
+  const tokens = expandEqualsFlags(stripped);
 
   // Mutable partial result that we fill during the parse pass.
   const options: Partial<ScanOptions> = {};
