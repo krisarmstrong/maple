@@ -95,7 +95,7 @@ Before upload, CI verifies that each platform produced the expected files:
 ## Release Constraints
 
 - Keep Wails v2.12.0.
-- Keep Go 1.26.4.
+- Keep Go 1.26.9.
 - Keep Node 26.3.0.
 - Keep React 19.2.7.
 - Keep frontend tooling pinned through `frontend/package-lock.json`.
