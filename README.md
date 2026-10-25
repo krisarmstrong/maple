@@ -16,7 +16,7 @@ Maple is not affiliated with or endorsed by the Nmap Project. Maple does not bun
 
 ## Requirements
 
-- Go 1.26.4
+- Go 1.26.9
 - Node.js 26.3.0
 - npm 11.17.0 or newer
 - Wails CLI 2.12.0

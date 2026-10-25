@@ -72,5 +72,5 @@ next approved train carry the changelog.
 
 - Keep argv-only execution.
 - Do not bundle or redistribute Nmap, Npcap, Ncat, Ndiff, or Nping.
-- Keep Wails v2.12.0, Go 1.26.4, Node 26.3.0, React 19.2.7, and pinned frontend tooling.
+- Keep Wails v2.12.0, Go 1.26.9, Node 26.3.0, React 19.2.7, and pinned frontend tooling.
 - Local `make build` stays host-native; CI owns platform release artifacts.
