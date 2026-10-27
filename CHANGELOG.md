@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.1.11](https://github.com/krisarmstrong/maple/compare/v0.1.10...v0.1.11) (2026-10-27)
+
+
+### Bug Fixes
+
+* **deps:** bump Go to 1.26.9 for net/http vulnerabilities ([#140](https://github.com/krisarmstrong/maple/issues/140)) ([124f067](https://github.com/krisarmstrong/maple/commit/124f067145c739b8c508f047690c59aed773b033))
+* importer --flag=value form and defensive version-segment parsing ([#136](https://github.com/krisarmstrong/maple/issues/136)) ([220fc2b](https://github.com/krisarmstrong/maple/commit/220fc2ba94c2379a514fe87fb8c3a916b3fc529c))
+
+
+### Continuous Integration
+
+* exempt bot PRs from the PR body lint ([#144](https://github.com/krisarmstrong/maple/issues/144)) ([54ed92f](https://github.com/krisarmstrong/maple/commit/54ed92f0ff1da1eb3936832bc0fe5b4f8c34920f))
+* guard generated wails bindings against drift ([#138](https://github.com/krisarmstrong/maple/issues/138)) ([4944331](https://github.com/krisarmstrong/maple/commit/494433118747ce0d040f64fd11b4154248198042))
+* make release build resilient to macOS runner outages ([#137](https://github.com/krisarmstrong/maple/issues/137)) ([38a5ade](https://github.com/krisarmstrong/maple/commit/38a5ade8368670f91198e60808749c3f899da24a)), closes [#135](https://github.com/krisarmstrong/maple/issues/135)
+
+
+### Miscellaneous
+
+* **deps-dev:** bump undici ([#139](https://github.com/krisarmstrong/maple/issues/139)) ([1c8f327](https://github.com/krisarmstrong/maple/commit/1c8f327613a79e7461e36d07f7e9fb62a09eceea))
+* **deps:** bump the go_modules group across 1 directory with 2 updates ([#145](https://github.com/krisarmstrong/maple/issues/145)) ([5429250](https://github.com/krisarmstrong/maple/commit/54292504691c233633194f7e306b47254d91c4a7))
+
 ## [0.1.10](https://github.com/krisarmstrong/maple/compare/v0.1.9...v0.1.10) (2026-06-17)
 
 
