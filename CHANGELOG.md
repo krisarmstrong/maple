@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.12](https://github.com/krisarmstrong/maple/compare/v0.1.11...v0.1.12) (2026-10-28)
+
+
+### Miscellaneous
+
+* **deps:** bump the npm_and_yarn group across 1 directory with 3 updates ([#147](https://github.com/krisarmstrong/maple/issues/147)) ([101e67e](https://github.com/krisarmstrong/maple/commit/101e67eb066df03057e8fc33c1df7c57d4200cea))
+
 ## [0.1.11](https://github.com/krisarmstrong/maple/compare/v0.1.10...v0.1.11) (2026-10-27)
 
 
